@@ -158,7 +158,7 @@ function ARScannerComponent(
               <button
                 type="button"
                 onClick={() => void startScanner()}
-                className="mt-7 min-h-13 w-full rounded-full bg-white px-6 text-sm font-medium text-black transition-opacity hover:opacity-85"
+                className="mt-7 min-h-13 w-[80vw] rounded-full bg-white px-6 text-sm font-medium text-black transition-opacity hover:opacity-85"
               >
                 {scannerState === "error" ? "Try camera again" : "Start camera"}
               </button>

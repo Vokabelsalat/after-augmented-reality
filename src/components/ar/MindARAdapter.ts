@@ -3,10 +3,10 @@ import { createArtifactFormationPositions } from "@/components/particles/particl
 import { revealTiming } from "@/lib/animation/revealMachine";
 import type { ExhibitionArtifact } from "@/types/exhibition";
 
-const AR_PARTICLE_COUNT = 1200;
-const AR_PARTICLE_SIZE_PX = 8;
+const AR_PARTICLE_COUNT = 2000;
+const AR_PARTICLE_SIZE_PX = 15;
 const AR_CLUSTER_FADE_MS = 450;
-const AR_FORMATION_SCALE = 0.29;
+const AR_FORMATION_SCALE = 0.51;
 
 const trackedClusterVertexShader = /* glsl */ `
   attribute float aSeed;
@@ -271,7 +271,7 @@ export class MindARAdapter {
       positions[offset + 2] =
         0.12 +
         (formation[offset + 2] - 0.35) * 0.12 +
-        random() * 0.08;
+        random() * 0.25;
       basePositions[offset] = positions[offset];
       basePositions[offset + 1] = positions[offset + 1];
       basePositions[offset + 2] = positions[offset + 2];
