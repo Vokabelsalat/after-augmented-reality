@@ -1,6 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  forwardRef,
+  type ForwardedRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from "react";
 import type { MindARAdapter as MindARAdapterType } from "@/components/ar/MindARAdapter";
 import { artifacts } from "@/data/artifacts";
 
@@ -13,12 +21,19 @@ type ARScannerProps = {
   simulatorVisible: boolean;
 };
 
-export function ARScanner({
-  onTargetFound,
-  onTargetLost,
-  onUseSimulator,
-  simulatorVisible,
-}: ARScannerProps) {
+export type ARScannerHandle = {
+  dismissArtifact: (targetIndex: number) => void;
+};
+
+function ARScannerComponent(
+  {
+    onTargetFound,
+    onTargetLost,
+    onUseSimulator,
+    simulatorVisible,
+  }: ARScannerProps,
+  ref: ForwardedRef<ARScannerHandle>,
+) {
   const containerRef = useRef<HTMLDivElement>(null);
   const adapterRef = useRef<MindARAdapterType | null>(null);
   const startAttemptRef = useRef(0);
@@ -26,6 +41,16 @@ export function ARScanner({
   const onTargetLostRef = useRef(onTargetLost);
   const [scannerState, setScannerState] = useState<ScannerState>("idle");
   const [errorMessage, setErrorMessage] = useState("");
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      dismissArtifact: (targetIndex) => {
+        adapterRef.current?.dismissArtifact(targetIndex);
+      },
+    }),
+    [],
+  );
 
   useEffect(() => {
     onTargetFoundRef.current = onTargetFound;
@@ -52,7 +77,14 @@ export function ARScanner({
       if (attempt !== startAttemptRef.current) return;
       const adapter = new MindARAdapter({
         imageTargetSrc: "/targets/exhibition.mind",
-        targetIndices: artifacts.map((artifact) => artifact.targetIndex),
+        targets: artifacts.map(
+          ({ id, targetIndex, theme, color }) => ({
+            id,
+            targetIndex,
+            theme,
+            color,
+          }),
+        ),
         onTargetFound: (targetIndex) => onTargetFoundRef.current(targetIndex),
         onTargetLost: (targetIndex) => onTargetLostRef.current(targetIndex),
       });
@@ -110,10 +142,10 @@ export function ARScanner({
               <div className="mx-auto mb-7 size-14 rounded-full border border-white/20 p-1">
                 <div className="size-full rounded-full border border-dashed border-white/45" />
               </div>
-              <h2 className="font-display text-4xl tracking-[-0.04em]">
+              <h2 className="text-4xl tracking-[-0.04em]">
                 {scannerState === "error" ? "Camera unavailable" : "Find a fragment"}
               </h2>
-              <p className="mx-auto mt-4 max-w-xs text-sm leading-6 text-white/55" role="status">
+              <p className="mx-auto mt-4 max-w-xs text-sm leading-6 text-white/80" role="status">
                 {scannerState === "error"
                   ? errorMessage
                   : scannerState === "paused"
@@ -161,3 +193,7 @@ export function ARScanner({
     </div >
   );
 }
+
+export const ARScanner = forwardRef<ARScannerHandle, ARScannerProps>(
+  ARScannerComponent,
+);

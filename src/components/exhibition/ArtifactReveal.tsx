@@ -1,7 +1,6 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import Image from "next/image";
 import { useCallback } from "react";
 import { artifactById } from "@/data/artifacts";
 import { useRevealMachine } from "@/lib/animation/revealMachine";
@@ -23,42 +22,33 @@ const ParticleNarrative = dynamic(
   { ssr: false },
 );
 
-function ArtifactRevealSequence({ artifact }: { artifact: ExhibitionArtifact }) {
+type RevealPresentation = "tracked-ar" | "simulated";
+
+function ArtifactRevealSequence({
+  artifact,
+  onContinue,
+}: {
+  artifact: ExhibitionArtifact;
+  onContinue?: (artifact: ExhibitionArtifact) => void;
+}) {
   const dispatch = useAppDispatch();
   const handleContentReady = useCallback(() => {
     dispatch(artifactCollected(artifact.id));
   }, [artifact.id, dispatch]);
-  const { phase, sourceImageVisible } = useRevealMachine(
-    artifact.id,
-    handleContentReady,
-  );
+  const phase = useRevealMachine(artifact.id, handleContentReady);
 
   const contentVisible = phase === "content-reveal" || phase === "complete";
 
   return (
     <section className="pointer-events-none absolute inset-0 z-40 overflow-hidden" aria-live="polite">
-      <div className="absolute inset-0 bg-black/20 transition-colors duration-700" />
-      <div
-        className={`absolute inset-0 bg-black transition-opacity duration-700 ${sourceImageVisible ? "opacity-100" : "opacity-0"
-          }`}
-        aria-hidden="true"
-      >
-        <Image
-          src={artifact.posterImageSrc}
-          alt=""
-          fill
-          sizes="100vw"
-          loading="eager"
-          unoptimized
-          className="object-contain"
+      {phase !== "complete" && (
+        <ParticleNarrative
+          artifact={artifact}
+          phase={phase}
+          mode="ar-release"
+          quality="high"
         />
-      </div>
-      <ParticleNarrative
-        artifact={artifact}
-        phase={phase}
-        mode="ar-release"
-        quality="high"
-      />
+      )}
       {!contentVisible && (
         <p className="absolute inset-x-0 bottom-[12vh] text-center text-[10px] tracking-[0.28em] text-white/65">
           {phase === "attached" && "Fragment located"}
@@ -71,6 +61,7 @@ function ArtifactRevealSequence({ artifact }: { artifact: ExhibitionArtifact }) 
           <ArtifactContent
             artifact={artifact}
             onContinue={() => {
+              onContinue?.(artifact);
               dispatch(setActiveArtifact(null));
               dispatch(setExperiencePhase("scanning"));
             }}
@@ -81,12 +72,24 @@ function ArtifactRevealSequence({ artifact }: { artifact: ExhibitionArtifact }) 
   );
 }
 
-export function ArtifactReveal() {
+export function ArtifactReveal({
+  presentation,
+  onContinue,
+}: {
+  presentation: RevealPresentation;
+  onContinue?: (artifact: ExhibitionArtifact) => void;
+}) {
   const activeArtifactId = useAppSelector(selectActiveArtifactId);
   const artifact = activeArtifactId
     ? artifactById.get(activeArtifactId) ?? null
     : null;
 
   if (!artifact) return null;
-  return <ArtifactRevealSequence key={artifact.id} artifact={artifact} />;
+  return (
+    <ArtifactRevealSequence
+      key={artifact.id}
+      artifact={artifact}
+      onContinue={presentation === "tracked-ar" ? onContinue : undefined}
+    />
+  );
 }

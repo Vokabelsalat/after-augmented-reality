@@ -123,9 +123,7 @@ export function JourneyConstellation({
   return (
     <div className="relative size-full" role="img" aria-label={label}>
       {discoveries.length === 0 && (
-        <div className="absolute inset-0 flex items-center justify-center text-center text-xs leading-5 tracking-[0.16em] text-white/35 uppercase">
-          Your first fragment<br />will appear here
-        </div>
+        <div className="absolute inset-0 flex items-center justify-center text-center text-xs leading-5 tracking-[0.16em] text-white/35" />
       )}
       <Canvas
         frameloop={variant === "miniature" ? "demand" : "always"}

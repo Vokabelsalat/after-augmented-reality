@@ -77,7 +77,7 @@ const journeySlice = createSlice({
           (discovery) => discovery.artifactId === artifactId,
         );
 
-        if (alreadyDiscovered) return;
+        // if (alreadyDiscovered) return;
 
         state.discoveries.push({
           artifactId,

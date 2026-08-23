@@ -4,7 +4,7 @@ import "@/app/globals.css";
 import { StoreProvider } from "@/store/StoreProvider";
 
 export const metadata: Metadata = {
-  title: "Say Hi — An exhibition reading",
+  title: "After Augmented Reality — An exhibition reading",
   description:
     "Scan fragments throughout the exhibition and build your own reading.",
 };

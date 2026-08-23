@@ -4,7 +4,8 @@ export const artifacts: ExhibitionArtifact[] = [
   {
     id: "memory-fragment",
     targetIndex: 0,
-    posterImageSrc: "/images/poster-0.jpeg",
+    posterImageSrc: "/images/boston.jpeg",
+    posterAspectRatio: 3239 / 2240,
     title: "Fragment of Memory",
     artist: "Artist One",
     theme: "memory",
@@ -15,7 +16,8 @@ export const artifacts: ExhibitionArtifact[] = [
   {
     id: "machine-voice",
     targetIndex: 1,
-    posterImageSrc: "/images/poster-1.jpeg",
+    posterImageSrc: "/images/algarve.jpeg",
+    posterAspectRatio: 1643 / 2493,
     title: "The Machine Speaks",
     artist: "Artist Two",
     theme: "machine",
@@ -26,7 +28,8 @@ export const artifacts: ExhibitionArtifact[] = [
   {
     id: "body-space",
     targetIndex: 2,
-    posterImageSrc: "/images/poster-2.jpeg",
+    posterImageSrc: "/images/torro.jpeg",
+    posterAspectRatio: 2199 / 3079,
     title: "A Body in Space",
     artist: "Artist Three",
     theme: "body",

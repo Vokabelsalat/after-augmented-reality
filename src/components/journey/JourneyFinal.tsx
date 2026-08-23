@@ -43,7 +43,7 @@ export function JourneyFinal() {
     <main className="film-grain safe-top safe-bottom min-h-dvh overflow-x-hidden bg-[#050505] px-5">
       <header className="relative z-10 flex items-center justify-between">
         <Link href="/" className="font-display text-2xl tracking-[-0.04em]">
-          Say Hi
+          After Augmented Reality
         </Link>
         <p className="text-[9px] tracking-[0.24em] text-white/42">
           Your reading

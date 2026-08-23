@@ -24,7 +24,11 @@ export const narrativeVertexShader = /* glsl */ `
     if (uPhase > 0.5 && uPhase < 1.5) {
       transformed = mix(aSource, aRelease, progress);
     } else if (uPhase >= 1.5 && uPhase < 2.5) {
-      transformed = mix(aRelease, aFormation, progress);
+      float reformProgress = smoothstep(0.2, 0.66, progress);
+      transformed = mix(aRelease, aFormation, reformProgress);
+      float releaseFade = 1.0 - smoothstep(0.0, 0.28, progress);
+      float formationFade = smoothstep(0.48, 0.78, progress);
+      vAlpha = max(releaseFade, formationFade);
     } else if (uPhase >= 2.5) {
       vec3 handoff = aFormation + vec3(0.0, -0.58, 1.45);
       transformed = mix(aFormation, handoff, progress);

@@ -5,6 +5,7 @@ declare module "mind-ar/dist/mindar-image-three.prod.js" {
     group: THREE.Group;
     onTargetFound: (() => void) | null;
     onTargetLost: (() => void) | null;
+    onTargetUpdate: (() => void) | null;
   };
 
   export class MindARThree {

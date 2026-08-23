@@ -24,8 +24,8 @@ export function ExhibitionNavigation() {
   return (
     <header className="safe-top pointer-events-none absolute inset-x-0 top-0 z-30 flex items-start justify-between px-4">
       <div className="pt-2">
-        <p className="font-display text-2xl leading-none tracking-[-0.04em]">Say Hi</p>
-        <p className="mt-2 text-[10px] tracking-[0.2em] text-white/58" aria-live="polite">
+        <p className="text-lg leading-none tracking-[-0.04em]">After Augmented Reality</p>
+        <p className="mt-1 text-[10px] tracking-[0.2em] text-white/80" aria-live="polite">
           {count} {count === 1 ? "fragment" : "fragments"} found
         </p>
       </div>

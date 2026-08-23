@@ -1,6 +1,6 @@
-# Say Hi
+# After Augmented Reality
 
-**Say Hi** is a mobile-first AR exhibition prototype about extending digital narratives. A visitor scans physical works; particles detach from each work, resolve into accessible exhibition content, and join a persistent personal constellation. The final screen turns the ordered path into a deterministic short poem.
+**After Augmented Reality** is a mobile-first AR exhibition prototype about extending digital narratives. A visitor scans physical works; particles detach from each work, resolve into accessible exhibition content, and join a persistent personal constellation. The final screen turns the ordered path into a deterministic short poem.
 
 The complete prototype loop works without a camera through the built-in simulator. Real image tracking uses MindAR through a narrow adapter and can be enabled by adding one compiled target bundle.
 
@@ -93,7 +93,7 @@ semantic adapter callback
           ↓ artifactId
 Redux journey state + localStorage
           ↓
-R3F particle reveal + React content
+tracked AR particle volume + React content
           ↓
 persistent particle constellation
           ↓
@@ -103,7 +103,7 @@ deterministic narrative generator
 - `src/components/ar/MindARAdapter.ts` is the only application module that imports MindAR. It owns camera startup, anchors, its renderer loop, repeated-target gating, and disposal.
 - `src/components/ar/ARScanner.tsx` dynamically imports the adapter only after the user taps **Start camera**. No MindAR or camera code runs during SSR.
 - `src/store/journeySlice.ts` contains only serializable application state. Three.js scenes, anchors, buffers, cameras, and DOM nodes remain local.
-- `src/lib/animation/revealMachine.ts` centralizes reveal phase timings. The R3F shader interpolates preallocated source, release, and formation buffers; it does not update React or Redux each frame.
+- `src/lib/animation/revealMachine.ts` centralizes reveal phase timings. Real and simulated detections both use the R3F full-screen source, release, disappearance, and theme-formation sequence. Real detections then hand the same deterministic formation positions to a target-anchored MindAR point cloud. Neither path updates React or Redux each frame.
 - `src/components/particles/JourneyConstellation.tsx` builds one point cloud and one chronological line geometry, keeping draw calls low.
 - `src/lib/narrative/generateJourneyNarrative.ts` is pure and deterministic, so an external generator can replace it later without changing the view.
 
@@ -112,12 +112,12 @@ deterministic narrative generator
 The prototype uses the reliability-first handoff described in the brief:
 
 1. MindAR owns its native Three.js tracking scene.
-2. Every target anchor contains a small, target-aligned `THREE.Points` emergence effect.
+2. R3F plays the cinematic screen-space release: particles fill the view, disappear, and reform as the artifact's memory, machine, or body shape.
 3. `onTargetFound(targetIndex)` crosses the boundary as a plain number.
-4. The semantic artifact event starts the larger full-screen R3F release/formation composition.
-5. The R3F layer fades into a normal HTML article sheet.
+4. The formation positions are shared as typed arrays, not tracking objects. At the content handoff, MindAR renders that shape as a separate `THREE.Points` group above the target. It follows the anchor while tracking is active and retains its last valid pose through brief tracking interruptions.
+5. A normal HTML article sheet resolves over the lower part of the camera view. Pressing **Continue scanning** explicitly removes the anchored cluster.
 
-MindAR transforms are not shared with the R3F renderer. This avoids synchronizing cameras, render loops, contexts, and matrices across two scene owners on mobile Safari. The conceptual continuity comes from the target-aligned initial burst followed immediately by the R3F particle field.
+MindAR transforms, cameras, and render loops are not shared with the R3F renderer. Only deterministic particle formation arrays cross the visual handoff, avoiding synchronized cameras or matrices across two scene owners on mobile Safari. R3F also owns the persistent journey constellation.
 
 ## Add another poster or artifact
 
@@ -135,7 +135,7 @@ The localStorage key is `say-hi:journey:v1`. It stores only session ID, start ti
 ## Known prototype limitations
 
 - Real tracking cannot be demonstrated until `public/targets/exhibition.mind` is compiled from the actual physical poster artwork.
-- The native target-aligned burst is intentionally short and simple; the richer composition is screen-space R3F rather than a shared world-space particle field.
+- The current AR-first experiment retains the last valid particle pose when tracking is lost and realigns it when the poster is reacquired. Because MindAR image tracking is not world-tracking/SLAM, that frozen pose cannot remain physically registered if the camera moves significantly while the poster is outside the frame.
 - Detection has been architected for Safari/Chrome lifecycle constraints, but final tracking quality and filter tuning must be validated against the actual prints and exhibition lighting.
 - The poem is template-based and English-only. It varies by first/last work, intermediate order, narrative vocabulary, count, and repeated themes, but it is not an LLM.
 - Prototype persistence is device/browser-local and has no account sync.

@@ -62,6 +62,31 @@ function formationPosition(
   ];
 }
 
+type FormationArtifact = Pick<ExhibitionArtifact, "id" | "theme">;
+
+export function createArtifactFormationPositions(
+  artifact: FormationArtifact,
+  count: number,
+) {
+  const random = seededRandom(`${artifact.id}:formation`);
+  const formation = new Float32Array(count * 3);
+
+  for (let index = 0; index < count; index += 1) {
+    const offset = index * 3;
+    const target = formationPosition(
+      artifact.theme,
+      index,
+      count,
+      random,
+    );
+    formation[offset] = target[0];
+    formation[offset + 1] = target[1] + 0.32;
+    formation[offset + 2] = target[2] + 0.35;
+  }
+
+  return formation;
+}
+
 export function createNarrativeGeometry(
   artifact: ExhibitionArtifact,
   count: number,
@@ -69,7 +94,7 @@ export function createNarrativeGeometry(
   const random = seededRandom(`${artifact.id}:release`);
   const source = new Float32Array(count * 3);
   const release = new Float32Array(count * 3);
-  const formation = new Float32Array(count * 3);
+  const formation = createArtifactFormationPositions(artifact, count);
   const seeds = new Float32Array(count);
 
   for (let index = 0; index < count; index += 1) {
@@ -79,13 +104,6 @@ export function createNarrativeGeometry(
     const sourceZ = (random() - 0.5) * 0.05;
     const radialAngle = Math.atan2(sourceY, sourceX) + (random() - 0.5);
     const force = 0.65 + random() * 1.5;
-    const target = formationPosition(
-      artifact.theme,
-      index,
-      count,
-      random,
-    );
-
     source[offset] = sourceX;
     source[offset + 1] = sourceY;
     source[offset + 2] = sourceZ;
@@ -94,9 +112,6 @@ export function createNarrativeGeometry(
     release[offset + 1] = sourceY + Math.sin(radialAngle) * force;
     release[offset + 2] = 1.2 + random() * 2.1;
 
-    formation[offset] = target[0];
-    formation[offset + 1] = target[1] + 0.32;
-    formation[offset + 2] = target[2] + 0.35;
     seeds[index] = random();
   }
 

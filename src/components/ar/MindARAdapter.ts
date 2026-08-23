@@ -1,13 +1,52 @@
 import type * as THREEType from "three";
+import { createArtifactFormationPositions } from "@/components/particles/particleGeometry";
+import { revealTiming } from "@/lib/animation/revealMachine";
+import type { ExhibitionArtifact } from "@/types/exhibition";
+
+const AR_PARTICLE_COUNT = 1200;
+const AR_PARTICLE_SIZE_PX = 8;
+const AR_CLUSTER_FADE_MS = 450;
+const AR_FORMATION_SCALE = 0.29;
+
+const trackedClusterVertexShader = /* glsl */ `
+  attribute float aSeed;
+  uniform float uPointSize;
+  varying float vBrightness;
+
+  void main() {
+    vec4 viewPosition = modelViewMatrix * vec4(position, 1.0);
+    gl_Position = projectionMatrix * viewPosition;
+    gl_PointSize = uPointSize * (0.72 + aSeed * 0.8);
+    vBrightness = 0.72 + aSeed * 0.28;
+  }
+`;
+
+const trackedClusterFragmentShader = /* glsl */ `
+  uniform vec3 uColor;
+  uniform float uOpacity;
+  varying float vBrightness;
+
+  void main() {
+    float distanceToCenter = distance(gl_PointCoord, vec2(0.5));
+    float particle = 1.0 - smoothstep(0.08, 0.5, distanceToCenter);
+    float glow = 1.0 - smoothstep(0.0, 0.5, distanceToCenter);
+    gl_FragColor = vec4((uColor + glow * 0.25) * vBrightness, particle * uOpacity);
+  }
+`;
 
 export type TargetEvent = (targetIndex: number) => void;
 
 export type MindARAdapterOptions = {
   imageTargetSrc: string;
-  targetIndices: number[];
+  targets: ARParticleTarget[];
   onTargetFound: TargetEvent;
   onTargetLost: TargetEvent;
 };
+
+export type ARParticleTarget = Pick<
+  ExhibitionArtifact,
+  "id" | "targetIndex" | "theme" | "color"
+>;
 
 export type ARAdapterErrorCode =
   | "unsupported"
@@ -26,7 +65,9 @@ export class ARAdapterError extends Error {
 }
 
 type NativeParticle = {
+  group: THREEType.Group;
   points: THREEType.Points;
+  material: THREEType.ShaderMaterial;
   positions: Float32Array;
   basePositions: Float32Array;
   seeds: Float32Array;
@@ -41,12 +82,20 @@ export class MindARAdapter {
   private instance: MindARNative | null = null;
   private particles = new Map<number, NativeParticle>();
   private visibleTargets = new Set<number>();
+  private activeTargets = new Set<number>();
+  private dismissedTargets = new Set<number>();
+  private revealTimeScale = 1;
   private stopped = false;
 
   constructor(private options: MindARAdapterOptions) {}
 
   async start(container: HTMLElement) {
     this.stopped = false;
+    this.revealTimeScale = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches
+      ? 0.08
+      : 1;
     if (
       typeof navigator === "undefined" ||
       !navigator.mediaDevices?.getUserMedia ||
@@ -88,26 +137,42 @@ export class MindARAdapter {
         missTolerance: 5,
       });
       this.instance = mindar;
+      mindar.renderer.domElement.style.zIndex = "1";
+      mindar.renderer.domElement.style.pointerEvents = "none";
 
-      this.options.targetIndices.forEach((targetIndex) => {
-        const anchor = mindar.addAnchor(targetIndex);
-        const nativeParticle = this.createNativeParticle(THREE, targetIndex);
-        this.particles.set(targetIndex, nativeParticle);
-        anchor.group.add(nativeParticle.points);
+      this.options.targets.forEach((target) => {
+        const anchor = mindar.addAnchor(target.targetIndex);
+        const nativeParticle = this.createNativeParticle(THREE, target);
+        this.particles.set(target.targetIndex, nativeParticle);
+        mindar.scene.add(nativeParticle.group);
 
         anchor.onTargetFound = () => {
-          if (this.stopped || this.visibleTargets.has(targetIndex)) return;
-          this.visibleTargets.add(targetIndex);
-          this.resetNativeParticle(nativeParticle);
-          nativeParticle.startedAt = performance.now();
-          nativeParticle.points.visible = true;
-          this.options.onTargetFound(targetIndex);
+          if (this.stopped || this.visibleTargets.has(target.targetIndex)) return;
+          this.visibleTargets.add(target.targetIndex);
+          if (
+            !this.activeTargets.has(target.targetIndex) &&
+            !this.dismissedTargets.has(target.targetIndex)
+          ) {
+            this.activeTargets.add(target.targetIndex);
+            this.resetNativeParticle(nativeParticle);
+            nativeParticle.startedAt = performance.now();
+          }
+          this.options.onTargetFound(target.targetIndex);
         };
         anchor.onTargetLost = () => {
-          if (this.stopped || !this.visibleTargets.has(targetIndex)) return;
-          this.visibleTargets.delete(targetIndex);
-          nativeParticle.points.visible = false;
-          this.options.onTargetLost(targetIndex);
+          if (this.stopped || !this.visibleTargets.has(target.targetIndex)) return;
+          this.visibleTargets.delete(target.targetIndex);
+          this.options.onTargetLost(target.targetIndex);
+        };
+        anchor.onTargetUpdate = () => {
+          if (
+            !anchor.group.visible ||
+            !this.activeTargets.has(target.targetIndex)
+          ) {
+            return;
+          }
+          nativeParticle.group.matrix.copy(anchor.group.matrix);
+          nativeParticle.group.matrixWorldNeedsUpdate = true;
         };
       });
 
@@ -143,6 +208,8 @@ export class MindARAdapter {
     if (this.stopped) return;
     this.stopped = true;
     this.visibleTargets.clear();
+    this.activeTargets.clear();
+    this.dismissedTargets.clear();
 
     const instance = this.instance;
     this.instance = null;
@@ -155,27 +222,38 @@ export class MindARAdapter {
       }
     }
 
-    this.particles.forEach(({ points }) => {
+    this.particles.forEach(({ group, points }) => {
       points.geometry.dispose();
       if (Array.isArray(points.material)) {
         points.material.forEach((material) => material.dispose());
       } else {
         points.material.dispose();
       }
-      points.removeFromParent();
+      group.removeFromParent();
     });
     this.particles.clear();
   }
 
+  dismissArtifact(targetIndex: number) {
+    this.activeTargets.delete(targetIndex);
+    this.dismissedTargets.add(targetIndex);
+    const particle = this.particles.get(targetIndex);
+    if (!particle) return;
+    particle.points.visible = false;
+    particle.group.visible = false;
+    particle.material.uniforms.uOpacity.value = 0;
+  }
+
   private createNativeParticle(
     THREE: typeof THREEType,
-    targetIndex: number,
+    target: ARParticleTarget,
   ): NativeParticle {
-    const count = 180;
+    const count = AR_PARTICLE_COUNT;
     const positions = new Float32Array(count * 3);
     const basePositions = new Float32Array(count * 3);
     const seeds = new Float32Array(count);
-    let seed = (targetIndex + 1) * 104729;
+    const formation = createArtifactFormationPositions(target, count);
+    let seed = (target.targetIndex + 1) * 104729;
     const random = () => {
       seed = (seed * 1664525 + 1013904223) >>> 0;
       return seed / 4294967296;
@@ -183,9 +261,13 @@ export class MindARAdapter {
 
     for (let index = 0; index < count; index += 1) {
       const offset = index * 3;
-      positions[offset] = (random() - 0.5) * 0.95;
-      positions[offset + 1] = (random() - 0.5) * 0.68;
-      positions[offset + 2] = 0.01 + random() * 0.015;
+      positions[offset] = formation[offset] * AR_FORMATION_SCALE;
+      positions[offset + 1] =
+        (formation[offset + 1] - 0.32) * AR_FORMATION_SCALE;
+      positions[offset + 2] =
+        0.12 +
+        (formation[offset + 2] - 0.35) * 0.12 +
+        random() * 0.08;
       basePositions[offset] = positions[offset];
       basePositions[offset + 1] = positions[offset + 1];
       basePositions[offset + 2] = positions[offset + 2];
@@ -194,20 +276,34 @@ export class MindARAdapter {
 
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-    const colors = [0xff7557, 0x58d6ff, 0xc69cff];
-    const material = new THREE.PointsMaterial({
-      color: colors[targetIndex % colors.length],
-      size: 1.112,
+    geometry.setAttribute("aSeed", new THREE.BufferAttribute(seeds, 1));
+    const material = new THREE.ShaderMaterial({
       transparent: true,
-      opacity: 0.9,
       depthWrite: false,
+      depthTest: false,
       blending: THREE.AdditiveBlending,
+      vertexShader: trackedClusterVertexShader,
+      fragmentShader: trackedClusterFragmentShader,
+      uniforms: {
+        uColor: { value: new THREE.Color(target.color) },
+        uOpacity: { value: 0 },
+        uPointSize: { value: AR_PARTICLE_SIZE_PX },
+      },
     });
+    material.toneMapped = false;
     const points = new THREE.Points(geometry, material);
     points.visible = false;
+    points.frustumCulled = false;
+    points.renderOrder = 10;
+    const group = new THREE.Group();
+    group.visible = false;
+    group.matrixAutoUpdate = false;
+    group.add(points);
 
     return {
+      group,
       points,
+      material,
       positions,
       basePositions,
       seeds,
@@ -221,35 +317,53 @@ export class MindARAdapter {
       "position",
     ) as THREEType.BufferAttribute;
     attribute.needsUpdate = true;
-    const material = particle.points.material as THREEType.PointsMaterial;
-    material.opacity = 0.9;
+    particle.points.visible = false;
+    particle.group.visible = false;
+    particle.material.uniforms.uOpacity.value = 0;
   }
 
   private updateNativeParticles(now: number) {
     this.particles.forEach((particle, targetIndex) => {
-      if (!this.visibleTargets.has(targetIndex) || !particle.points.visible) return;
-      const progress = Math.min((now - particle.startedAt) / 1050, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
+      if (!this.activeTargets.has(targetIndex)) return;
+      const elapsed = Math.max(0, now - particle.startedAt);
+      const clusterRevealAt =
+        (revealTiming.attached +
+          revealTiming.release +
+          revealTiming.formation) *
+        this.revealTimeScale;
+      const clusterElapsed = elapsed - clusterRevealAt;
+
+      if (clusterElapsed < 0) return;
+
+      particle.group.visible = true;
+      particle.points.visible = true;
+      const elapsedSeconds = elapsed / 1000;
+      const revealProgress = Math.min(
+        clusterElapsed / (AR_CLUSTER_FADE_MS * this.revealTimeScale),
+        1,
+      );
+      const easedReveal = 1 - Math.pow(1 - revealProgress, 3);
 
       for (let index = 0; index < particle.seeds.length; index += 1) {
         const offset = index * 3;
         const seed = particle.seeds[index];
         particle.positions[offset] =
           particle.basePositions[offset] +
-          Math.sin(progress * 5 + seed * 20) * eased * 0.06;
+          Math.sin(elapsedSeconds * 0.72 + seed * 20) * 0.012;
         particle.positions[offset + 1] =
           particle.basePositions[offset + 1] +
-          Math.cos(progress * 4 + seed * 18) * eased * 0.06;
+          Math.cos(elapsedSeconds * 0.61 + seed * 18) * 0.014;
         particle.positions[offset + 2] =
-          particle.basePositions[offset + 2] + eased * (0.35 + seed * 0.35);
+          particle.basePositions[offset + 2] +
+          Math.sin(elapsedSeconds * 0.52 + seed * 13) * 0.018;
       }
 
       const attribute = particle.points.geometry.getAttribute(
         "position",
       ) as THREEType.BufferAttribute;
       attribute.needsUpdate = true;
-      const material = particle.points.material as THREEType.PointsMaterial;
-      material.opacity = Math.max(0, 0.9 - progress * 0.72);
+      particle.material.uniforms.uOpacity.value =
+        easedReveal * (0.82 + Math.sin(elapsedSeconds * 0.7) * 0.05);
     });
   }
 }

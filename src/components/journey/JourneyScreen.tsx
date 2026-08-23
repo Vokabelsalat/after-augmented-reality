@@ -28,7 +28,7 @@ export function JourneyScreen() {
     <main className="film-grain safe-top safe-bottom flex min-h-dvh flex-col overflow-hidden bg-[#050505] px-5">
       <header className="flex items-start justify-between">
         <div>
-          <p className="text-[10px] tracking-[0.24em] text-white/42 uppercase">Personal trace</p>
+          <p className="text-[10px] tracking-[0.24em] text-white/42">Personal trace</p>
           <h1 className="font-display mt-2 text-4xl tracking-[-0.045em]">My Journey</h1>
         </div>
         <button
@@ -45,7 +45,7 @@ export function JourneyScreen() {
       </div>
 
       <div className="mx-auto w-full max-w-xl flex-1">
-        <p className="text-[10px] tracking-[0.22em] text-white/35 uppercase">
+        <p className="text-[10px] tracking-[0.22em] text-white/35">
           In the order you found them
         </p>
         <ol className="mt-4 space-y-3">
@@ -58,7 +58,7 @@ export function JourneyScreen() {
               <li key={artifact.id} className="flex items-baseline gap-4">
                 <span className="text-[10px] text-white/30">0{sequence}</span>
                 <span className="font-display text-xl">{artifact.title}</span>
-                <span className="ml-auto text-[9px] tracking-[0.14em] uppercase" style={{ color: artifact.color }}>
+                <span className="ml-auto text-[9px] tracking-[0.14em]" style={{ color: artifact.color }}>
                   {themes[artifact.theme].label}
                 </span>
               </li>
