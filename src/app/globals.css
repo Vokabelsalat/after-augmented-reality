@@ -85,6 +85,20 @@ a:focus-visible {
   animation: breathe 3.8s ease-in-out infinite;
 }
 
+@keyframes category-orbit {
+  from {
+    transform: rotate(var(--orbit-angle));
+  }
+  to {
+    transform: rotate(calc(var(--orbit-angle) + 360deg));
+  }
+}
+
+.category-orbit {
+  animation: category-orbit 6s linear infinite;
+  will-change: transform;
+}
+
 @keyframes resolve-in {
   from {
     opacity: 0;
@@ -110,5 +124,10 @@ a:focus-visible {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+
+  .category-orbit {
+    animation: none !important;
+    transform: rotate(var(--orbit-angle));
   }
 }

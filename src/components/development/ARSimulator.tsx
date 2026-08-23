@@ -19,7 +19,7 @@ export function ARSimulator({
 
   return (
     <aside className="safe-bottom absolute inset-x-3 bottom-3 z-30 rounded-[1.5rem] bg-[#101010]/92 p-3 text-white shadow-2xl backdrop-blur-xl" aria-label="AR simulator controls">
-      <div className="mb-3 flex items-center justify-between px-1">
+      {/* <div className="mb-3 flex items-center justify-between px-1">
         <p className="text-[9px] tracking-[0.22em] text-white/40">
           AR simulator · same event path
         </p>
@@ -40,8 +40,8 @@ export function ARSimulator({
             Poster {index + 1}
           </button>
         ))}
-      </div>
-      <div className="mt-2 grid grid-cols-2 gap-2">
+      </div> */}
+      <div className="grid grid-cols-2 gap-2">
         <button
           type="button"
           onClick={() => dispatch(resetJourney())}

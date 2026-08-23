@@ -2,19 +2,20 @@
 
 import { useAppDispatch } from "@/store/hooks";
 import { startJourney } from "@/store/journeySlice";
+import { CategoryOrbit } from "../ar/ARScanner";
 
 export function IntroScreen() {
   const dispatch = useAppDispatch();
 
   return (
-    <main className="film-grain relative flex min-h-dvh flex-col overflow-hidden bg-[#050505] px-6 text-[#F3F0E8]">
-      <div className="safe-top flex items-center justify-between text-[10px] tracking-[0.24em] text-white/45">
-      </div>
+    <main className="film-grain relative min-h-dvh overflow-hidden bg-[#050505] px-6 text-[#F3F0E8] grid grid-cols-1 grid-rows-[auto_auto_auto]">
+      {/* <div className="safe-top flex items-center justify-between text-[10px] tracking-[0.24em] text-white/45">
+      </div> */}
 
       {/* <div className="pointer-events-none absolute top-[15%] left-1/2 h-[38vh] w-px -translate-x-1/2 bg-white/10" />
       <div className="animate-breathe pointer-events-none absolute top-[29%] left-1/2 size-2 -translate-x-1/2 rounded-full bg-white shadow-[0_0_24px_8px_rgba(255,255,255,0.34)]" /> */}
 
-      <div className="flex flex-1 flex-col justify-center pb-[10vh]">
+      <div className="flex flex-col justify-center items-center">
         <h1 className="font-display -ml-1 text-[clamp(2.4rem,19vw,5rem)] leading-[1.2] font-normal tracking-[-0.085em]">
           Extending
           <br />
@@ -24,15 +25,23 @@ export function IntroScreen() {
           Extend the narrative
         </p> */}
       </div>
-
-      <div className="safe-bottom relative z-10 pb-6">
-        <p className="max-w-sm text-lg leading-7 text-white/80">
-          Scan fragments throughout the exhibition and build your own story.
-        </p>
+      <div className="flex flex-col justify-center items-center">
+        <div>
+          <div className="flex scale-150">
+            <CategoryOrbit />
+          </div>
+          <div className="flex flex-3 safe-bottom relative z-10">
+            <p className="max-w-sm text-lg leading-7 text-white/80">
+              Scan fragments throughout the exhibition and build your own story.
+            </p>
+          </div>
+        </div>
+      </div>
+      <div className="flex flex-col justify-end items-center">
         <button
           type="button"
           onClick={() => dispatch(startJourney())}
-          className="mt-8 flex min-h-14 w-full items-center justify-between rounded-full bg-[#F3F0E8] px-6 text-sm font-medium text-black transition-transform active:scale-[0.98]"
+          className="flex min-h-14 w-full items-center justify-between rounded-full bg-[#F3F0E8] px-6 text-sm font-medium text-black transition-transform active:scale-[0.98] animate-pulse"
         >
           <span>Start experience</span>
           <span aria-hidden="true">→</span>

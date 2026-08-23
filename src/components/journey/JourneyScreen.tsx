@@ -76,7 +76,7 @@ export function JourneyScreen() {
         className="mx-auto mt-7 flex min-h-14 w-full max-w-xl items-center justify-between rounded-full bg-[#F3F0E8] px-6 text-sm text-black disabled:cursor-not-allowed disabled:opacity-35"
         disabled={discoveries.length === 0}
       >
-        <span>Finish my reading</span>
+        <span>Finish my story</span>
         <span aria-hidden="true">→</span>
       </button>
     </main>

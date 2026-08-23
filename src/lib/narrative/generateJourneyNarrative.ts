@@ -24,7 +24,7 @@ export function generateJourneyNarrative(
 
   if (ordered.length === 0) {
     return [
-      "Your reading is still waiting.",
+      "Your story is still waiting.",
       "Find a fragment,",
       "and let the path begin.",
     ];
@@ -55,6 +55,7 @@ export function generateJourneyNarrative(
       `${lead} ${artifact.theme} crossed the path as ${articleFor(artifact.narrativeWords[1])} ${artifact.narrativeWords[1]},`,
       `asking the fragments to ${artifact.narrativeWords[2]}.`,
     );
+
   });
 
   if (repeatedTheme) {

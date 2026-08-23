@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  type CSSProperties,
   forwardRef,
   type ForwardedRef,
   useCallback,
@@ -14,6 +15,67 @@ import type {
   TargetDetectionResult,
 } from "@/components/ar/MindARAdapter";
 import { artifacts } from "@/data/artifacts";
+
+const orbitCategories = Array.from(
+  new Map(artifacts.map(({ theme, color }) => [theme, color])).entries(),
+);
+const ORBIT_PARTICLES_PER_CATEGORY = 6;
+const orbitParticles = orbitCategories.flatMap(
+  ([theme, color], categoryIndex) =>
+    Array.from({ length: ORBIT_PARTICLES_PER_CATEGORY }, (_, particleIndex) => {
+      const categoryCount = orbitCategories.length;
+      const sequence = particleIndex * categoryCount + categoryIndex;
+      const total = categoryCount * ORBIT_PARTICLES_PER_CATEGORY;
+
+      return {
+        id: `${theme}-${particleIndex}`,
+        color,
+        angle: (sequence / total) * 360 + (particleIndex % 2) * 7,
+        duration: 5 + ((sequence * 7) % 5) * 0.65,
+        inset: (particleIndex + categoryIndex) % 2 === 0 ? 0 : 4,
+        opacity: 0.5 + ((sequence * 3) % 5) * 0.1,
+        reverse: sequence % 4 === 0,
+        size: 3 + ((sequence * 5) % 3),
+      };
+    }),
+);
+
+export function CategoryOrbit() {
+  return (
+    <div
+      className="relative mx-auto mb-7 size-14 rounded-full border border-white/20"
+      aria-hidden="true"
+    >
+      <div className="absolute inset-1 rounded-full border border-dashed border-white/45" />
+      {orbitParticles.map((particle) => (
+        <span
+          key={particle.id}
+          className="category-orbit absolute rounded-full"
+          style={
+            {
+              "--orbit-angle": `${particle.angle}deg`,
+              animationDirection: particle.reverse ? "reverse" : "normal",
+              animationDuration: `${particle.duration}s`,
+              inset: particle.inset,
+            } as CSSProperties
+          }
+        >
+          <span
+            className="absolute left-1/2 -translate-x-1/2 rounded-full"
+            style={{
+              backgroundColor: particle.color,
+              boxShadow: `0 0 7px ${particle.color}`,
+              height: particle.size,
+              opacity: particle.opacity,
+              top: -particle.size / 2,
+              width: particle.size,
+            }}
+          />
+        </span>
+      ))}
+    </div>
+  );
+}
 
 type ScannerState = "idle" | "starting" | "running" | "paused" | "error";
 
@@ -142,9 +204,7 @@ function ARScannerComponent(
         (waiting || scannerState === "error") && (
           <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/55 px-7 backdrop-blur-sm">
             <div className="w-full max-w-sm text-center">
-              <div className="mx-auto mb-7 size-14 rounded-full border border-white/20 p-1">
-                <div className="size-full rounded-full border border-dashed border-white/45" />
-              </div>
+              <CategoryOrbit />
               <h2 className="text-4xl tracking-[-0.04em]">
                 {scannerState === "error" ? "Camera unavailable" : "Find a fragment"}
               </h2>
@@ -158,7 +218,7 @@ function ARScannerComponent(
               <button
                 type="button"
                 onClick={() => void startScanner()}
-                className="mt-7 min-h-13 w-[80vw] rounded-full bg-white px-6 text-sm font-medium text-black transition-opacity hover:opacity-85"
+                className="mt-7 min-h-13 w-[80vw] rounded-full bg-white px-6 text-sm font-medium text-black transition-opacity hover:opacity-85 animate-pulse"
               >
                 {scannerState === "error" ? "Try camera again" : "Start camera"}
               </button>
