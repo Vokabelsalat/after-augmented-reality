@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   artifactCollected,
   artifactDetected,
+  artifactRevisited,
   journeyReducer,
   resetJourney,
   setActiveArtifact,
@@ -49,6 +50,19 @@ describe("journeySlice", () => {
       { artifactId: "memory-fragment", discoveredAt: 100, sequence: 1 },
     ]);
     expect(state.activeArtifactId).toBeNull();
+  });
+
+  it("reopens a discovered artifact without adding another discovery", () => {
+    let state = journeyReducer(undefined, artifactDetected("memory-fragment", 100));
+    state = journeyReducer(state, artifactCollected("memory-fragment"));
+    state = journeyReducer(state, setActiveArtifact(null));
+    state = journeyReducer(state, artifactRevisited("memory-fragment"));
+
+    expect(state.discoveries).toEqual([
+      { artifactId: "memory-fragment", discoveredAt: 100, sequence: 1 },
+    ]);
+    expect(state.activeArtifactId).toBe("memory-fragment");
+    expect(state.experiencePhase).toBe("revealing");
   });
 
   it("resets all persistent and transient journey data", () => {

@@ -8,9 +8,10 @@ import Image from "next/image";
 type ArtifactContentProps = {
   artifact: ExhibitionArtifact;
   onContinue: () => void;
+  mini?: boolean;
 };
 
-export function ArtifactContent({ artifact, onContinue }: ArtifactContentProps) {
+export function ArtifactContent({ artifact, onContinue, mini = false }: ArtifactContentProps) {
   const theme = themes[artifact.theme];
   const [collapsed, setCollapsed] = useState(false);
 
@@ -20,7 +21,7 @@ export function ArtifactContent({ artifact, onContinue }: ArtifactContentProps) 
       aria-labelledby="artifact-title"
     >
       <div className="bg-white/25 w-16 h-1 mx-auto mb-3" onClick={() => { setCollapsed(!collapsed) }} />
-      <div className={`flex flex-col gap-2 ${collapsed ? "max-h-[80vh]" : "max-h-[35vh]"} w-full overflow-y-auto overscroll-contain`}>
+      <div className={`flex flex-col gap-2 ${collapsed ? "max-h-[80vh]" : mini ? "max-h-[9vh]" : "max-h-[35vh]"} w-full overflow-y-auto overscroll-contain`}>
         <div className="flex items-center gap-2 text-[10px] tracking-[0.22em]">
           <span
             className="size-1.5 rounded-full"

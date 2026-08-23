@@ -6,13 +6,17 @@ import {
   ARScanner,
   type ARScannerHandle,
 } from "@/components/ar/ARScanner";
+import type { TargetDetectionResult } from "@/components/ar/MindARAdapter";
 import { ARSimulator } from "@/components/development/ARSimulator";
 import { ArtifactReveal } from "@/components/exhibition/ArtifactReveal";
 import { ExhibitionNavigation } from "@/components/exhibition/ExhibitionNavigation";
 import { IntroScreen } from "@/components/exhibition/IntroScreen";
 import { JourneyScreen } from "@/components/journey/JourneyScreen";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { artifactDetected } from "@/store/journeySlice";
+import {
+  artifactDetected,
+  artifactRevisited,
+} from "@/store/journeySlice";
 import {
   selectDiscoveries,
   selectExperiencePhase,
@@ -30,36 +34,42 @@ export function ExhibitionExperience() {
   const [revealPresentation, setRevealPresentation] = useState<
     "tracked-ar" | "simulated"
   >("tracked-ar");
+  const [revealIsRevisit, setRevealIsRevisit] = useState(false);
   const discoveredIds = useMemo(
     () => new Set(discoveries.map((discovery) => discovery.artifactId)),
     [discoveries],
   );
 
-  // useEffect(() => {
-  //   if (!alreadyDiscovered) return;
-  //   const timer = window.setTimeout(() => setAlreadyDiscovered(null), 1800);
-  //   return () => window.clearTimeout(timer);
-  // }, [alreadyDiscovered]);
+  useEffect(() => {
+    if (!alreadyDiscovered) return;
+    const timer = window.setTimeout(() => setAlreadyDiscovered(null), 1800);
+    return () => window.clearTimeout(timer);
+  }, [alreadyDiscovered]);
 
   const handleArtifactDetected = useCallback(
-    (artifactId: string) => {
-      if (phase !== "scanning") return;
-      // if (discoveredIds.has(artifactId)) {
-      //   setAlreadyDiscovered(artifactId);
-      //   return;
-      // }
+    (artifactId: string): TargetDetectionResult => {
+      if (phase !== "scanning") return "ignore";
+      if (discoveredIds.has(artifactId)) {
+        setAlreadyDiscovered(artifactId);
+        setRevealIsRevisit(true);
+        dispatch(artifactRevisited(artifactId));
+        return "revisit";
+      }
+      setRevealIsRevisit(false);
       dispatch(artifactDetected(artifactId));
+      return "reveal";
     },
     [dispatch, discoveredIds, phase],
   );
 
   const handleTargetFound = useCallback(
-    (targetIndex: number) => {
+    (targetIndex: number): TargetDetectionResult => {
       const artifact = artifactByTargetIndex.get(targetIndex);
       if (artifact) {
         setRevealPresentation("tracked-ar");
-        handleArtifactDetected(artifact.id);
+        return handleArtifactDetected(artifact.id);
       }
+      return "ignore";
     },
     [handleArtifactDetected],
   );
@@ -78,11 +88,11 @@ export function ExhibitionExperience() {
       />
       <ExhibitionNavigation />
 
-      {/* {alreadyDiscovered && (
+      {alreadyDiscovered && (
         <div className="absolute top-28 left-1/2 z-30 -translate-x-1/2 rounded-full bg-black/75 px-5 py-3 text-center text-[10px] tracking-[0.16em] text-white/70 backdrop-blur-lg" role="status">
           Already part of your journey
         </div>
-      )} */}
+      )}
 
       {simulatorVisible && phase === "scanning" && (
         <ARSimulator
@@ -96,6 +106,7 @@ export function ExhibitionExperience() {
 
       <ArtifactReveal
         presentation={revealPresentation}
+        isRevisit={revealIsRevisit}
         onContinue={(artifact) => {
           scannerRef.current?.dismissArtifact(artifact.targetIndex);
         }}

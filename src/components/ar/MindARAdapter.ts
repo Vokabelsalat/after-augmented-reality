@@ -34,13 +34,17 @@ const trackedClusterFragmentShader = /* glsl */ `
   }
 `;
 
-export type TargetEvent = (targetIndex: number) => void;
+export type TargetDetectionResult = "reveal" | "revisit" | "ignore";
+export type TargetFoundEvent = (
+  targetIndex: number,
+) => TargetDetectionResult;
+export type TargetLostEvent = (targetIndex: number) => void;
 
 export type MindARAdapterOptions = {
   imageTargetSrc: string;
   targets: ARParticleTarget[];
-  onTargetFound: TargetEvent;
-  onTargetLost: TargetEvent;
+  onTargetFound: TargetFoundEvent;
+  onTargetLost: TargetLostEvent;
 };
 
 export type ARParticleTarget = Pick<
@@ -83,7 +87,6 @@ export class MindARAdapter {
   private particles = new Map<number, NativeParticle>();
   private visibleTargets = new Set<number>();
   private activeTargets = new Set<number>();
-  private dismissedTargets = new Set<number>();
   private revealTimeScale = 1;
   private stopped = false;
 
@@ -149,15 +152,18 @@ export class MindARAdapter {
         anchor.onTargetFound = () => {
           if (this.stopped || this.visibleTargets.has(target.targetIndex)) return;
           this.visibleTargets.add(target.targetIndex);
+          const detection = this.options.onTargetFound(target.targetIndex);
+
           if (
-            !this.activeTargets.has(target.targetIndex) &&
-            !this.dismissedTargets.has(target.targetIndex)
+            detection !== "ignore" &&
+            !this.activeTargets.has(target.targetIndex)
           ) {
             this.activeTargets.add(target.targetIndex);
             this.resetNativeParticle(nativeParticle);
-            nativeParticle.startedAt = performance.now();
+            nativeParticle.startedAt =
+              performance.now() -
+              (detection === "revisit" ? this.clusterRevealDelay() : 0);
           }
-          this.options.onTargetFound(target.targetIndex);
         };
         anchor.onTargetLost = () => {
           if (this.stopped || !this.visibleTargets.has(target.targetIndex)) return;
@@ -209,7 +215,6 @@ export class MindARAdapter {
     this.stopped = true;
     this.visibleTargets.clear();
     this.activeTargets.clear();
-    this.dismissedTargets.clear();
 
     const instance = this.instance;
     this.instance = null;
@@ -235,13 +240,12 @@ export class MindARAdapter {
   }
 
   dismissArtifact(targetIndex: number) {
+    // End only the current presentation. A later lost → found cycle may
+    // activate this target again without changing its Redux collection state.
     this.activeTargets.delete(targetIndex);
-    this.dismissedTargets.add(targetIndex);
     const particle = this.particles.get(targetIndex);
     if (!particle) return;
-    particle.points.visible = false;
-    particle.group.visible = false;
-    particle.material.uniforms.uOpacity.value = 0;
+    this.hideNativeParticle(particle);
   }
 
   private createNativeParticle(
@@ -322,15 +326,26 @@ export class MindARAdapter {
     particle.material.uniforms.uOpacity.value = 0;
   }
 
+  private hideNativeParticle(particle: NativeParticle) {
+    particle.points.visible = false;
+    particle.group.visible = false;
+    particle.material.uniforms.uOpacity.value = 0;
+  }
+
+  private clusterRevealDelay() {
+    return (
+      (revealTiming.attached +
+        revealTiming.release +
+        revealTiming.formation) *
+      this.revealTimeScale
+    );
+  }
+
   private updateNativeParticles(now: number) {
     this.particles.forEach((particle, targetIndex) => {
       if (!this.activeTargets.has(targetIndex)) return;
       const elapsed = Math.max(0, now - particle.startedAt);
-      const clusterRevealAt =
-        (revealTiming.attached +
-          revealTiming.release +
-          revealTiming.formation) *
-        this.revealTimeScale;
+      const clusterRevealAt = this.clusterRevealDelay();
       const clusterElapsed = elapsed - clusterRevealAt;
 
       if (clusterElapsed < 0) return;

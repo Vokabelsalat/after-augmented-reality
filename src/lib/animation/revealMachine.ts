@@ -27,10 +27,18 @@ function prefersReducedMotion() {
 export function useRevealMachine(
   artifactId: string,
   onContentReady: () => void,
+  immediate = false,
 ) {
-  const [phase, setPhase] = useState<RevealPhase>("attached");
+  const [phase, setPhase] = useState<RevealPhase>(
+    immediate ? "complete" : "attached",
+  );
 
   useEffect(() => {
+    if (immediate) {
+      onContentReady();
+      return;
+    }
+
     const reduced = prefersReducedMotion();
     const scale = reduced ? 0.08 : 1;
     const attachedEnd = revealTiming.attached * scale;
@@ -50,7 +58,7 @@ export function useRevealMachine(
     timers.push(window.setTimeout(() => setPhase("complete"), completeAt));
 
     return () => timers.forEach((timer) => window.clearTimeout(timer));
-  }, [artifactId, onContentReady]);
+  }, [artifactId, immediate, onContentReady]);
 
   return phase;
 }

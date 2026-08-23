@@ -26,22 +26,28 @@ type RevealPresentation = "tracked-ar" | "simulated";
 
 function ArtifactRevealSequence({
   artifact,
+  isRevisit,
   onContinue,
 }: {
   artifact: ExhibitionArtifact;
+  isRevisit: boolean;
   onContinue?: (artifact: ExhibitionArtifact) => void;
 }) {
   const dispatch = useAppDispatch();
   const handleContentReady = useCallback(() => {
     dispatch(artifactCollected(artifact.id));
   }, [artifact.id, dispatch]);
-  const phase = useRevealMachine(artifact.id, handleContentReady);
+  const phase = useRevealMachine(
+    artifact.id,
+    handleContentReady,
+    isRevisit,
+  );
 
   const contentVisible = phase === "content-reveal" || phase === "complete";
 
   return (
     <section className="pointer-events-none absolute inset-0 z-40 overflow-hidden" aria-live="polite">
-      {phase !== "complete" && (
+      {!isRevisit && phase !== "complete" && (
         <ParticleNarrative
           artifact={artifact}
           phase={phase}
@@ -59,6 +65,7 @@ function ArtifactRevealSequence({
       {contentVisible && (
         <div className="pointer-events-auto">
           <ArtifactContent
+            mini={isRevisit}
             artifact={artifact}
             onContinue={() => {
               onContinue?.(artifact);
@@ -74,9 +81,11 @@ function ArtifactRevealSequence({
 
 export function ArtifactReveal({
   presentation,
+  isRevisit,
   onContinue,
 }: {
   presentation: RevealPresentation;
+  isRevisit: boolean;
   onContinue?: (artifact: ExhibitionArtifact) => void;
 }) {
   const activeArtifactId = useAppSelector(selectActiveArtifactId);
@@ -87,8 +96,9 @@ export function ArtifactReveal({
   if (!artifact) return null;
   return (
     <ArtifactRevealSequence
-      key={artifact.id}
+      key={`${artifact.id}:${isRevisit ? "revisit" : "reveal"}`}
       artifact={artifact}
+      isRevisit={isRevisit}
       onContinue={presentation === "tracked-ar" ? onContinue : undefined}
     />
   );

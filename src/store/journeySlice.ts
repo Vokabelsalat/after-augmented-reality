@@ -77,7 +77,7 @@ const journeySlice = createSlice({
           (discovery) => discovery.artifactId === artifactId,
         );
 
-        // if (alreadyDiscovered) return;
+        if (alreadyDiscovered) return;
 
         state.discoveries.push({
           artifactId,
@@ -95,6 +95,14 @@ const journeySlice = createSlice({
       if (state.activeArtifactId === action.payload) {
         state.experiencePhase = "content";
       }
+    },
+    artifactRevisited(state, action: PayloadAction<string>) {
+      const wasDiscovered = state.discoveries.some(
+        (discovery) => discovery.artifactId === action.payload,
+      );
+      if (!wasDiscovered) return;
+      state.activeArtifactId = action.payload;
+      state.experiencePhase = "revealing";
     },
     setActiveArtifact(state, action: PayloadAction<string | null>) {
       state.activeArtifactId = action.payload;
@@ -118,6 +126,7 @@ const journeySlice = createSlice({
 export const {
   artifactCollected,
   artifactDetected,
+  artifactRevisited,
   hydrateJourney,
   resetJourney,
   setActiveArtifact,

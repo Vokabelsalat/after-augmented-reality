@@ -9,13 +9,16 @@ import {
   useRef,
   useState,
 } from "react";
-import type { MindARAdapter as MindARAdapterType } from "@/components/ar/MindARAdapter";
+import type {
+  MindARAdapter as MindARAdapterType,
+  TargetDetectionResult,
+} from "@/components/ar/MindARAdapter";
 import { artifacts } from "@/data/artifacts";
 
 type ScannerState = "idle" | "starting" | "running" | "paused" | "error";
 
 type ARScannerProps = {
-  onTargetFound: (targetIndex: number) => void;
+  onTargetFound: (targetIndex: number) => TargetDetectionResult;
   onTargetLost: (targetIndex: number) => void;
   onUseSimulator: () => void;
   simulatorVisible: boolean;
