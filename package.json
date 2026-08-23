@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --webpack",
-    "build": "next build --webpack",
+    "dev": "next dev --webpack -p 3066",
+    "build": "next build --webpack -p 3066",
     "start": "next start",
     "lint": "eslint .",
     "postinstall": "node scripts/patch-mindar.mjs",
