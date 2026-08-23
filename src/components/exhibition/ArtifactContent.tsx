@@ -17,7 +17,7 @@ export function ArtifactContent({ artifact, onContinue }: ArtifactContentProps) 
       aria-labelledby="artifact-title"
     >
       <div className="mx-auto mb-8 h-px w-12 bg-white/25" aria-hidden="true" />
-      <div className="flex items-center gap-2 text-[10px] tracking-[0.22em] uppercase">
+      <div className="flex items-center gap-2 text-[10px] tracking-[0.22em]">
         <span
           className="size-1.5 rounded-full"
           style={{ backgroundColor: artifact.color }}
@@ -32,7 +32,7 @@ export function ArtifactContent({ artifact, onContinue }: ArtifactContentProps) 
       >
         {artifact.title}
       </h2>
-      <p className="mt-4 text-[10px] tracking-[0.18em] text-white/42 uppercase">
+      <p className="mt-4 text-[10px] tracking-[0.18em] text-white/42">
         {artifact.artist}
       </p>
       <p className="mt-7 max-w-md text-lg leading-7 text-white/76">

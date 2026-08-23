@@ -1,3 +1,9 @@
 # Poster reference images
 
-Keep the three high-resolution poster reference images used for target compilation here (for example `poster-1.jpg`, `poster-2.jpg`, and `poster-3.jpg`). They are intentionally not fabricated in this prototype because the compiled targets must match the physical exhibition prints exactly.
+The reveal uses the same zero-based source images as the compiled MindAR target bundle:
+
+- target index `0` → `poster-0.jpeg`
+- target index `1` → `poster-1.jpeg`
+- target index `2` → `poster-2.jpeg`
+
+Each path is explicitly connected to its target in `src/data/artifacts.ts` through `posterImageSrc`. Keep these files visually identical to the images used to compile `public/targets/exhibition.mind`.

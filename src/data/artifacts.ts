@@ -4,6 +4,7 @@ export const artifacts: ExhibitionArtifact[] = [
   {
     id: "memory-fragment",
     targetIndex: 0,
+    posterImageSrc: "/images/poster-0.jpeg",
     title: "Fragment of Memory",
     artist: "Artist One",
     theme: "memory",
@@ -14,6 +15,7 @@ export const artifacts: ExhibitionArtifact[] = [
   {
     id: "machine-voice",
     targetIndex: 1,
+    posterImageSrc: "/images/poster-1.jpeg",
     title: "The Machine Speaks",
     artist: "Artist Two",
     theme: "machine",
@@ -24,6 +26,7 @@ export const artifacts: ExhibitionArtifact[] = [
   {
     id: "body-space",
     targetIndex: 2,
+    posterImageSrc: "/images/poster-2.jpeg",
     title: "A Body in Space",
     artist: "Artist Three",
     theme: "body",

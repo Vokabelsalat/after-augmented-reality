@@ -35,7 +35,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       {ready ? (
         children
       ) : (
-        <div className="flex min-h-dvh items-center justify-center bg-[#050505] text-[11px] uppercase tracking-[0.28em] text-white/45">
+        <div className="flex min-h-dvh items-center justify-center bg-[#050505] text-[11px] tracking-[0.28em] text-white/45">
           Gathering fragments
         </div>
       )}

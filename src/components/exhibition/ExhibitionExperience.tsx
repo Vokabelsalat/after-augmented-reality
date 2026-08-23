@@ -68,7 +68,7 @@ export function ExhibitionExperience() {
       <ExhibitionNavigation />
 
       {alreadyDiscovered && (
-        <div className="absolute top-28 left-1/2 z-30 -translate-x-1/2 rounded-full bg-black/75 px-5 py-3 text-center text-[10px] tracking-[0.16em] text-white/70 uppercase backdrop-blur-lg" role="status">
+        <div className="absolute top-28 left-1/2 z-30 -translate-x-1/2 rounded-full bg-black/75 px-5 py-3 text-center text-[10px] tracking-[0.16em] text-white/70 backdrop-blur-lg" role="status">
           Already part of your journey
         </div>
       )}

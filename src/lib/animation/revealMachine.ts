@@ -29,17 +29,22 @@ export function useRevealMachine(
   onContentReady: () => void,
 ) {
   const [phase, setPhase] = useState<RevealPhase>("attached");
+  const [sourceImageVisible, setSourceImageVisible] = useState(false);
 
   useEffect(() => {
     const reduced = prefersReducedMotion();
     const scale = reduced ? 0.08 : 1;
     const attachedEnd = revealTiming.attached * scale;
     const releaseEnd = attachedEnd + revealTiming.release * scale;
+    const sourceImageAt = attachedEnd + (revealTiming.release * scale) / 2;
     const formationEnd = releaseEnd + revealTiming.formation * scale;
     const completeAt = formationEnd + revealTiming.uiReveal * scale;
     const timers: number[] = [];
 
     timers.push(window.setTimeout(() => setPhase("release"), attachedEnd));
+    timers.push(
+      window.setTimeout(() => setSourceImageVisible(true), sourceImageAt),
+    );
     timers.push(window.setTimeout(() => setPhase("formation"), releaseEnd));
     timers.push(
       window.setTimeout(() => {
@@ -52,5 +57,5 @@ export function useRevealMachine(
     return () => timers.forEach((timer) => window.clearTimeout(timer));
   }, [artifactId, onContentReady]);
 
-  return phase;
+  return { phase, sourceImageVisible };
 }

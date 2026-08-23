@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import Image from "next/image";
 import { useCallback } from "react";
 import { artifactById } from "@/data/artifacts";
 import { useRevealMachine } from "@/lib/animation/revealMachine";
@@ -27,21 +28,39 @@ function ArtifactRevealSequence({ artifact }: { artifact: ExhibitionArtifact }) 
   const handleContentReady = useCallback(() => {
     dispatch(artifactCollected(artifact.id));
   }, [artifact.id, dispatch]);
-  const phase = useRevealMachine(artifact.id, handleContentReady);
+  const { phase, sourceImageVisible } = useRevealMachine(
+    artifact.id,
+    handleContentReady,
+  );
 
   const contentVisible = phase === "content-reveal" || phase === "complete";
 
   return (
     <section className="pointer-events-none absolute inset-0 z-40 overflow-hidden" aria-live="polite">
       <div className="absolute inset-0 bg-black/20 transition-colors duration-700" />
+      <div
+        className={`absolute inset-0 bg-black transition-opacity duration-700 ${sourceImageVisible ? "opacity-100" : "opacity-0"
+          }`}
+        aria-hidden="true"
+      >
+        <Image
+          src={artifact.posterImageSrc}
+          alt=""
+          fill
+          sizes="100vw"
+          loading="eager"
+          unoptimized
+          className="object-contain"
+        />
+      </div>
       <ParticleNarrative
         artifact={artifact}
         phase={phase}
         mode="ar-release"
-        quality="medium"
+        quality="high"
       />
       {!contentVisible && (
-        <p className="absolute inset-x-0 bottom-[12vh] text-center text-[10px] tracking-[0.28em] text-white/65 uppercase">
+        <p className="absolute inset-x-0 bottom-[12vh] text-center text-[10px] tracking-[0.28em] text-white/65">
           {phase === "attached" && "Fragment located"}
           {phase === "release" && "Releasing narrative"}
           {phase === "formation" && "Resolving language"}

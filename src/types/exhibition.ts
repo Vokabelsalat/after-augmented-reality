@@ -3,6 +3,7 @@ export type ThemeId = "memory" | "body" | "machine" | "language" | "place";
 export type ExhibitionArtifact = {
   id: string;
   targetIndex: number;
+  posterImageSrc: `/images/${string}`;
   title: string;
   artist: string;
   theme: ThemeId;

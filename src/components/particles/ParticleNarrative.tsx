@@ -77,7 +77,7 @@ function ParticleField({
           uTime: { value: 0 },
           uProgress: { value: 0 },
           uPhase: { value: 0 },
-          uPointSize: { value: 2.1 },
+          uPointSize: { value: 6.0 },
           uMotion: { value: reducedMotion ? 0 : 1 },
           uColor: { value: new THREE.Color(artifact.color) },
         },
@@ -128,7 +128,7 @@ export function ParticleNarrative({
   mode = "ar-release",
   quality = "medium",
 }: ParticleNarrativeProps) {
-  const count = quality === "high" ? 2200 : quality === "low" ? 900 : 1500;
+  const count = quality === "high" ? 4200 : quality === "low" ? 1900 : 3000;
   const effectivePhase =
     mode === "poster"
       ? "attached"
@@ -142,7 +142,7 @@ export function ParticleNarrative({
     <div className="absolute inset-0" aria-hidden="true">
       <Canvas
         camera={{ position: [0, 0, 5], fov: 52, near: 0.1, far: 100 }}
-        dpr={[1, 1.5]}
+        dpr={[1, 1.2]}
         gl={{ alpha: true, antialias: false, powerPreference: "high-performance" }}
       >
         <AdaptiveDpr pixelated />

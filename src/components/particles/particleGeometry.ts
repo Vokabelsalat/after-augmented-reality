@@ -75,7 +75,7 @@ export function createNarrativeGeometry(
   for (let index = 0; index < count; index += 1) {
     const offset = index * 3;
     const sourceX = (random() - 0.5) * 2.75;
-    const sourceY = (random() - 0.5) * 1.8;
+    const sourceY = (random() - 0.5) * 5;
     const sourceZ = (random() - 0.5) * 0.05;
     const radialAngle = Math.atan2(sourceY, sourceX) + (random() - 0.5);
     const force = 0.65 + random() * 1.5;

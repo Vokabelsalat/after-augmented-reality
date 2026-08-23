@@ -57,9 +57,9 @@ Add the final print artwork as high-quality JPG or PNG files in `public/images/`
 
 Open the [MindAR image target compiler](https://hiukim.github.io/mind-ar-js-doc/tools/compile/), add the images in this exact order, compile, and export the bundle:
 
-1. `poster-1` → target index `0`
-2. `poster-2` → target index `1`
-3. `poster-3` → target index `2`
+1. `poster-0.jpeg` → target index `0`
+2. `poster-1.jpeg` → target index `1`
+3. `poster-2.jpeg` → target index `2`
 
 Save the downloaded file as:
 
@@ -121,7 +121,7 @@ MindAR transforms are not shared with the R3F renderer. This avoids synchronizin
 
 ## Add another poster or artifact
 
-1. Add a typed entry to `src/data/artifacts.ts`, including a unique `id`, the next `targetIndex`, theme, color, content, and narrative words.
+1. Add a typed entry to `src/data/artifacts.ts`, including a unique `id`, the next `targetIndex`, its matching `posterImageSrc`, theme, color, content, and narrative words.
 2. Add or adjust its theme definition in `src/data/themes.ts` if necessary.
 3. Recompile **all** reference images into `exhibition.mind` in the same order as the configured indices.
 4. Replace `public/targets/exhibition.mind` and test both the simulator button (add one if moving beyond the three-target prototype) and the physical target.

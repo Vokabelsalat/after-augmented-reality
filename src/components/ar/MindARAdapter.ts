@@ -84,7 +84,7 @@ export class MindARAdapter {
         uiError: "no",
         filterMinCF: 0.0001,
         filterBeta: 10,
-        warmupTolerance: 3,
+        warmupTolerance: 30,
         missTolerance: 5,
       });
       this.instance = mindar;
@@ -197,7 +197,7 @@ export class MindARAdapter {
     const colors = [0xff7557, 0x58d6ff, 0xc69cff];
     const material = new THREE.PointsMaterial({
       color: colors[targetIndex % colors.length],
-      size: 0.012,
+      size: 1.112,
       transparent: true,
       opacity: 0.9,
       depthWrite: false,
