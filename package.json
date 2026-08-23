@@ -1,0 +1,45 @@
+{
+  "name": "say-hi-ar-exhibition",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --webpack",
+    "build": "next build --webpack",
+    "start": "next start",
+    "lint": "eslint .",
+    "postinstall": "node scripts/patch-mindar.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@react-three/drei": "10.7.8",
+    "@react-three/fiber": "9.7.0",
+    "@reduxjs/toolkit": "2.12.0",
+    "mind-ar": "1.2.5",
+    "next": "16.3.2",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "react-redux": "9.3.0",
+    "three": "0.185.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "4.3.3",
+    "@types/node": "26.2.0",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.4",
+    "@types/three": "0.185.4",
+    "@vitest/coverage-v8": "4.1.11",
+    "eslint": "9.39.5",
+    "eslint-config-next": "16.3.2",
+    "postcss": "8.5.26",
+    "tailwindcss": "4.3.3",
+    "typescript": "6.0.3",
+    "vitest": "4.1.11"
+  },
+  "overrides": {
+    "mind-ar": {
+      "canvas": "3.2.3"
+    }
+  }
+}
