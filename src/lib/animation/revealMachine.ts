@@ -13,8 +13,8 @@ export type RevealPhase =
 export const revealTiming = {
   attached: 500,
   release: 1200,
-  formation: 1000,
-  uiReveal: 500,
+  formation: 800,
+  uiReveal: 2000,
 } as const;
 
 function prefersReducedMotion() {

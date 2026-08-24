@@ -99,18 +99,23 @@ export function createNarrativeGeometry(
 
   for (let index = 0; index < count; index += 1) {
     const offset = index * 3;
-    const sourceX = (random() - 0.5) * 2.75;
-    const sourceY = (random() - 0.5) * 5;
+    const radialAngle = random() * Math.PI * 2;
+    const sourceRadius =
+      index % 3 === 0
+        ? 1.03 + (random() - 0.5) * 0.08
+        : Math.sqrt(random()) * 0.96;
+    const sourceX = Math.cos(radialAngle) * sourceRadius;
+    const sourceY = Math.sin(radialAngle) * sourceRadius;
     const sourceZ = (random() - 0.5) * 0.05;
-    const radialAngle = Math.atan2(sourceY, sourceX) + (random() - 0.5);
-    const force = 0.65 + random() * 1.5;
+    const releaseAngle = radialAngle + (random() - 0.5) * 0.16;
+    const releaseRadius = 3.2 + random() * 1.1;
     source[offset] = sourceX;
     source[offset + 1] = sourceY;
     source[offset + 2] = sourceZ;
 
-    release[offset] = sourceX + Math.cos(radialAngle) * force;
-    release[offset + 1] = sourceY + Math.sin(radialAngle) * force;
-    release[offset + 2] = 1.2 + random() * 2.1;
+    release[offset] = Math.cos(releaseAngle) * releaseRadius;
+    release[offset + 1] = Math.sin(releaseAngle) * releaseRadius;
+    release[offset + 2] = 0.45 + random() * 0.9;
 
     seeds[index] = random();
   }
