@@ -3,8 +3,8 @@ import type { ExhibitionArtifact } from "@/types/exhibition";
 export const artifacts: ExhibitionArtifact[] = [
   {
     id: "memory-fragment",
-    targetIndex: 0,
-    posterImageSrc: "/images/boston.jpeg",
+    targetIndex: 2,
+    posterImageSrc: "/images/melting-eye.jpeg",
     posterAspectRatio: 3239 / 2240,
     title: "Fragment of Memory",
     artist: "Artist One",
@@ -15,8 +15,8 @@ export const artifacts: ExhibitionArtifact[] = [
   },
   {
     id: "machine-voice",
-    targetIndex: 1,
-    posterImageSrc: "/images/algarve.jpeg",
+    targetIndex: 0,
+    posterImageSrc: "/images/eye.jpeg",
     posterAspectRatio: 1643 / 2493,
     title: "The Machine Speaks",
     artist: "Artist Two",
@@ -27,8 +27,8 @@ export const artifacts: ExhibitionArtifact[] = [
   },
   {
     id: "body-space",
-    targetIndex: 2,
-    posterImageSrc: "/images/torro.jpeg",
+    targetIndex: 1,
+    posterImageSrc: "/images/hands.jpeg",
     posterAspectRatio: 2199 / 3079,
     title: "A Body in Space",
     artist: "Artist Three",
