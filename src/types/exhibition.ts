@@ -4,7 +4,6 @@ export type ExhibitionArtifact = {
   id: string;
   targetIndex: number;
   posterImageSrc: `/images/${string}`;
-  posterAspectRatio: number;
   title: string;
   artist: string;
   theme: ThemeId;
