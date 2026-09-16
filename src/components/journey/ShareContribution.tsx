@@ -41,19 +41,19 @@ export function ShareContribution({
         className="flex min-h-14 w-full items-center justify-between rounded-full bg-[#F3F0E8] px-6 text-sm text-black transition-opacity disabled:cursor-not-allowed disabled:opacity-50"
       >
         <span>
-          {state === "sharing" && "Sending to the exhibition…"}
-          {state === "shared" && "Shared with the exhibition"}
+          {state === "sharing" && "Releasing your creature…"}
+          {state === "shared" && "Your creature is now floating"}
           {state === "error" && "Try sharing again"}
-          {state === "idle" && "Share with the exhibition"}
+          {state === "idle" && "Release to the collective"}
         </span>
         <span aria-hidden="true">{state === "shared" ? "✓" : "↗"}</span>
       </button>
       <p className="mt-3 px-3 text-center text-[10px] leading-4 tracking-[0.08em] text-white/35" role="status" aria-live="polite">
         {state === "shared"
-          ? "Your constellation will join the collective screen."
+          ? "Your creature has joined the collective screen."
           : state === "error"
             ? "The screen could not be reached. Your story is still safe on this device."
-            : "Your path and story will appear anonymously on the collective screen."}
+            : "Your creature and its voice will appear anonymously on the collective screen."}
       </p>
     </div>
   );

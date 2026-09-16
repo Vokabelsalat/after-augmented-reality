@@ -24,9 +24,9 @@ export function generateJourneyNarrative(
 
   if (ordered.length === 0) {
     return [
-      "Your story is still waiting.",
-      "Find a fragment,",
-      "and let the path begin.",
+      "Your creature is still sleeping.",
+      "Find an artwork,",
+      "and let its first trait wake.",
     ];
   }
 
@@ -38,7 +38,7 @@ export function generateJourneyNarrative(
     lines.push(
       `${articleFor(first.narrativeWords[1])[0].toUpperCase()}${articleFor(first.narrativeWords[1]).slice(1)} ${first.narrativeWords[1]} loosened from the surface,`,
       `asking you to ${first.narrativeWords[2]}.`,
-      "One fragment travels with you.",
+      "One new part travels with you.",
     );
     return lines;
   }
@@ -53,7 +53,7 @@ export function generateJourneyNarrative(
     const lead = index === 0 ? "Then" : "Afterward";
     lines.push(
       `${lead} ${artifact.theme} crossed the path as ${articleFor(artifact.narrativeWords[1])} ${artifact.narrativeWords[1]},`,
-      `asking the fragments to ${artifact.narrativeWords[2]}.`,
+      `asking its growing body to ${artifact.narrativeWords[2]}.`,
     );
 
   });
@@ -67,7 +67,7 @@ export function generateJourneyNarrative(
   lines.push(
     `${last.theme[0].toUpperCase()}${last.theme.slice(1)} arrived last,`,
     `carrying ${last.narrativeWords[2]} into what remains.`,
-    `${numberWords[ordered.length] ?? ordered.length} fragments travel with you.`,
+    `${numberWords[ordered.length] ?? ordered.length} parts now move as one.`,
   );
 
   return lines.slice(0, 7);

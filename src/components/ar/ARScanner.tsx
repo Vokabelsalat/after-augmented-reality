@@ -206,7 +206,7 @@ function ARScannerComponent(
             <div className="w-full max-w-sm text-center flex items-center flex-col">
               <CategoryOrbit />
               <h2 className="text-4xl tracking-[-0.04em]">
-                {scannerState === "error" ? "Camera unavailable" : "Find a fragment"}
+                {scannerState === "error" ? "Camera unavailable" : "Find an artwork"}
               </h2>
               <p className="mx-auto mt-4 max-w-xs text-sm leading-6 text-white/80" role="status">
                 {scannerState === "error"

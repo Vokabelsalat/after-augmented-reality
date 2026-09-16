@@ -6,7 +6,7 @@ import {
 } from "@/lib/contributions/database";
 import { generateJourneyNarrative } from "@/lib/narrative/generateJourneyNarrative";
 import { calculateDwellTimes } from "@/lib/contributions/dwellTime";
-import type { ContributionSubmission, SharedGlyph } from "@/types/contribution";
+import type { ContributionSubmission, SharedCreaturePart } from "@/types/contribution";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -96,10 +96,12 @@ export async function POST(request: Request) {
     submission.discoveries,
     submission.completedAt,
   );
-  const glyphs: SharedGlyph[] = submission.discoveries.map((discovery, index) => {
+  const parts: SharedCreaturePart[] = submission.discoveries.map((discovery, index) => {
     const artifact = artifactById.get(discovery.artifactId)!;
     return {
       artifactId: artifact.id,
+      partId: artifact.creaturePart.id,
+      label: artifact.creaturePart.label,
       sequence: discovery.sequence,
       theme: artifact.theme,
       color: artifact.color,
@@ -110,7 +112,7 @@ export async function POST(request: Request) {
   const contribution = createContribution({
     publicId: randomUUID(),
     sessionId: submission.sessionId,
-    glyphs,
+    parts,
     narrative,
   });
 

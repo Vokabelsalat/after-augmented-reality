@@ -1,7 +1,9 @@
-import type { ThemeId } from "@/types/exhibition";
+import type { CreaturePartId, ThemeId } from "@/types/exhibition";
 
-export type SharedGlyph = {
+export type SharedCreaturePart = {
   artifactId: string;
+  partId: CreaturePartId;
+  label: string;
   sequence: number;
   theme: ThemeId;
   color: string;
@@ -12,7 +14,7 @@ export type SharedGlyph = {
 export type ExhibitionContribution = {
   id: number;
   publicId: string;
-  glyphs: SharedGlyph[];
+  parts: SharedCreaturePart[];
   narrative: string[];
   createdAt: string;
 };

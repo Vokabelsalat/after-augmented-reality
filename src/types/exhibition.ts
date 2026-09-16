@@ -7,6 +7,27 @@ export type ThemeId =
 
 export type ParticleFormId = "memory" | "machine" | "body";
 
+export type CreaturePartId =
+  | "memory-crown"
+  | "archive-ears"
+  | "route-tail"
+  | "signal-antenna"
+  | "cockatoo-beak"
+  | "glass-wings"
+  | "page-fins"
+  | "surfer-feet"
+  | "inner-eye"
+  | "orbit-ring"
+  | "heart-plume"
+  | "helping-arms"
+  | "goliath-horns";
+
+export type CreaturePart = {
+  id: CreaturePartId;
+  label: string;
+  description: string;
+};
+
 export type ExhibitionArtifact = {
   id: string;
   targetIndex: number;
@@ -18,6 +39,7 @@ export type ExhibitionArtifact = {
   color: string;
   shortText: string;
   narrativeWords: string[];
+  creaturePart: CreaturePart;
 };
 
 export type ThemeDefinition = {

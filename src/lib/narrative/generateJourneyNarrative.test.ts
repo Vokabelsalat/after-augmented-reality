@@ -26,10 +26,10 @@ describe("generateJourneyNarrative", () => {
     expect(first).toEqual([
       "You began with interface.",
       "Then memory crossed the path as an archive,",
-      "asking the fragments to return.",
+      "asking its growing body to return.",
       "Embodiment arrived last,",
       "carrying reach into what remains.",
-      "Three fragments travel with you.",
+      "Three parts now move as one.",
     ]);
   });
 
@@ -48,14 +48,14 @@ describe("generateJourneyNarrative", () => {
     expect(machineFirst).not.toEqual(memoryFirst);
   });
 
-  it("uses a compact single-fragment form", () => {
+  it("uses a compact single-part form", () => {
     expect(
       generateJourneyNarrative(discoveries(["finding-frida"]), artifacts),
     ).toEqual([
       "You began with memory.",
       "An archive loosened from the surface,",
       "asking you to return.",
-      "One fragment travels with you.",
+      "One new part travels with you.",
     ]);
   });
 

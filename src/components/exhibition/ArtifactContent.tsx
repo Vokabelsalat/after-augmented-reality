@@ -29,7 +29,7 @@ export function ArtifactContent({ artifact, onContinue, mini = false }: Artifact
             aria-hidden="true"
           />
           <span style={{ color: artifact.color }}>{theme.label}</span>
-          <span className="text-white/80">· Collected</span>
+          <span className="text-white/80">· {artifact.creaturePart.label} added</span>
         </div>
         <h2
           id="artifact-title"
@@ -39,6 +39,9 @@ export function ArtifactContent({ artifact, onContinue, mini = false }: Artifact
         </h2>
         <p className="text-[10px] tracking-[0.18em] text-white/80">
           {artifact.artist}
+        </p>
+        <p className="max-w-md border-l border-white/20 pl-3 text-sm leading-5 text-white/65">
+          {artifact.creaturePart.description}
         </p>
         <p className="max-w-md text-base leading-7 text-white/80">
           {artifact.shortText}

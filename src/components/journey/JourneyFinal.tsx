@@ -1,6 +1,5 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useEffect, useMemo } from "react";
 import { artifacts, artifactById } from "@/data/artifacts";
@@ -11,14 +10,8 @@ import { selectDiscoveries } from "@/store/selectors";
 import { selectJourney } from "@/store/selectors";
 import { ShareContribution } from "@/components/journey/ShareContribution";
 import { themes } from "@/data/themes";
-
-const JourneyConstellation = dynamic(
-  () =>
-    import("@/components/particles/JourneyConstellation").then(
-      (module) => module.JourneyConstellation,
-    ),
-  { ssr: false },
-);
+import { CreatureCanvas } from "@/components/creature/CreatureCanvas";
+import dynamic from "next/dynamic";
 
 const GeneratedNarrative = dynamic(() =>
   import("@/components/journey/GeneratedNarrative").then(
@@ -52,15 +45,15 @@ export function JourneyFinal() {
           After Augmented Reality
         </Link>
         <p className="text-[9px] tracking-[0.24em] text-white/42">
-          Your story
+          Your creature
         </p>
       </header>
 
       <section className="relative mx-auto mt-1 h-[46dvh] min-h-80 w-full max-w-3xl" aria-labelledby="reading-title">
         <h1 id="reading-title" className="absolute inset-x-0 top-6 z-10 text-center text-[10px] tracking-[0.32em] text-white/48">
-          Your story
+          Your creature
         </h1>
-        <JourneyConstellation discoveries={discoveries} variant="full" />
+        <CreatureCanvas artifactIds={discoveries.map((item) => item.artifactId)} label="Your finished exhibition creature" />
         <div className="absolute inset-x-0 bottom-5 flex flex-wrap justify-center gap-x-4 gap-y-1">
           {themesInOrder.map((artifact, index) => (
             <span key={`${artifact.id}-${index}`} className="flex items-center gap-1.5 text-[9px] tracking-[0.14em] text-white/48">
@@ -72,7 +65,7 @@ export function JourneyFinal() {
       </section>
 
       <section className="relative z-10 mx-auto max-w-xl pb-8">
-        <p className="mb-6 text-[9px] tracking-[0.24em] text-white/35">A narrative from your path</p>
+        <p className="mb-6 text-[9px] tracking-[0.24em] text-white/35">The voice it found along your path</p>
         <GeneratedNarrative lines={lines} />
 
         <div className="mt-14">

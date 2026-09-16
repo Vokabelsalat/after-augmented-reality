@@ -125,7 +125,7 @@ a:focus-visible {
   animation: arrival-stage 17s ease-in-out both;
 }
 
-.collective-arrival-graph {
+.collective-arrival-creature {
   animation: arrival-graph 17s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
@@ -191,7 +191,7 @@ a:focus-visible {
     text-align: center;
   }
 
-  .collective-arrival-graph {
+  .collective-arrival-creature {
     margin-inline: auto;
     width: min(44vh, 70vw);
   }

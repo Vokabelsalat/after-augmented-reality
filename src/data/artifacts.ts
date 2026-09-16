@@ -41,6 +41,11 @@ const exhibitionSources: ArtifactSource[] = [
     shortText:
       "Finding Frida is a documentary VR experience where past and present intertwine in an exploration of art, family and the power of human creativity. Photorealistic 3D scans, dreamlike projections and animated artwork blend with a soundscape of reworked foley and an original musical score. Voice-over drawn from interviews with Frida Hansen and contemporary historical sources seeks authenticity within a dreamlike world while shedding new light on a forgotten female artist. Central to the work is the value of role models, and how VR allows resonance to travel back and forth through time.",
     narrativeWords: ["remember", "archive", "return", "resonate"],
+    creaturePart: {
+      id: "memory-crown",
+      label: "Memory crown",
+      description: "A halo for carrying images between past and present.",
+    },
   },
   {
     id: "historically-yours",
@@ -51,6 +56,11 @@ const exhibitionSources: ArtifactSource[] = [
     theme: "memory",
     shortText: "Description forthcoming.",
     narrativeWords: ["remember", "record", "revisit", "inherit"],
+    creaturePart: {
+      id: "archive-ears",
+      label: "Archive ears",
+      description: "Wide ears tuned to voices that history almost lost.",
+    },
   },
   {
     id: "from-ingrid-to-bergen",
@@ -61,6 +71,11 @@ const exhibitionSources: ArtifactSource[] = [
     theme: "memory",
     shortText: "Description forthcoming.",
     narrativeWords: ["trace", "route", "carry", "return"],
+    creaturePart: {
+      id: "route-tail",
+      label: "Route tail",
+      description: "A travelling tail that remembers every turn.",
+    },
   },
   {
     id: "your-update-has-failed",
@@ -71,6 +86,11 @@ const exhibitionSources: ArtifactSource[] = [
     theme: "interface",
     shortText: "Description forthcoming.",
     narrativeWords: ["update", "error", "restart", "persist"],
+    creaturePart: {
+      id: "signal-antenna",
+      label: "Signal antenna",
+      description: "A stubborn receiver that keeps searching after failure.",
+    },
   },
   {
     id: "grand-hotel-bald-cockatoo",
@@ -81,6 +101,11 @@ const exhibitionSources: ArtifactSource[] = [
     theme: "worldmaking",
     shortText: "Description forthcoming.",
     narrativeWords: ["enter", "corridor", "wander", "transform"],
+    creaturePart: {
+      id: "cockatoo-beak",
+      label: "Cockatoo beak",
+      description: "A bright beak made for calling into strange hotels.",
+    },
   },
   {
     id: "glass-like-fabric",
@@ -91,6 +116,11 @@ const exhibitionSources: ArtifactSource[] = [
     theme: "interface",
     shortText: "Description forthcoming.",
     narrativeWords: ["touch", "surface", "refract", "fold"],
+    creaturePart: {
+      id: "glass-wings",
+      label: "Glass wings",
+      description: "Translucent wings that fold light into new surfaces.",
+    },
   },
   {
     id: "between-page-and-screen",
@@ -102,6 +132,11 @@ const exhibitionSources: ArtifactSource[] = [
     shortText:
       "An unlikely marriage of print and digital, Between Page and Screen chronicles a love affair between two characters, P and S. The book has no words, only inscrutable black and white geometric patterns that, when coupled with a webcam, conjure the written word. Reflected on screen, the reader sees themself with open book in hand, language springing alive and shape-shifting with each turn of the page. The story unfolds through a playful and cryptic exchange of letters between P and S as they struggle to define their relationship. Rich with innuendo, anagrams, etymological and sonic affinities between words, Between Page and Screen revels in language and the act of reading.",
     narrativeWords: ["read", "letter", "decode", "respond"],
+    creaturePart: {
+      id: "page-fins",
+      label: "Page fins",
+      description: "Two pages poised between print, screen and motion.",
+    },
   },
   {
     id: "bybanen-slop-surfer",
@@ -112,6 +147,11 @@ const exhibitionSources: ArtifactSource[] = [
     theme: "embodiment",
     shortText: "Description forthcoming.",
     narrativeWords: ["move", "balance", "glide", "arrive"],
+    creaturePart: {
+      id: "surfer-feet",
+      label: "Surfer feet",
+      description: "Balanced feet ready to glide through the city.",
+    },
   },
   {
     id: "emperor",
@@ -123,6 +163,11 @@ const exhibitionSources: ArtifactSource[] = [
     shortText:
       "Emperor is an interactive narrative experience that invites us to travel inside the brain of a father suffering from aphasia. Alongside his daughter, we journey into the father’s mental space, imagined as a hand-drawn monochrome landscape, as she seeks to learn more about his inner self, now obscured by illness.",
     narrativeWords: ["speak", "silence", "reach", "remember"],
+    creaturePart: {
+      id: "inner-eye",
+      label: "Inner eye",
+      description: "An extra eye for finding a way through an inner world.",
+    },
   },
   {
     id: "grand-hotel-galactic-center",
@@ -133,6 +178,11 @@ const exhibitionSources: ArtifactSource[] = [
     theme: "worldmaking",
     shortText: "Description forthcoming.",
     narrativeWords: ["orbit", "signal", "navigate", "connect"],
+    creaturePart: {
+      id: "orbit-ring",
+      label: "Galactic orbit",
+      description: "A ring that keeps distant worlds in conversation.",
+    },
   },
   {
     id: "her-name-was-gisberta",
@@ -144,6 +194,11 @@ const exhibitionSources: ArtifactSource[] = [
     shortText:
       "Her Name Was Gisberta is a VR/2D documentary that portrays the life and death of Gisberta Salce, a Brazilian trans woman murdered by 14 young men in Porto in 2006. Drawing on virtual-reality perspective-taking, the project was created as a tool for education, social intervention and activism against transphobia.",
     narrativeWords: ["witness", "presence", "remember", "resist"],
+    creaturePart: {
+      id: "heart-plume",
+      label: "Brave heart",
+      description: "A bright chest plume for presence, memory and resistance.",
+    },
   },
   {
     id: "missing-10-hours",
@@ -155,6 +210,11 @@ const exhibitionSources: ArtifactSource[] = [
     shortText:
       "Missing 10 Hours is a narrative VR experience created with survivors of substance abuse. Visitors become a bystander whose choices influence the story, navigating whether to help a young woman named Mara or become complicit in the actions of a perpetrator. Its multiplayer structure amplifies the impact of each decision across a night-time party that moves from excessive drinking and invasions of privacy to police intervention and a final revelation.",
     narrativeWords: ["choose", "choice", "intervene", "answer"],
+    creaturePart: {
+      id: "helping-arms",
+      label: "Helping arms",
+      description: "Long arms that make the choice to reach out.",
+    },
   },
   {
     id: "goliath",
@@ -166,6 +226,11 @@ const exhibitionSources: ArtifactSource[] = [
     shortText:
       "Through mind-bending animation, Goliath: Playing with Reality explores the limits of reality and the true story of a man diagnosed with schizophrenia. Echo guides visitors through the realities of Goliath, who spent years isolated in psychiatric institutions before finding connection in multiplayer games. Heartfelt dialogue, mesmerising visuals and symbolic interactions reveal his story across multiple worlds.",
     narrativeWords: ["play", "world", "connect", "return"],
+    creaturePart: {
+      id: "goliath-horns",
+      label: "Reality horns",
+      description: "Playful horns that tune into more than one reality.",
+    },
   },
 ];
 

@@ -1,6 +1,5 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import { useCallback } from "react";
 import { artifactById } from "@/data/artifacts";
 import { useRevealMachine } from "@/lib/animation/revealMachine";
@@ -13,14 +12,8 @@ import {
 import { selectActiveArtifactId } from "@/store/selectors";
 import { ArtifactContent } from "@/components/exhibition/ArtifactContent";
 import type { ExhibitionArtifact } from "@/types/exhibition";
-
-const ParticleNarrative = dynamic(
-  () =>
-    import("@/components/particles/ParticleNarrative").then(
-      (module) => module.ParticleNarrative,
-    ),
-  { ssr: false },
-);
+import { CreatureCanvas } from "@/components/creature/CreatureCanvas";
+import { selectDiscoveries } from "@/store/selectors";
 
 type RevealPresentation = "tracked-ar" | "simulated";
 
@@ -34,6 +27,7 @@ function ArtifactRevealSequence({
   onContinue?: (artifact: ExhibitionArtifact) => void;
 }) {
   const dispatch = useAppDispatch();
+  const discoveries = useAppSelector(selectDiscoveries);
   const handleContentReady = useCallback(() => {
     dispatch(artifactCollected(artifact.id));
   }, [artifact.id, dispatch]);
@@ -48,18 +42,19 @@ function ArtifactRevealSequence({
   return (
     <section className="pointer-events-none absolute inset-0 z-40 overflow-hidden" aria-live="polite">
       {!isRevisit && phase !== "complete" && (
-        <ParticleNarrative
-          artifact={artifact}
-          phase={phase}
-          mode="ar-release"
-          quality="high"
-        />
+        <div className="absolute inset-x-0 top-[12vh] h-[52vh]">
+          <CreatureCanvas
+            artifactIds={discoveries.map((item) => item.artifactId)}
+            highlightedPart={artifact.creaturePart.id}
+            label={`${artifact.creaturePart.label} joining your creature`}
+          />
+        </div>
       )}
       {!contentVisible && (
         <p className="absolute inset-x-0 bottom-[12vh] text-center text-[10px] tracking-[0.28em] text-white/65">
-          {phase === "attached" && "Fragment located"}
-          {phase === "release" && "Releasing narrative"}
-          {phase === "formation" && "Resolving language"}
+          {phase === "attached" && "New trait found"}
+          {phase === "release" && `${artifact.creaturePart.label} is waking up`}
+          {phase === "formation" && "Joining your creature"}
         </p>
       )}
       {contentVisible && (

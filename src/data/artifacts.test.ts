@@ -31,4 +31,11 @@ describe("artifact target image configuration", () => {
       ),
     ).toBe(true);
   });
+
+  it("gives every artifact a distinct creature part", () => {
+    expect(new Set(artifacts.map(({ creaturePart }) => creaturePart.id)).size).toBe(13);
+    expect(
+      artifacts.find(({ id }) => id === "grand-hotel-bald-cockatoo")?.creaturePart,
+    ).toMatchObject({ id: "cockatoo-beak", label: "Cockatoo beak" });
+  });
 });

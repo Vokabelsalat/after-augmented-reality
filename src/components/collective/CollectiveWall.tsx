@@ -1,96 +1,11 @@
 "use client";
 
-import { useEffect, useId, useMemo, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { CollectiveCreatureField } from "@/components/collective/CollectiveCreatureField";
+import { CreatureCanvas } from "@/components/creature/CreatureCanvas";
 import type { ExhibitionContribution } from "@/types/contribution";
-import {
-  dwellTimeReference,
-  glyphScaleFromDwellMs,
-} from "@/lib/contributions/dwellTime";
 
 const ARRIVAL_DURATION_MS = 17_000;
-
-type PositionedContribution = ExhibitionContribution & {
-  x: number;
-  y: number;
-  size: number;
-  delay: number;
-  duration: number;
-};
-
-function seededUnit(seed: number) {
-  const value = Math.sin(seed * 999.13) * 43758.5453;
-  return value - Math.floor(value);
-}
-
-function positionContribution(contribution: ExhibitionContribution): PositionedContribution {
-  return {
-    ...contribution,
-    x: 7 + seededUnit(contribution.id * 3) * 86,
-    y: 12 + seededUnit(contribution.id * 5) * 76,
-    size: 110 + seededUnit(contribution.id * 7) * 150,
-    delay: seededUnit(contribution.id * 11) * -18,
-    duration: 17 + seededUnit(contribution.id * 13) * 14,
-  };
-}
-
-function NetworkGlyph({
-  contribution,
-  label,
-}: {
-  contribution: ExhibitionContribution;
-  label?: string;
-}) {
-  const gradientPrefix = useId().replaceAll(":", "");
-  const points = useMemo(() => {
-    const count = contribution.glyphs.length;
-    if (count === 1) return [{ x: 100, y: 100 }];
-    return contribution.glyphs.map((_, index) => {
-      const angle = -Math.PI / 2 + (index / count) * Math.PI * 2;
-      const radius = count === 2 ? 48 : 58;
-      return { x: 100 + Math.cos(angle) * radius, y: 100 + Math.sin(angle) * radius };
-    });
-  }, [contribution.glyphs]);
-  const dwellReference = useMemo(
-    () => dwellTimeReference(contribution.glyphs.map((glyph) => glyph.dwellMs)),
-    [contribution.glyphs],
-  );
-
-  return (
-    <svg viewBox="0 0 200 200" role={label ? "img" : undefined} aria-label={label} className="size-full overflow-visible">
-      <defs>
-        {contribution.glyphs.map((glyph, index) => (
-          <radialGradient key={glyph.artifactId} id={`glow-${gradientPrefix}-${contribution.id}-${index}`}>
-            <stop offset="0" stopColor="#fff" />
-            <stop offset="0.28" stopColor={glyph.color} stopOpacity=".95" />
-            <stop offset="1" stopColor={glyph.color} stopOpacity="0" />
-          </radialGradient>
-        ))}
-      </defs>
-      {points.slice(0, -1).map((point, index) => (
-        <line
-          key={`line-${index}`}
-          x1={point.x}
-          y1={point.y}
-          x2={points[index + 1].x}
-          y2={points[index + 1].y}
-          stroke="rgba(243,240,232,.32)"
-          strokeWidth=".8"
-        />
-      ))}
-      {points.map((point, index) => {
-        const glyph = contribution.glyphs[index];
-        const scale = glyphScaleFromDwellMs(glyph.dwellMs, dwellReference);
-        return (
-          <g key={glyph.artifactId}>
-            <circle cx={point.x} cy={point.y} r={31 * scale} fill={`url(#glow-${gradientPrefix}-${contribution.id}-${index})`} opacity=".42" />
-            <circle cx={point.x} cy={point.y} r={3.2 * scale} fill={glyph.color} />
-            <circle cx={point.x} cy={point.y} r={7 * scale} fill="none" stroke={glyph.color} strokeOpacity=".48" strokeWidth=".7" />
-          </g>
-        );
-      })}
-    </svg>
-  );
-}
 
 export function CollectiveWall() {
   const [contributions, setContributions] = useState<ExhibitionContribution[]>([]);
@@ -107,10 +22,8 @@ export function CollectiveWall() {
 
     async function refresh() {
       try {
-        const response = await fetch(`/api/contributions?after=${latestId.current}&limit=100`, {
-          cache: "no-store",
-        });
-        if (!response.ok) throw new Error("Wall feed unavailable");
+        const response = await fetch(`/api/contributions?after=${latestId.current}&limit=100`, { cache: "no-store" });
+        if (!response.ok) throw new Error("Collective habitat unavailable");
         const data = (await response.json()) as { contributions: ExhibitionContribution[] };
         if (cancelled) return;
 
@@ -160,25 +73,26 @@ export function CollectiveWall() {
     return () => window.clearTimeout(timeout);
   }, [active]);
 
-  const positioned = useMemo(
-    () => contributions.map(positionContribution),
-    [contributions],
+  const habitatCreatures = useMemo(
+    () => contributions.filter((contribution) => contribution.id !== active?.id),
+    [active?.id, contributions],
   );
-  const recentContributions = useMemo(
-    () => contributions.slice(-6).reverse(),
-    [contributions],
-  );
-  const latestContribution = recentContributions[0];
-  const previousContributions = recentContributions.slice(1);
+  const latest = contributions.at(-1);
 
   return (
-    <main className="collective-wall film-grain relative h-screen overflow-hidden bg-[#030405] text-[#F3F0E8]" aria-label="Collective exhibition stories">
+    <main className="collective-wall film-grain relative h-screen overflow-hidden bg-[#030405] text-[#F3F0E8]" aria-label="Collective exhibition creature habitat">
       <div className="absolute inset-0 collective-aurora" aria-hidden="true" />
+      <div className="absolute inset-0" aria-live="polite">
+        <CollectiveCreatureField contributions={habitatCreatures} />
+      </div>
 
       <header className="absolute inset-x-0 top-0 z-30 flex items-center justify-between px-8 py-7 lg:px-12 lg:py-9">
-        <h1 className="font-display text-xl tracking-[-0.03em] lg:text-2xl">After Augmented Reality</h1>
+        <div>
+          <h1 className="font-display text-xl tracking-[-0.03em] lg:text-2xl">After Augmented Reality</h1>
+          <p className="mt-1 text-[10px] tracking-[0.22em] text-white/35">COLLECTIVE HABITAT</p>
+        </div>
         <div className="flex items-center gap-6 text-xs tracking-[0.18em] text-white/42">
-          <span>{contributions.length} {contributions.length === 1 ? "story" : "stories"}</span>
+          <span>{contributions.length} {contributions.length === 1 ? "creature" : "creatures"}</span>
           <span className="flex items-center gap-2">
             <span className={`size-1.5 rounded-full ${connected ? "bg-emerald-300" : "bg-amber-300"}`} aria-hidden="true" />
             {connected ? "LISTENING" : "RECONNECTING"}
@@ -186,48 +100,31 @@ export function CollectiveWall() {
         </div>
       </header>
 
-      <div className="absolute inset-x-0 top-0 bottom-[clamp(14rem,29vh,20rem)]" aria-live="polite">
-        {positioned.map((contribution) => {
-          const style = {
-            left: `${contribution.x}%`,
-            top: `${contribution.y}%`,
-            width: `${contribution.size}px`,
-            height: `${contribution.size}px`,
-            "--float-delay": `${contribution.delay}s`,
-            "--float-duration": `${contribution.duration}s`,
-          } as CSSProperties;
-          return (
-            <div
-              key={contribution.id}
-              className={`collective-fragment absolute -translate-x-1/2 -translate-y-1/2 transition-opacity duration-1000 ${active?.id === contribution.id ? "opacity-0" : "opacity-55"}`}
-              style={style}
-              aria-hidden="true"
-            >
-              <NetworkGlyph contribution={contribution} />
-            </div>
-          );
-        })}
-      </div>
-
       {contributions.length === 0 && ready && (
         <div className="absolute inset-0 flex items-center justify-center text-center">
           <div>
             <div className="mx-auto mb-8 size-2 rounded-full bg-white/70 shadow-[0_0_32px_10px_rgba(255,255,255,.24)] animate-breathe" />
-            <p className="font-display text-3xl text-white/72">Waiting for the first story</p>
-            <p className="mt-3 text-xs tracking-[0.2em] text-white/30">THE COLLECTIVE FIELD IS OPEN</p>
+            <p className="font-display text-3xl text-white/72">Waiting for the first creature</p>
+            <p className="mt-3 text-xs tracking-[0.2em] text-white/30">THE HABITAT IS OPEN</p>
           </div>
         </div>
       )}
 
       {active && (
-        <section key={active.id} className="collective-arrival absolute inset-0 z-20 grid place-items-center" aria-label="A new visitor story has arrived">
+        <section key={active.id} className="collective-arrival absolute inset-0 z-20 grid place-items-center" aria-label="A new visitor creature has arrived">
           <div className="collective-arrival-glow absolute inset-0" aria-hidden="true" />
           <div className="relative grid w-[min(90vw,1100px)] grid-cols-[minmax(280px,.8fr)_minmax(360px,1.2fr)] items-center gap-20">
-            <div className="collective-arrival-graph aspect-square w-full">
-              <NetworkGlyph contribution={active} label={`Constellation of ${active.glyphs.length} glyphs`} />
+            <div className="collective-arrival-creature aspect-square w-full">
+              <CreatureCanvas
+                artifactIds={active.parts.map((part) => part.artifactId)}
+                label={`New creature with ${active.parts.length} parts`}
+              />
             </div>
             <div className="collective-story max-w-2xl">
-              <p className="mb-7 text-xs tracking-[0.28em] text-white/42">A NEW PATH ENTERS THE FIELD</p>
+              <p className="mb-3 text-xs tracking-[0.28em] text-white/42">A NEW CREATURE ENTERS THE HABITAT</p>
+              <p className="mb-8 text-sm text-white/45">
+                Made from {active.parts.length} exhibition {active.parts.length === 1 ? "encounter" : "encounters"}
+              </p>
               <div className="font-display text-[clamp(2rem,3.8vw,4.25rem)] leading-[1.08] tracking-[-0.035em]">
                 {active.narrative.map((line, index) => (
                   <p key={`${index}-${line}`} className="my-2">{line}</p>
@@ -238,34 +135,10 @@ export function CollectiveWall() {
         </section>
       )}
 
-      {latestContribution && (
-        <aside className="collective-recents absolute inset-x-0 bottom-0 z-10 h-[clamp(14rem,29vh,20rem)] px-8 pb-7 lg:px-12 lg:pb-9" aria-label="Most recently shared stories">
-          <div className="grid h-full grid-cols-[minmax(24rem,1.5fr)_minmax(28rem,1fr)] border-t border-white/12 pt-5">
-            <article className="grid min-w-0 grid-cols-[clamp(7rem,10vw,10rem)_1fr] items-center gap-6 border-r border-white/12 pr-8">
-              <div className="aspect-square w-full">
-                <NetworkGlyph contribution={latestContribution} label={`Latest constellation of ${latestContribution.glyphs.length} glyphs`} />
-              </div>
-              <div className="min-w-0">
-                <p className="mb-3 text-[10px] tracking-[0.25em] text-white/35">LATEST STORY</p>
-                <div className="font-display text-[clamp(1.15rem,1.45vw,1.75rem)] leading-[1.12] tracking-[-0.025em] text-white/82">
-                  {latestContribution.narrative.map((line, index) => (
-                    <p key={`${index}-${line}`} className="my-0.5">{line}</p>
-                  ))}
-                </div>
-              </div>
-            </article>
-
-            <div className="grid min-w-0 grid-cols-5 items-center gap-3 pl-8">
-              {previousContributions.map((contribution, index) => (
-                <article key={contribution.id} className="min-w-0 text-center">
-                  <div className="mx-auto aspect-square w-full max-w-32 opacity-70">
-                    <NetworkGlyph contribution={contribution} label={`Recent constellation ${index + 2}`} />
-                  </div>
-                  <p className="mt-1 text-[9px] tracking-[0.18em] text-white/25">0{index + 2}</p>
-                </article>
-              ))}
-            </div>
-          </div>
+      {latest && !active && (
+        <aside className="absolute inset-x-0 bottom-0 z-10 flex items-end justify-between px-8 pb-7 text-white/40 lg:px-12 lg:pb-9">
+          <p className="max-w-xl font-display text-lg leading-snug text-white/55">{latest.narrative[0]}</p>
+          <p className="text-[10px] tracking-[0.2em]">LATEST · {latest.parts.length} PARTS</p>
         </aside>
       )}
     </main>

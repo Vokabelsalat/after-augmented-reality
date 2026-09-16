@@ -32,7 +32,7 @@ export function IntroScreen() {
           </div>
           <div className="flex flex-3 safe-bottom relative z-10">
             <p className="max-w-sm text-lg leading-7 text-white/80">
-              Scan fragments throughout the exhibition and build your own story.
+              Scan works throughout the exhibition. Each encounter gives your creature a new body part.
             </p>
           </div>
         </div>

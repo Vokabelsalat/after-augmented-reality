@@ -3,7 +3,8 @@ import "server-only";
 import { mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
-import type { ExhibitionContribution, SharedGlyph } from "@/types/contribution";
+import type { ExhibitionContribution, SharedCreaturePart } from "@/types/contribution";
+import { artifactById } from "@/data/artifacts";
 
 type ContributionRow = {
   id: number;
@@ -49,10 +50,21 @@ function openDatabase() {
 }
 
 function deserialize(row: ContributionRow): ExhibitionContribution {
+  const storedParts = JSON.parse(row.glyphs_json) as Array<
+    Partial<SharedCreaturePart> & Pick<SharedCreaturePart, "artifactId" | "sequence" | "theme" | "color">
+  >;
   return {
     id: row.id,
     publicId: row.public_id,
-    glyphs: JSON.parse(row.glyphs_json) as SharedGlyph[],
+    parts: storedParts.flatMap((part) => {
+      const artifact = artifactById.get(part.artifactId);
+      if (!artifact) return [];
+      return [{
+        ...part,
+        partId: part.partId ?? artifact.creaturePart.id,
+        label: part.label ?? artifact.creaturePart.label,
+      } as SharedCreaturePart];
+    }),
     narrative: JSON.parse(row.narrative_json) as string[],
     createdAt: row.created_at,
   };
@@ -75,7 +87,7 @@ export function listContributions(afterId = 0, limit = 80) {
 export function createContribution(input: {
   publicId: string;
   sessionId: string;
-  glyphs: SharedGlyph[];
+  parts: SharedCreaturePart[];
   narrative: string[];
 }) {
   const database = openDatabase();
@@ -88,7 +100,7 @@ export function createContribution(input: {
     .run(
       input.publicId,
       input.sessionId,
-      JSON.stringify(input.glyphs),
+      JSON.stringify(input.parts),
       JSON.stringify(input.narrative),
     );
 
