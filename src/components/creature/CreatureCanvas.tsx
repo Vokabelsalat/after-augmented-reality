@@ -22,7 +22,7 @@ export function CreatureCanvas({
     <div
       className="relative size-full"
       role="img"
-      aria-label={label ?? `Creature with ${pieces.length} collected ${pieces.length === 1 ? "part" : "parts"}`}
+      aria-label={label ?? `Fish with ${pieces.length} collected ${pieces.length === 1 ? "part" : "parts"}`}
     >
       <Canvas
         camera={{ position: [0, 0.15, compact ? 5.4 : 5], fov: compact ? 48 : 44, near: 0.1, far: 30 }}

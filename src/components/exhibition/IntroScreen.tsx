@@ -32,7 +32,7 @@ export function IntroScreen() {
           </div>
           <div className="flex flex-3 safe-bottom relative z-10">
             <p className="max-w-sm text-lg leading-7 text-white/80">
-              Scan works throughout the exhibition. Each encounter gives your creature a new body part.
+              Scan works throughout the exhibition. Each encounter gives your fish a new body part.
             </p>
           </div>
         </div>

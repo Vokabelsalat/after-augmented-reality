@@ -43,8 +43,8 @@ const exhibitionSources: ArtifactSource[] = [
     narrativeWords: ["remember", "archive", "return", "resonate"],
     creaturePart: {
       id: "memory-crown",
-      label: "Memory crown",
-      description: "A halo for carrying images between past and present.",
+      label: "Memory scales",
+      description: "Iridescent scales for carrying images between past and present.",
     },
   },
   {
@@ -58,8 +58,8 @@ const exhibitionSources: ArtifactSource[] = [
     narrativeWords: ["remember", "record", "revisit", "inherit"],
     creaturePart: {
       id: "archive-ears",
-      label: "Archive ears",
-      description: "Wide ears tuned to voices that history almost lost.",
+      label: "Archive gills",
+      description: "Frilled gills tuned to voices that history almost lost.",
     },
   },
   {
@@ -73,8 +73,8 @@ const exhibitionSources: ArtifactSource[] = [
     narrativeWords: ["trace", "route", "carry", "return"],
     creaturePart: {
       id: "route-tail",
-      label: "Route tail",
-      description: "A travelling tail that remembers every turn.",
+      label: "Ribbon tail",
+      description: "A streaming tail that remembers every turn in the route.",
     },
   },
   {
@@ -88,8 +88,8 @@ const exhibitionSources: ArtifactSource[] = [
     narrativeWords: ["update", "error", "restart", "persist"],
     creaturePart: {
       id: "signal-antenna",
-      label: "Signal antenna",
-      description: "A stubborn receiver that keeps searching after failure.",
+      label: "Signal lure",
+      description: "A glowing angler lure that keeps searching after failure.",
     },
   },
   {
@@ -118,8 +118,8 @@ const exhibitionSources: ArtifactSource[] = [
     narrativeWords: ["touch", "surface", "refract", "fold"],
     creaturePart: {
       id: "glass-wings",
-      label: "Glass wings",
-      description: "Translucent wings that fold light into new surfaces.",
+      label: "Glass fins",
+      description: "Translucent fins that fold light into new surfaces.",
     },
   },
   {
@@ -134,8 +134,8 @@ const exhibitionSources: ArtifactSource[] = [
     narrativeWords: ["read", "letter", "decode", "respond"],
     creaturePart: {
       id: "page-fins",
-      label: "Page fins",
-      description: "Two pages poised between print, screen and motion.",
+      label: "Page fin",
+      description: "A folded dorsal fin poised between print, screen and motion.",
     },
   },
   {
@@ -149,8 +149,8 @@ const exhibitionSources: ArtifactSource[] = [
     narrativeWords: ["move", "balance", "glide", "arrive"],
     creaturePart: {
       id: "surfer-feet",
-      label: "Surfer feet",
-      description: "Balanced feet ready to glide through the city.",
+      label: "Surfer fins",
+      description: "Balanced pelvic fins ready to glide through the city.",
     },
   },
   {
@@ -180,8 +180,8 @@ const exhibitionSources: ArtifactSource[] = [
     narrativeWords: ["orbit", "signal", "navigate", "connect"],
     creaturePart: {
       id: "orbit-ring",
-      label: "Galactic orbit",
-      description: "A ring that keeps distant worlds in conversation.",
+      label: "Orbit markings",
+      description: "Luminous bands that keep distant worlds in conversation.",
     },
   },
   {
@@ -196,8 +196,8 @@ const exhibitionSources: ArtifactSource[] = [
     narrativeWords: ["witness", "presence", "remember", "resist"],
     creaturePart: {
       id: "heart-plume",
-      label: "Brave heart",
-      description: "A bright chest plume for presence, memory and resistance.",
+      label: "Heart scale",
+      description: "A bright central scale for presence, memory and resistance.",
     },
   },
   {
@@ -212,8 +212,8 @@ const exhibitionSources: ArtifactSource[] = [
     narrativeWords: ["choose", "choice", "intervene", "answer"],
     creaturePart: {
       id: "helping-arms",
-      label: "Helping arms",
-      description: "Long arms that make the choice to reach out.",
+      label: "Helping feelers",
+      description: "Long sensory fins that make the choice to reach out.",
     },
   },
   {
@@ -228,8 +228,8 @@ const exhibitionSources: ArtifactSource[] = [
     narrativeWords: ["play", "world", "connect", "return"],
     creaturePart: {
       id: "goliath-horns",
-      label: "Reality horns",
-      description: "Playful horns that tune into more than one reality.",
+      label: "Reality comb",
+      description: "A dorsal comb tuned into more than one reality.",
     },
   },
 ];

@@ -24,7 +24,7 @@ export function generateJourneyNarrative(
 
   if (ordered.length === 0) {
     return [
-      "Your creature is still sleeping.",
+      "Your fish is still sleeping.",
       "Find an artwork,",
       "and let its first trait wake.",
     ];

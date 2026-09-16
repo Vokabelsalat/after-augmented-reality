@@ -21,7 +21,7 @@ export function JourneyScreen() {
       <header className="flex items-start justify-between">
         <div>
           <p className="text-[10px] tracking-[0.24em] text-white/42">Born from your path</p>
-          <h1 className="font-display mt-2 text-4xl tracking-[-0.045em]">My Creature</h1>
+          <h1 className="font-display mt-2 text-4xl tracking-[-0.045em]">My Fish</h1>
         </div>
         <button
           type="button"
@@ -33,7 +33,7 @@ export function JourneyScreen() {
       </header>
 
       <div className="mx-auto h-[44dvh] w-full max-w-xl">
-        <CreatureCanvas artifactIds={discoveries.map((item) => item.artifactId)} label="Your evolving exhibition creature" />
+        <CreatureCanvas artifactIds={discoveries.map((item) => item.artifactId)} label="Your evolving exhibition fish" />
       </div>
 
       <div className="mx-auto w-full max-w-xl flex-1">
@@ -43,7 +43,7 @@ export function JourneyScreen() {
         <ol className="mt-4 space-y-3">
           {discoveredArtifacts.length === 0 ? (
             <li className="text-sm leading-6 text-white/42">
-              Return to the scanner. Each discovered work will give your creature a new trait.
+              Return to the scanner. Each discovered work will give your fish a new trait.
             </li>
           ) : (
             discoveredArtifacts.map(({ artifact, sequence }) => (
@@ -71,7 +71,7 @@ export function JourneyScreen() {
         className="mx-auto mt-7 flex min-h-14 w-full max-w-xl items-center justify-between rounded-full bg-[#F3F0E8] px-6 text-sm text-black disabled:cursor-not-allowed disabled:opacity-35"
         disabled={discoveries.length === 0}
       >
-        <span>Finish my creature</span>
+        <span>Finish my fish</span>
         <span aria-hidden="true">→</span>
       </button>
     </main>

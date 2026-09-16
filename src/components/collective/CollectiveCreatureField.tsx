@@ -15,24 +15,62 @@ function seededUnit(seed: number) {
 function FloatingCreature({ contribution }: { contribution: ExhibitionContribution }) {
   const ref = useRef<THREE.Group>(null);
   const placement = useMemo(() => ({
-    x: -6.5 + seededUnit(contribution.id * 3) * 13,
-    y: -3.15 + seededUnit(contribution.id * 5) * 6.25,
+    x: -6.4 + seededUnit(contribution.id * 3) * 12.8,
+    y: -2.6 + seededUnit(contribution.id * 5) * 5.2,
     z: -1 + seededUnit(contribution.id * 7) * 2,
     scale: 0.31 + seededUnit(contribution.id * 11) * 0.22,
-    speed: 0.16 + seededUnit(contribution.id * 13) * 0.2,
+    speed: 0.3 + seededUnit(contribution.id * 13) * 0.32,
     phase: seededUnit(contribution.id * 17) * Math.PI * 2,
+    direction: seededUnit(contribution.id * 19) > 0.5 ? 1 : -1,
+    verticalSpeed: (seededUnit(contribution.id * 23) - 0.5) * 0.34,
   }), [contribution.id]);
+  const motion = useRef({
+    x: placement.x,
+    y: placement.y,
+    vx: placement.speed * placement.direction,
+    vy: placement.verticalSpeed,
+  });
 
-  useFrame(({ clock }) => {
+  useFrame(({ clock }, delta) => {
     if (!ref.current) return;
-    const time = clock.elapsedTime * placement.speed + placement.phase;
-    ref.current.position.x = placement.x + Math.sin(time * 0.72) * 0.42;
-    ref.current.position.y = placement.y + Math.cos(time) * 0.32;
-    ref.current.rotation.z = Math.sin(time * 0.58) * 0.11;
+    const elapsed = clock.elapsedTime;
+    const state = motion.current;
+    const maxX = 7.15;
+    const maxY = 2.95;
+    const turnZone = 0.85;
+
+    if (state.x > maxX - turnZone && state.vx > 0) state.vx = -Math.abs(state.vx);
+    if (state.x < -maxX + turnZone && state.vx < 0) state.vx = Math.abs(state.vx);
+    if (state.y > maxY - turnZone && state.vy > 0) state.vy = -Math.max(0.08, Math.abs(state.vy));
+    if (state.y < -maxY + turnZone && state.vy < 0) state.vy = Math.max(0.08, Math.abs(state.vy));
+
+    state.vy += Math.sin(elapsed * 0.52 + placement.phase) * 0.045 * delta;
+    state.vy = THREE.MathUtils.clamp(state.vy, -0.24, 0.24);
+    state.x += state.vx * delta;
+    state.y += state.vy * delta;
+
+    ref.current.position.x = state.x;
+    ref.current.position.y = state.y;
+    ref.current.rotation.y = THREE.MathUtils.damp(
+      ref.current.rotation.y,
+      state.vx >= 0 ? 0 : Math.PI,
+      3.4,
+      delta,
+    );
+    ref.current.rotation.z = THREE.MathUtils.damp(
+      ref.current.rotation.z,
+      state.vy * 0.24 + Math.sin(elapsed * 0.8 + placement.phase) * 0.025,
+      2.8,
+      delta,
+    );
   });
 
   return (
-    <group ref={ref} position={[placement.x, placement.y, placement.z]}>
+    <group
+      ref={ref}
+      position={[placement.x, placement.y, placement.z]}
+      rotation={[0, placement.direction > 0 ? 0 : Math.PI, 0]}
+    >
       <CreatureModel pieces={contribution.parts} scale={placement.scale} />
     </group>
   );

@@ -36,7 +36,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         children
       ) : (
         <div className="flex min-h-dvh items-center justify-center bg-[#050505] text-[11px] tracking-[0.28em] text-white/45">
-          Waking your creature
+          Waking your fish
         </div>
       )}
     </Provider>

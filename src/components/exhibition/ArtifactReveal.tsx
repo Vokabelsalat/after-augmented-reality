@@ -46,7 +46,7 @@ function ArtifactRevealSequence({
           <CreatureCanvas
             artifactIds={discoveries.map((item) => item.artifactId)}
             highlightedPart={artifact.creaturePart.id}
-            label={`${artifact.creaturePart.label} joining your creature`}
+            label={`${artifact.creaturePart.label} joining your fish`}
           />
         </div>
       )}
@@ -54,7 +54,7 @@ function ArtifactRevealSequence({
         <p className="absolute inset-x-0 bottom-[12vh] text-center text-[10px] tracking-[0.28em] text-white/65">
           {phase === "attached" && "New trait found"}
           {phase === "release" && `${artifact.creaturePart.label} is waking up`}
-          {phase === "formation" && "Joining your creature"}
+          {phase === "formation" && "Joining your fish"}
         </p>
       )}
       {contentVisible && (

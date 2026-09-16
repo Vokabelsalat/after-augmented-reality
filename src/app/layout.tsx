@@ -4,9 +4,9 @@ import "@/app/globals.css";
 import { StoreProvider } from "@/store/StoreProvider";
 
 export const metadata: Metadata = {
-  title: "After Augmented Reality — Build an exhibition creature",
+  title: "After Augmented Reality — Build an exhibition fish",
   description:
-    "Scan works throughout the exhibition and build a creature from your path.",
+    "Scan works throughout the exhibition and build a fish from your path.",
 };
 
 export const viewport: Viewport = {
