@@ -49,7 +49,7 @@ export type MindARAdapterOptions = {
 
 export type ARParticleTarget = Pick<
   ExhibitionArtifact,
-  "id" | "targetIndex" | "theme" | "color"
+  "id" | "targetIndex" | "particleForm" | "color"
 >;
 
 export type ARAdapterErrorCode =

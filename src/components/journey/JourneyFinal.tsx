@@ -6,10 +6,11 @@ import { useEffect, useMemo } from "react";
 import { artifacts, artifactById } from "@/data/artifacts";
 import { generateJourneyNarrative } from "@/lib/narrative/generateJourneyNarrative";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { resetJourney, setExperiencePhase } from "@/store/journeySlice";
+import { finishJourney, resetJourney, setExperiencePhase } from "@/store/journeySlice";
 import { selectDiscoveries } from "@/store/selectors";
 import { selectJourney } from "@/store/selectors";
 import { ShareContribution } from "@/components/journey/ShareContribution";
+import { themes } from "@/data/themes";
 
 const JourneyConstellation = dynamic(
   () =>
@@ -39,8 +40,10 @@ export function JourneyFinal() {
   });
 
   useEffect(() => {
-    dispatch(setExperiencePhase("ending"));
-  }, [dispatch]);
+    if (!journey.completedAt) {
+      dispatch(finishJourney());
+    }
+  }, [dispatch, journey.completedAt]);
 
   return (
     <main className="film-grain safe-top safe-bottom min-h-dvh overflow-x-hidden bg-[#050505] px-5">
@@ -62,7 +65,7 @@ export function JourneyFinal() {
           {themesInOrder.map((artifact, index) => (
             <span key={`${artifact.id}-${index}`} className="flex items-center gap-1.5 text-[9px] tracking-[0.14em] text-white/48">
               <span className="size-1 rounded-full" style={{ backgroundColor: artifact.color }} aria-hidden="true" />
-              {artifact.theme}
+              {themes[artifact.theme].label}
             </span>
           ))}
         </div>
@@ -73,7 +76,11 @@ export function JourneyFinal() {
         <GeneratedNarrative lines={lines} />
 
         <div className="mt-14">
-          <ShareContribution sessionId={journey.sessionId} discoveries={discoveries} />
+          <ShareContribution
+            sessionId={journey.sessionId}
+            completedAt={journey.completedAt}
+            discoveries={discoveries}
+          />
         </div>
 
         <div className="mt-8 border-t border-white/12 pt-6">

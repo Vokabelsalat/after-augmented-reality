@@ -3,6 +3,7 @@ import {
   artifactCollected,
   artifactDetected,
   artifactRevisited,
+  finishJourney,
   journeyReducer,
   resetJourney,
   setActiveArtifact,
@@ -75,9 +76,20 @@ describe("journeySlice", () => {
     expect(reset).toMatchObject({
       sessionId: null,
       startedAt: null,
+      completedAt: null,
       discoveries: [],
       activeArtifactId: null,
       experiencePhase: "intro",
     });
+  });
+
+  it("records when the visitor finishes the story", () => {
+    const state = journeyReducer(
+      journeyReducer(undefined, artifactDetected("memory-fragment", 100)),
+      finishJourney(1_500),
+    );
+
+    expect(state.completedAt).toBe(1_500);
+    expect(state.experiencePhase).toBe("ending");
   });
 });

@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import type { ExhibitionArtifact, ThemeId } from "@/types/exhibition";
+import type { ExhibitionArtifact, ParticleFormId } from "@/types/exhibition";
 
 function hashString(value: string) {
   let hash = 2166136261;
@@ -22,7 +22,7 @@ export function seededRandom(seedValue: string) {
 }
 
 function formationPosition(
-  theme: ThemeId,
+  particleForm: ParticleFormId,
   index: number,
   count: number,
   random: () => number,
@@ -31,7 +31,7 @@ function formationPosition(
   const angle = progress * Math.PI * 18 + random() * 0.35;
   const jitter = () => (random() - 0.5) * 0.16;
 
-  if (theme === "memory") {
+  if (particleForm === "memory") {
     const radius = 0.24 + progress * 1.18;
     return [
       Math.cos(angle) * radius + jitter(),
@@ -40,14 +40,14 @@ function formationPosition(
     ];
   }
 
-  if (theme === "machine") {
+  if (particleForm === "machine") {
     const columns = 34;
     const x = ((index % columns) / (columns - 1) - 0.5) * 2.45;
     const y = (Math.floor(index / columns) / Math.ceil(count / columns) - 0.5) * 1.55;
     return [x + jitter() * 0.3, y + Math.sin(x * 5) * 0.12, jitter()];
   }
 
-  if (theme === "body") {
+  if (particleForm === "body") {
     const y = (progress - 0.5) * 2.45;
     const bodyWidth = 0.32 + Math.sin(progress * Math.PI) * 0.72;
     const side = index % 2 === 0 ? -1 : 1;
@@ -62,7 +62,7 @@ function formationPosition(
   ];
 }
 
-type FormationArtifact = Pick<ExhibitionArtifact, "id" | "theme">;
+type FormationArtifact = Pick<ExhibitionArtifact, "id" | "particleForm">;
 
 export function createArtifactFormationPositions(
   artifact: FormationArtifact,
@@ -74,7 +74,7 @@ export function createArtifactFormationPositions(
   for (let index = 0; index < count; index += 1) {
     const offset = index * 3;
     const target = formationPosition(
-      artifact.theme,
+      artifact.particleForm,
       index,
       count,
       random,
@@ -146,9 +146,20 @@ export function createConstellationGeometry(
   const seeds = new Float32Array(total);
   const centers = discoveredArtifacts.map((artifact, index) => {
     const count = discoveredArtifacts.length;
-    const x = (index - (count - 1) / 2) * (count > 2 ? 1.55 : 1.85);
-    const y = Math.sin(index * 2.15 + count) * 0.48;
-    return new THREE.Vector3(x, y, (index % 2) * 0.15);
+    if (count <= 5) {
+      const x = (index - (count - 1) / 2) * (count > 2 ? 1.3 : 1.85);
+      const y = Math.sin(index * 2.15 + count) * 0.48;
+      return new THREE.Vector3(x, y, (index % 2) * 0.15);
+    }
+
+    const columns = Math.min(4, Math.ceil(Math.sqrt(count)));
+    const rows = Math.ceil(count / columns);
+    const column = index % columns;
+    const row = Math.floor(index / columns);
+    const itemsInRow = Math.min(columns, count - row * columns);
+    const x = (column - (itemsInRow - 1) / 2) * 1.42;
+    const y = ((rows - 1) / 2 - row) * 1.3;
+    return new THREE.Vector3(x, y, ((column + row) % 2) * 0.12);
   });
 
   discoveredArtifacts.forEach((artifact, clusterIndex) => {

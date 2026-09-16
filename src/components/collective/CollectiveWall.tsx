@@ -1,7 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useId, useMemo, useRef, useState, type CSSProperties } from "react";
 import type { ExhibitionContribution } from "@/types/contribution";
+import {
+  dwellTimeReference,
+  glyphScaleFromDwellMs,
+} from "@/lib/contributions/dwellTime";
+
+const ARRIVAL_DURATION_MS = 17_000;
 
 type PositionedContribution = ExhibitionContribution & {
   x: number;
@@ -34,6 +40,7 @@ function NetworkGlyph({
   contribution: ExhibitionContribution;
   label?: string;
 }) {
+  const gradientPrefix = useId().replaceAll(":", "");
   const points = useMemo(() => {
     const count = contribution.glyphs.length;
     if (count === 1) return [{ x: 100, y: 100 }];
@@ -43,12 +50,16 @@ function NetworkGlyph({
       return { x: 100 + Math.cos(angle) * radius, y: 100 + Math.sin(angle) * radius };
     });
   }, [contribution.glyphs]);
+  const dwellReference = useMemo(
+    () => dwellTimeReference(contribution.glyphs.map((glyph) => glyph.dwellMs)),
+    [contribution.glyphs],
+  );
 
   return (
     <svg viewBox="0 0 200 200" role={label ? "img" : undefined} aria-label={label} className="size-full overflow-visible">
       <defs>
         {contribution.glyphs.map((glyph, index) => (
-          <radialGradient key={glyph.artifactId} id={`glow-${contribution.id}-${index}`}>
+          <radialGradient key={glyph.artifactId} id={`glow-${gradientPrefix}-${contribution.id}-${index}`}>
             <stop offset="0" stopColor="#fff" />
             <stop offset="0.28" stopColor={glyph.color} stopOpacity=".95" />
             <stop offset="1" stopColor={glyph.color} stopOpacity="0" />
@@ -66,13 +77,17 @@ function NetworkGlyph({
           strokeWidth=".8"
         />
       ))}
-      {points.map((point, index) => (
-        <g key={contribution.glyphs[index].artifactId}>
-          <circle cx={point.x} cy={point.y} r="31" fill={`url(#glow-${contribution.id}-${index})`} opacity=".42" />
-          <circle cx={point.x} cy={point.y} r="3.2" fill={contribution.glyphs[index].color} />
-          <circle cx={point.x} cy={point.y} r="7" fill="none" stroke={contribution.glyphs[index].color} strokeOpacity=".48" strokeWidth=".7" />
-        </g>
-      ))}
+      {points.map((point, index) => {
+        const glyph = contribution.glyphs[index];
+        const scale = glyphScaleFromDwellMs(glyph.dwellMs, dwellReference);
+        return (
+          <g key={glyph.artifactId}>
+            <circle cx={point.x} cy={point.y} r={31 * scale} fill={`url(#glow-${gradientPrefix}-${contribution.id}-${index})`} opacity=".42" />
+            <circle cx={point.x} cy={point.y} r={3.2 * scale} fill={glyph.color} />
+            <circle cx={point.x} cy={point.y} r={7 * scale} fill="none" stroke={glyph.color} strokeOpacity=".48" strokeWidth=".7" />
+          </g>
+        );
+      })}
     </svg>
   );
 }
@@ -141,7 +156,7 @@ export function CollectiveWall() {
       const next = queueRef.current.shift() ?? null;
       activeRef.current = next;
       setActive(next);
-    }, 11000);
+    }, ARRIVAL_DURATION_MS);
     return () => window.clearTimeout(timeout);
   }, [active]);
 
@@ -149,6 +164,12 @@ export function CollectiveWall() {
     () => contributions.map(positionContribution),
     [contributions],
   );
+  const recentContributions = useMemo(
+    () => contributions.slice(-6).reverse(),
+    [contributions],
+  );
+  const latestContribution = recentContributions[0];
+  const previousContributions = recentContributions.slice(1);
 
   return (
     <main className="collective-wall film-grain relative h-screen overflow-hidden bg-[#030405] text-[#F3F0E8]" aria-label="Collective exhibition stories">
@@ -165,7 +186,7 @@ export function CollectiveWall() {
         </div>
       </header>
 
-      <div className="absolute inset-0" aria-live="polite">
+      <div className="absolute inset-x-0 top-0 bottom-[clamp(14rem,29vh,20rem)]" aria-live="polite">
         {positioned.map((contribution) => {
           const style = {
             left: `${contribution.x}%`,
@@ -217,10 +238,36 @@ export function CollectiveWall() {
         </section>
       )}
 
-      <footer className="absolute inset-x-0 bottom-0 z-30 flex items-end justify-between px-8 py-7 text-[10px] tracking-[0.18em] text-white/25 lg:px-12 lg:py-9">
-        <p>Every path leaves a trace</p>
-        <p>Stories dissolve. Connections remain.</p>
-      </footer>
+      {latestContribution && (
+        <aside className="collective-recents absolute inset-x-0 bottom-0 z-10 h-[clamp(14rem,29vh,20rem)] px-8 pb-7 lg:px-12 lg:pb-9" aria-label="Most recently shared stories">
+          <div className="grid h-full grid-cols-[minmax(24rem,1.5fr)_minmax(28rem,1fr)] border-t border-white/12 pt-5">
+            <article className="grid min-w-0 grid-cols-[clamp(7rem,10vw,10rem)_1fr] items-center gap-6 border-r border-white/12 pr-8">
+              <div className="aspect-square w-full">
+                <NetworkGlyph contribution={latestContribution} label={`Latest constellation of ${latestContribution.glyphs.length} glyphs`} />
+              </div>
+              <div className="min-w-0">
+                <p className="mb-3 text-[10px] tracking-[0.25em] text-white/35">LATEST STORY</p>
+                <div className="font-display text-[clamp(1.15rem,1.45vw,1.75rem)] leading-[1.12] tracking-[-0.025em] text-white/82">
+                  {latestContribution.narrative.map((line, index) => (
+                    <p key={`${index}-${line}`} className="my-0.5">{line}</p>
+                  ))}
+                </div>
+              </div>
+            </article>
+
+            <div className="grid min-w-0 grid-cols-5 items-center gap-3 pl-8">
+              {previousContributions.map((contribution, index) => (
+                <article key={contribution.id} className="min-w-0 text-center">
+                  <div className="mx-auto aspect-square w-full max-w-32 opacity-70">
+                    <NetworkGlyph contribution={contribution} label={`Recent constellation ${index + 2}`} />
+                  </div>
+                  <p className="mt-1 text-[9px] tracking-[0.18em] text-white/25">0{index + 2}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </aside>
+      )}
     </main>
   );
 }

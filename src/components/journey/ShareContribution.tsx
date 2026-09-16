@@ -7,21 +7,23 @@ type ShareState = "idle" | "sharing" | "shared" | "error";
 
 export function ShareContribution({
   sessionId,
+  completedAt,
   discoveries,
 }: {
   sessionId: string | null;
+  completedAt: number | null;
   discoveries: Discovery[];
 }) {
   const [state, setState] = useState<ShareState>("idle");
 
   async function share() {
-    if (!sessionId || discoveries.length === 0 || state === "sharing") return;
+    if (!sessionId || !completedAt || discoveries.length === 0 || state === "sharing") return;
     setState("sharing");
     try {
       const response = await fetch("/api/contributions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId, discoveries }),
+        body: JSON.stringify({ sessionId, completedAt, discoveries }),
       });
       if (!response.ok) throw new Error("Share failed");
       setState("shared");
@@ -35,7 +37,7 @@ export function ShareContribution({
       <button
         type="button"
         onClick={share}
-        disabled={!sessionId || discoveries.length === 0 || state === "sharing" || state === "shared"}
+        disabled={!sessionId || !completedAt || discoveries.length === 0 || state === "sharing" || state === "shared"}
         className="flex min-h-14 w-full items-center justify-between rounded-full bg-[#F3F0E8] px-6 text-sm text-black transition-opacity disabled:cursor-not-allowed disabled:opacity-50"
       >
         <span>

@@ -143,10 +143,10 @@ function ARScannerComponent(
       const adapter = new MindARAdapter({
         imageTargetSrc: "/targets/exhibition.mind",
         targets: artifacts.map(
-          ({ id, targetIndex, theme, color }) => ({
+          ({ id, targetIndex, particleForm, color }) => ({
             id,
             targetIndex,
-            theme,
+            particleForm,
             color,
           }),
         ),
@@ -203,7 +203,7 @@ function ARScannerComponent(
       {
         (waiting || scannerState === "error") && (
           <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/55 px-7 backdrop-blur-sm">
-            <div className="w-full max-w-sm text-center">
+            <div className="w-full max-w-sm text-center flex items-center flex-col">
               <CategoryOrbit />
               <h2 className="text-4xl tracking-[-0.04em]">
                 {scannerState === "error" ? "Camera unavailable" : "Find a fragment"}
@@ -218,7 +218,7 @@ function ARScannerComponent(
               <button
                 type="button"
                 onClick={() => void startScanner()}
-                className="mt-7 min-h-13 w-[80vw] rounded-full bg-white px-6 text-sm font-medium text-black transition-opacity hover:opacity-85 animate-pulse"
+                className="mt-7 min-h-13 w-[40vw] rounded-full bg-white px-6 text-sm font-medium text-black transition-opacity hover:opacity-85 animate-pulse"
               >
                 {scannerState === "error" ? "Try camera again" : "Start camera"}
               </button>

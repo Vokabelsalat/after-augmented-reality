@@ -5,30 +5,30 @@ export const themes: Record<ThemeId, ThemeDefinition> = {
     id: "memory",
     label: "Memory",
     color: "#FF7557",
-    description: "What returns differently each time it is recalled.",
+    description: "Archives, histories, role models, and what returns through time.",
   },
-  machine: {
-    id: "machine",
-    label: "Machine",
+  interface: {
+    id: "interface",
+    label: "Interface",
     color: "#58D6FF",
-    description: "Signals, systems, and voices that answer back.",
+    description: "Encounters shaped by screens, systems, text, and digital material.",
   },
-  body: {
-    id: "body",
-    label: "Body",
+  worldmaking: {
+    id: "worldmaking",
+    label: "Worldmaking",
+    color: "#58D6FF",
+    description: "Constructed realities, play, and the worlds entered through stories.",
+  },
+  embodiment: {
+    id: "embodiment",
+    label: "Embodiment",
     color: "#C69CFF",
-    description: "The sensing form that carries every encounter.",
+    description: "Movement, perception, illness, and experience carried by the body.",
   },
-  language: {
-    id: "language",
-    label: "Language",
-    color: "#F2E85C",
-    description: "Words as material, interruption, and shared space.",
-  },
-  place: {
-    id: "place",
-    label: "Place",
-    color: "#6DE2A0",
-    description: "Where a path gathers meaning through attention.",
+  agency: {
+    id: "agency",
+    label: "Agency",
+    color: "#C69CFF",
+    description: "Choice, responsibility, solidarity, and the possibility of intervention.",
   },
 };

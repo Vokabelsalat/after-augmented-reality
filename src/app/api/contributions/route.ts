@@ -5,6 +5,7 @@ import {
   listContributions,
 } from "@/lib/contributions/database";
 import { generateJourneyNarrative } from "@/lib/narrative/generateJourneyNarrative";
+import { calculateDwellTimes } from "@/lib/contributions/dwellTime";
 import type { ContributionSubmission, SharedGlyph } from "@/types/contribution";
 
 export const runtime = "nodejs";
@@ -21,6 +22,8 @@ function parseSubmission(value: unknown): ContributionSubmission | null {
     typeof candidate.sessionId !== "string" ||
     candidate.sessionId.length < 6 ||
     candidate.sessionId.length > 120 ||
+    typeof candidate.completedAt !== "number" ||
+    !Number.isFinite(candidate.completedAt) ||
     !Array.isArray(candidate.discoveries) ||
     candidate.discoveries.length === 0 ||
     candidate.discoveries.length > artifacts.length
@@ -33,6 +36,7 @@ function parseSubmission(value: unknown): ContributionSubmission | null {
     .map((item) => ({
       artifactId: typeof item?.artifactId === "string" ? item.artifactId : "",
       sequence: Number(item?.sequence),
+      discoveredAt: Number(item?.discoveredAt),
     }))
     .sort((a, b) => a.sequence - b.sequence);
 
@@ -40,7 +44,10 @@ function parseSubmission(value: unknown): ContributionSubmission | null {
     if (
       !artifactById.has(item.artifactId) ||
       seen.has(item.artifactId) ||
-      item.sequence !== index + 1
+      item.sequence !== index + 1 ||
+      !Number.isFinite(item.discoveredAt) ||
+      item.discoveredAt <= 0 ||
+      (index > 0 && item.discoveredAt < discoveries[index - 1].discoveredAt)
     ) {
       return false;
     }
@@ -48,7 +55,15 @@ function parseSubmission(value: unknown): ContributionSubmission | null {
     return true;
   });
 
-  return valid ? { sessionId: candidate.sessionId, discoveries } : null;
+  const firstDiscoveredAt = discoveries[0]?.discoveredAt ?? 0;
+  const lastDiscoveredAt = discoveries.at(-1)?.discoveredAt ?? 0;
+  const validCompletion =
+    candidate.completedAt >= lastDiscoveredAt &&
+    candidate.completedAt - firstDiscoveredAt <= 24 * 60 * 60_000;
+
+  return valid && validCompletion
+    ? { sessionId: candidate.sessionId, completedAt: candidate.completedAt, discoveries }
+    : null;
 }
 
 export async function GET(request: Request) {
@@ -77,13 +92,18 @@ export async function POST(request: Request) {
     );
   }
 
-  const glyphs: SharedGlyph[] = submission.discoveries.map((discovery) => {
+  const dwellTimes = calculateDwellTimes(
+    submission.discoveries,
+    submission.completedAt,
+  );
+  const glyphs: SharedGlyph[] = submission.discoveries.map((discovery, index) => {
     const artifact = artifactById.get(discovery.artifactId)!;
     return {
       artifactId: artifact.id,
       sequence: discovery.sequence,
       theme: artifact.theme,
       color: artifact.color,
+      dwellMs: dwellTimes[index],
     };
   });
   const narrative = generateJourneyNarrative(submission.discoveries, artifacts);

@@ -25,7 +25,8 @@ export function loadJourney(storage: StorageLike): PersistedJourney | null {
       !Array.isArray(value.discoveries) ||
       !value.discoveries.every(isDiscovery) ||
       (value.sessionId !== null && typeof value.sessionId !== "string") ||
-      (value.startedAt !== null && typeof value.startedAt !== "number")
+      (value.startedAt !== null && typeof value.startedAt !== "number") ||
+      (value.completedAt != null && typeof value.completedAt !== "number")
     ) {
       return null;
     }
@@ -33,6 +34,7 @@ export function loadJourney(storage: StorageLike): PersistedJourney | null {
     return {
       sessionId: value.sessionId ?? null,
       startedAt: value.startedAt ?? null,
+      completedAt: value.completedAt ?? null,
       discoveries: value.discoveries
         .slice()
         .sort((a, b) => a.sequence - b.sequence),
@@ -59,13 +61,13 @@ export function subscribeToJourneyPersistence(
 ) {
   let previous = "";
   return store.subscribe(() => {
-    const { sessionId, startedAt, discoveries } = store.getState().journey;
+    const { sessionId, startedAt, completedAt, discoveries } = store.getState().journey;
     if (!sessionId && startedAt === null && discoveries.length === 0) {
       previous = "";
       storage.removeItem(JOURNEY_STORAGE_KEY);
       return;
     }
-    const serialized = JSON.stringify({ sessionId, startedAt, discoveries });
+    const serialized = JSON.stringify({ sessionId, startedAt, completedAt, discoveries });
     if (serialized === previous) return;
     previous = serialized;
     storage.setItem(JOURNEY_STORAGE_KEY, serialized);

@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { themes } from "@/data/themes";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { setExperiencePhase } from "@/store/journeySlice";
+import { finishJourney, setExperiencePhase } from "@/store/journeySlice";
 import {
   selectDiscoveries,
   selectDiscoveredArtifacts,
@@ -70,7 +70,7 @@ export function JourneyScreen() {
       <button
         type="button"
         onClick={() => {
-          dispatch(setExperiencePhase("ending"));
+          dispatch(finishJourney());
           router.push("/journey");
         }}
         className="mx-auto mt-7 flex min-h-14 w-full max-w-xl items-center justify-between rounded-full bg-[#F3F0E8] px-6 text-sm text-black disabled:cursor-not-allowed disabled:opacity-35"

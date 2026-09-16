@@ -5,6 +5,8 @@ export type SharedGlyph = {
   sequence: number;
   theme: ThemeId;
   color: string;
+  /** Time from this scan until the next scan or journey completion. */
+  dwellMs?: number;
 };
 
 export type ExhibitionContribution = {
@@ -17,8 +19,10 @@ export type ExhibitionContribution = {
 
 export type ContributionSubmission = {
   sessionId: string;
+  completedAt: number;
   discoveries: Array<{
     artifactId: string;
     sequence: number;
+    discoveredAt: number;
   }>;
 };

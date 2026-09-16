@@ -1,4 +1,11 @@
-export type ThemeId = "memory" | "body" | "machine" | "language" | "place";
+export type ThemeId =
+  | "memory"
+  | "interface"
+  | "worldmaking"
+  | "embodiment"
+  | "agency";
+
+export type ParticleFormId = "memory" | "machine" | "body";
 
 export type ExhibitionArtifact = {
   id: string;
@@ -7,6 +14,7 @@ export type ExhibitionArtifact = {
   title: string;
   artist: string;
   theme: ThemeId;
+  particleForm: ParticleFormId;
   color: string;
   shortText: string;
   narrativeWords: string[];

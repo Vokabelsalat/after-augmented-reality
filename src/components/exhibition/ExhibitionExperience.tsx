@@ -28,7 +28,8 @@ export function ExhibitionExperience() {
   const phase = useAppSelector(selectExperiencePhase);
   const discoveries = useAppSelector(selectDiscoveries);
   const [simulatorVisible, setSimulatorVisible] = useState(
-    process.env.NODE_ENV === "development",
+    // process.env.NODE_ENV === "development",
+    true
   );
   const [alreadyDiscovered, setAlreadyDiscovered] = useState<string | null>(null);
   const [revealPresentation, setRevealPresentation] = useState<

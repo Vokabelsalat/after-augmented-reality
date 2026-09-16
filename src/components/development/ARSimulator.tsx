@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { artifacts } from "@/data/artifacts";
 import { useAppDispatch } from "@/store/hooks";
-import { resetJourney, setExperiencePhase } from "@/store/journeySlice";
+import { finishJourney, resetJourney } from "@/store/journeySlice";
 
 type ARSimulatorProps = {
   onArtifactDetected: (artifactId: string) => void;
@@ -29,7 +29,7 @@ export function ARSimulator({
           </button>
         )}
       </div>
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid max-h-40 grid-cols-3 gap-2 overflow-y-auto overscroll-contain pr-1">
         {artifacts.map((artifact, index) => (
           <button
             key={artifact.id}
@@ -37,7 +37,7 @@ export function ARSimulator({
             onClick={() => onArtifactDetected(artifact.id)}
             className="min-h-11 rounded-full bg-white/[0.08] px-2 text-[11px] transition-colors hover:bg-white/[0.14]"
           >
-            Poster {index + 1}
+            {index + 1}. {artifact.title}
           </button>
         ))}
       </div>
@@ -52,7 +52,7 @@ export function ARSimulator({
         <button
           type="button"
           onClick={() => {
-            dispatch(setExperiencePhase("ending"));
+            dispatch(finishJourney());
             router.push("/journey");
           }}
           className="min-h-10 rounded-full bg-white px-3 text-[11px] text-black transition-opacity hover:opacity-80"

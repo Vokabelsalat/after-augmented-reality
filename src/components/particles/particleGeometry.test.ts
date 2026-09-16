@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { artifacts } from "@/data/artifacts";
 import {
   createArtifactFormationPositions,
+  createConstellationGeometry,
   createNarrativeGeometry,
 } from "@/components/particles/particleGeometry";
 
@@ -43,5 +44,16 @@ describe("artifact particle formations", () => {
 
     expect(particlesOnRim).toBeGreaterThanOrEqual(55);
     geometry.dispose();
+  });
+
+  it("keeps the full exhibition constellation within a compact field", () => {
+    const geometry = createConstellationGeometry(artifacts, 8);
+    const xs = geometry.centers.map((center) => center.x);
+    const ys = geometry.centers.map((center) => center.y);
+
+    expect(Math.max(...xs) - Math.min(...xs)).toBeLessThan(5);
+    expect(Math.max(...ys) - Math.min(...ys)).toBeLessThan(5);
+    geometry.particleGeometry.dispose();
+    geometry.lineGeometry.dispose();
   });
 });

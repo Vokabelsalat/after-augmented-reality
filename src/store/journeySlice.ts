@@ -17,6 +17,7 @@ export type Discovery = {
 export type JourneyState = {
   sessionId: string | null;
   startedAt: number | null;
+  completedAt: number | null;
   discoveries: Discovery[];
   activeArtifactId: string | null;
   experiencePhase: ExperiencePhase;
@@ -24,12 +25,13 @@ export type JourneyState = {
 
 export type PersistedJourney = Pick<
   JourneyState,
-  "sessionId" | "startedAt" | "discoveries"
+  "sessionId" | "startedAt" | "completedAt" | "discoveries"
 >;
 
 export const initialJourneyState: JourneyState = {
   sessionId: null,
   startedAt: null,
+  completedAt: null,
   discoveries: [],
   activeArtifactId: null,
   experiencePhase: "intro",
@@ -56,6 +58,7 @@ const journeySlice = createSlice({
           state.startedAt = action.payload.startedAt;
         }
         state.activeArtifactId = null;
+        state.completedAt = null;
         state.experiencePhase = "scanning";
       },
       prepare(payload?: { sessionId: string; startedAt: number }) {
@@ -84,6 +87,7 @@ const journeySlice = createSlice({
           discoveredAt,
           sequence: state.discoveries.length + 1,
         });
+        state.completedAt = null;
         state.activeArtifactId = artifactId;
         state.experiencePhase = "revealing";
       },
@@ -109,10 +113,21 @@ const journeySlice = createSlice({
     },
     setExperiencePhase(state, action: PayloadAction<ExperiencePhase>) {
       state.experiencePhase = action.payload;
+      if (action.payload === "scanning") state.completedAt = null;
+    },
+    finishJourney: {
+      reducer(state, action: PayloadAction<number>) {
+        state.completedAt = action.payload;
+        state.experiencePhase = "ending";
+      },
+      prepare(completedAt = Date.now()) {
+        return { payload: completedAt };
+      },
     },
     hydrateJourney(state, action: PayloadAction<PersistedJourney>) {
       state.sessionId = action.payload.sessionId;
       state.startedAt = action.payload.startedAt;
+      state.completedAt = action.payload.completedAt;
       state.discoveries = action.payload.discoveries;
       state.activeArtifactId = null;
       state.experiencePhase = action.payload.sessionId ? "scanning" : "intro";
@@ -127,6 +142,7 @@ export const {
   artifactCollected,
   artifactDetected,
   artifactRevisited,
+  finishJourney,
   hydrateJourney,
   resetJourney,
   setActiveArtifact,

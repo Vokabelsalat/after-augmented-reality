@@ -15,45 +15,45 @@ function discoveries(ids: string[]): Discovery[] {
 describe("generateJourneyNarrative", () => {
   it("is deterministic for the same path", () => {
     const path = discoveries([
-      "machine-voice",
-      "memory-fragment",
-      "body-space",
+      "between-page-and-screen",
+      "finding-frida",
+      "emperor",
     ]);
     const first = generateJourneyNarrative(path, artifacts);
     const second = generateJourneyNarrative(path, artifacts);
 
     expect(first).toEqual(second);
     expect(first).toEqual([
-      "You began with machine.",
-      "Then memory crossed the path as a trace,",
+      "You began with interface.",
+      "Then memory crossed the path as an archive,",
       "asking the fragments to return.",
-      "Body arrived last,",
-      "carrying distance into what remains.",
+      "Embodiment arrived last,",
+      "carrying reach into what remains.",
       "Three fragments travel with you.",
     ]);
   });
 
   it("changes when discovery order changes", () => {
     const machineFirst = generateJourneyNarrative(
-      discoveries(["machine-voice", "memory-fragment"]),
+      discoveries(["between-page-and-screen", "finding-frida"]),
       artifacts,
     );
     const memoryFirst = generateJourneyNarrative(
-      discoveries(["memory-fragment", "machine-voice"]),
+      discoveries(["finding-frida", "between-page-and-screen"]),
       artifacts,
     );
 
-    expect(machineFirst[0]).toBe("You began with machine.");
+    expect(machineFirst[0]).toBe("You began with interface.");
     expect(memoryFirst[0]).toBe("You began with memory.");
     expect(machineFirst).not.toEqual(memoryFirst);
   });
 
   it("uses a compact single-fragment form", () => {
     expect(
-      generateJourneyNarrative(discoveries(["memory-fragment"]), artifacts),
+      generateJourneyNarrative(discoveries(["finding-frida"]), artifacts),
     ).toEqual([
       "You began with memory.",
-      "A trace loosened from the surface,",
+      "An archive loosened from the surface,",
       "asking you to return.",
       "One fragment travels with you.",
     ]);
@@ -66,7 +66,7 @@ describe("generateJourneyNarrative", () => {
       title: "Memory Returns",
     };
     const lines = generateJourneyNarrative(
-      discoveries(["memory-fragment", "machine-voice", "memory-return"]),
+      discoveries(["finding-frida", "between-page-and-screen", "memory-return"]),
       [...artifacts, secondMemory],
     );
 

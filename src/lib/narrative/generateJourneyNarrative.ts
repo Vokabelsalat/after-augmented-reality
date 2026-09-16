@@ -36,7 +36,7 @@ export function generateJourneyNarrative(
 
   if (ordered.length === 1) {
     lines.push(
-      `A ${first.narrativeWords[1]} loosened from the surface,`,
+      `${articleFor(first.narrativeWords[1])[0].toUpperCase()}${articleFor(first.narrativeWords[1]).slice(1)} ${first.narrativeWords[1]} loosened from the surface,`,
       `asking you to ${first.narrativeWords[2]}.`,
       "One fragment travels with you.",
     );

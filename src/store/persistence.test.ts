@@ -31,6 +31,7 @@ describe("journey persistence", () => {
     const persisted = {
       sessionId: "session-test",
       startedAt: 100,
+      completedAt: null,
       discoveries: [
         { artifactId: "memory-fragment", sequence: 1, discoveredAt: 200 },
       ],

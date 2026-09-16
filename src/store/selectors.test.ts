@@ -10,15 +10,15 @@ import {
 describe("journey selectors", () => {
   it("maps ordered discoveries back to typed artifact configuration", () => {
     const store = makeStore();
-    store.dispatch(artifactDetected("body-space", 10));
-    store.dispatch(artifactDetected("memory-fragment", 20));
+    store.dispatch(artifactDetected("emperor", 10));
+    store.dispatch(artifactDetected("finding-frida", 20));
     const state = store.getState();
 
     expect(selectDiscoveryCount(state)).toBe(2);
     expect(
       selectDiscoveredArtifacts(state).map(({ artifact }) => artifact.id),
-    ).toEqual(["body-space", "memory-fragment"]);
-    expect(selectHasDiscovered("body-space")(state)).toBe(true);
-    expect(selectHasDiscovered("machine-voice")(state)).toBe(false);
+    ).toEqual(["emperor", "finding-frida"]);
+    expect(selectHasDiscovered("emperor")(state)).toBe(true);
+    expect(selectHasDiscovered("between-page-and-screen")(state)).toBe(false);
   });
 });

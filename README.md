@@ -32,7 +32,7 @@ The development and production scripts use Next.js's supported webpack mode. Wit
 
 In `npm run dev`, the simulator controls appear automatically at the bottom of the scanner. They provide:
 
-- **Poster 1**, **Poster 2**, and **Poster 3** — send the same semantic artifact event as a MindAR detection;
+- the numbered artwork buttons — send the same semantic artifact event as a MindAR detection and expose every work from `public/exhibition.csv`;
 - **Reset journey** — clears the current Redux journey and its persisted record;
 - **Finish journey** — opens the final constellation and generated narrative;
 - **Hide** — reveals the camera interface; the no-camera simulator can be reopened from there.
@@ -42,15 +42,17 @@ The simulator is also offered as an accessible fallback whenever the real scanne
 Suggested acceptance path:
 
 1. Start the experience.
-2. Tap Poster 1 and watch the attached → release → formation → content handoff.
-3. Continue scanning and repeat with Posters 2 and 3.
+2. Tap the first artwork and watch the attached → release → formation → content handoff.
+3. Continue scanning and repeat with other works.
 4. Open **My Journey** after any scan to see the constellation change.
 5. Finish the reading, then reload to confirm persistence.
 6. Tap **Share with the exhibition**, then open [http://localhost:3066/collective](http://localhost:3066/collective) on the wall display.
 
 ## Shared exhibition screen
 
-The finished-story screen can send a visitor's anonymous journey to the server. The submission contains only the journey session ID and ordered artifact IDs. The server validates those IDs, regenerates the canonical narrative, attaches the configured glyph themes and colors, and stores the result in SQLite.
+The finished-story screen can send a visitor's anonymous journey to the server. The submission contains only the journey session ID, completion time, and ordered artifact IDs with their scan timestamps. The server validates those values, regenerates the canonical narrative, attaches the configured glyph themes and colors, calculates each artifact's dwell time, and stores the result in SQLite.
+
+Dwell time runs from an artifact's first scan until the next new artifact is scanned. The final artifact runs until the visitor finishes the story. On the collective screen, longer dwell times produce larger colored nodes. Sizing combines a bounded logarithmic absolute scale with relative contrast inside each story, making modest timing differences visible without allowing an unusually long visit to overwhelm the composition. Previously stored stories without timing data retain the original neutral node size.
 
 Open `/collective` full-screen on the exhibition display. It polls the live contribution feed every 2.5 seconds. Each new story expands into focus, displays its narrative, then contracts into an abstract constellation and joins up to 60 other drifting contributions. Initial history appears directly as the ambient field, so restarting the display does not replay every old story.
 
@@ -71,9 +73,7 @@ Add the final print artwork as high-quality JPG or PNG files in `public/images/`
 
 Open the [MindAR image target compiler](https://hiukim.github.io/mind-ar-js-doc/tools/compile/), add the images in this exact order, compile, and export the bundle:
 
-1. `poster-0.jpeg` → target index `0`
-2. `poster-1.jpeg` → target index `1`
-3. `poster-2.jpeg` → target index `2`
+Compile the final artwork images in the same order as `public/exhibition.csv`. The current configuration assigns target indices `0` through `12`, from **Finding Frida** through **Goliath**.
 
 Save the downloaded file as:
 
@@ -85,7 +85,7 @@ The repository deliberately does not include a fake `.mind` file. An invalid pla
 
 ### 3. Check the configuration mapping
 
-`src/data/artifacts.ts` is the source of truth. `targetIndex` must match the image order used by the compiler. MindAR emits a number, the adapter forwards it, and `artifactByTargetIndex` resolves the exhibition content.
+`src/data/artifacts.ts` is the runtime source of truth and follows the CSV row order. `targetIndex` must match the image order used by the compiler. MindAR emits a number, the adapter forwards it, and `artifactByTargetIndex` resolves the exhibition content. The curatorial themes are **Memory**, **Interface**, **Worldmaking**, **Embodiment**, and **Agency**. Until final artwork images are available, a separate `particleForm` field lets the 13 works reuse the existing memory, machine, and body images, colors, and formations without reducing their themes to those three visual placeholders.
 
 ### 4. Serve over HTTPS on a phone
 
@@ -142,13 +142,13 @@ MindAR transforms, cameras, and render loops are not shared with the R3F rendere
 1. Add a typed entry to `src/data/artifacts.ts`, including a unique `id`, the next `targetIndex`, its matching `posterImageSrc`, theme, color, content, and narrative words.
 2. Add or adjust its theme definition in `src/data/themes.ts` if necessary.
 3. Recompile **all** reference images into `exhibition.mind` in the same order as the configured indices.
-4. Replace `public/targets/exhibition.mind` and test both the simulator button (add one if moving beyond the three-target prototype) and the physical target.
+4. Replace `public/targets/exhibition.mind` and test both the simulator button and the physical target.
 
 Artifact content, target mapping, particles, persistence, constellation encoding, and narrative generation all read configuration data; no individual reveal component needs exhibition-specific logic.
 
 ## Persistence
 
-The localStorage key is `say-hi:journey:v1`. It stores only session ID, start time, artifact IDs, discovery order, and timestamps. Hydration validates malformed data before handing it to Redux. **Start again** or the development reset returns to a clean intro state. Shared journeys are separate, anonymous server records; resetting the phone does not remove a story already shared with the exhibition.
+The localStorage key is `say-hi:journey:v1`. It stores only session ID, start and completion times, artifact IDs, discovery order, and scan timestamps. Hydration validates malformed data before handing it to Redux. **Start again** or the development reset returns to a clean intro state. Shared journeys are separate, anonymous server records; resetting the phone does not remove a story already shared with the exhibition.
 
 ## Known prototype limitations
 
