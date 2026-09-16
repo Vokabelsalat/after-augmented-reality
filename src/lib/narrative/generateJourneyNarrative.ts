@@ -8,7 +8,7 @@ function articleFor(word: string) {
 }
 
 export function generateJourneyNarrative(
-  discoveries: Discovery[],
+  discoveries: Array<Pick<Discovery, "artifactId" | "sequence">>,
   exhibitionArtifacts: ExhibitionArtifact[],
 ): string[] {
   const artifactMap = new Map(

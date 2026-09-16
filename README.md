@@ -13,7 +13,7 @@ npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000). Tap **Start experience**. Camera access is never requested until the separate **Start camera** action.
+Open [http://localhost:3066](http://localhost:3066). Tap **Start experience**. Camera access is never requested until the separate **Start camera** action.
 
 Useful checks:
 
@@ -46,6 +46,20 @@ Suggested acceptance path:
 3. Continue scanning and repeat with Posters 2 and 3.
 4. Open **My Journey** after any scan to see the constellation change.
 5. Finish the reading, then reload to confirm persistence.
+6. Tap **Share with the exhibition**, then open [http://localhost:3066/collective](http://localhost:3066/collective) on the wall display.
+
+## Shared exhibition screen
+
+The finished-story screen can send a visitor's anonymous journey to the server. The submission contains only the journey session ID and ordered artifact IDs. The server validates those IDs, regenerates the canonical narrative, attaches the configured glyph themes and colors, and stores the result in SQLite.
+
+Open `/collective` full-screen on the exhibition display. It polls the live contribution feed every 2.5 seconds. Each new story expands into focus, displays its narrative, then contracts into an abstract constellation and joins up to 60 other drifting contributions. Initial history appears directly as the ambient field, so restarting the display does not replay every old story.
+
+The default database file is `data/exhibition.sqlite` and is ignored by Git. Set `EXHIBITION_DATABASE_PATH` to an absolute persistent volume path in production. Run one server instance against that volume; for horizontal scaling, replace the small database helper with a managed shared SQL store while preserving the API contract.
+
+The server endpoints are:
+
+- `POST /api/contributions` — validate and store a completed journey; duplicate session IDs are idempotent.
+- `GET /api/contributions?after=<id>&limit=<n>` — return ordered contributions for the wall feed.
 
 ## Real AR testing
 
@@ -98,6 +112,10 @@ tracked AR particle volume + React content
 persistent particle constellation
           ↓
 deterministic narrative generator
+          ↓ share
+validated contribution API + SQLite
+          ↓ live feed
+collective wall field
 ```
 
 - `src/components/ar/MindARAdapter.ts` is the only application module that imports MindAR. It owns camera startup, anchors, its renderer loop, repeated-target gating, and disposal.
@@ -130,7 +148,7 @@ Artifact content, target mapping, particles, persistence, constellation encoding
 
 ## Persistence
 
-The localStorage key is `say-hi:journey:v1`. It stores only session ID, start time, artifact IDs, discovery order, and timestamps. Hydration validates malformed data before handing it to Redux. **Start again** or the development reset returns to a clean intro state.
+The localStorage key is `say-hi:journey:v1`. It stores only session ID, start time, artifact IDs, discovery order, and timestamps. Hydration validates malformed data before handing it to Redux. **Start again** or the development reset returns to a clean intro state. Shared journeys are separate, anonymous server records; resetting the phone does not remove a story already shared with the exhibition.
 
 ## Known prototype limitations
 
@@ -138,4 +156,4 @@ The localStorage key is `say-hi:journey:v1`. It stores only session ID, start ti
 - The current AR-first experiment retains the last valid particle pose when tracking is lost and realigns it when the poster is reacquired. Because MindAR image tracking is not world-tracking/SLAM, that frozen pose cannot remain physically registered if the camera moves significantly while the poster is outside the frame.
 - Detection has been architected for Safari/Chrome lifecycle constraints, but final tracking quality and filter tuning must be validated against the actual prints and exhibition lighting.
 - The poem is template-based and English-only. It varies by first/last work, intermediate order, narrative vocabulary, count, and repeated themes, but it is not an LLM.
-- Prototype persistence is device/browser-local and has no account sync.
+- Personal in-progress journeys remain device/browser-local and have no account sync. Only an explicit share sends the completed path to the server.

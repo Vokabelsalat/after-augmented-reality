@@ -8,6 +8,8 @@ import { generateJourneyNarrative } from "@/lib/narrative/generateJourneyNarrati
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { resetJourney, setExperiencePhase } from "@/store/journeySlice";
 import { selectDiscoveries } from "@/store/selectors";
+import { selectJourney } from "@/store/selectors";
+import { ShareContribution } from "@/components/journey/ShareContribution";
 
 const JourneyConstellation = dynamic(
   () =>
@@ -26,6 +28,7 @@ const GeneratedNarrative = dynamic(() =>
 export function JourneyFinal() {
   const dispatch = useAppDispatch();
   const discoveries = useAppSelector(selectDiscoveries);
+  const journey = useAppSelector(selectJourney);
   const lines = useMemo(
     () => generateJourneyNarrative(discoveries, artifacts),
     [discoveries],
@@ -69,7 +72,11 @@ export function JourneyFinal() {
         <p className="mb-6 text-[9px] tracking-[0.24em] text-white/35">A narrative from your path</p>
         <GeneratedNarrative lines={lines} />
 
-        <div className="mt-14 border-t border-white/12 pt-6">
+        <div className="mt-14">
+          <ShareContribution sessionId={journey.sessionId} discoveries={discoveries} />
+        </div>
+
+        <div className="mt-8 border-t border-white/12 pt-6">
           <Link
             href="/"
             onClick={() => dispatch(setExperiencePhase("scanning"))}

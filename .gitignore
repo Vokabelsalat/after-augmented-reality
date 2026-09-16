@@ -28,3 +28,6 @@ yarn-error.log*
 pnpm-debug.log*
 
 certificates
+
+# local exhibition database
+/data/*.sqlite*
