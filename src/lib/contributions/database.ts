@@ -5,6 +5,8 @@ import { dirname, join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import type { ExhibitionContribution, SharedCreaturePart } from "@/types/contribution";
 import { artifactById } from "@/data/artifacts";
+import { artifacts } from "@/data/artifacts";
+import { aggregateContributionDwellTimes } from "@/lib/contributions/heatmap";
 
 type ContributionRow = {
   id: number;
@@ -82,6 +84,21 @@ export function listContributions(afterId = 0, limit = 80) {
     .all(afterId, limit) as unknown as ContributionRow[];
 
   return rows.map(deserialize);
+}
+
+export function getCollectiveHeatmap() {
+  const rows = openDatabase()
+    .prepare(
+      `SELECT id, public_id, glyphs_json, narrative_json, created_at
+       FROM contributions
+       ORDER BY id ASC`,
+    )
+    .all() as unknown as ContributionRow[];
+
+  return aggregateContributionDwellTimes(
+    rows.map(deserialize),
+    artifacts.map((artifact) => artifact.id),
+  );
 }
 
 export function createContribution(input: {

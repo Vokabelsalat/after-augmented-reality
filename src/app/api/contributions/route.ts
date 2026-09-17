@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { artifacts, artifactById } from "@/data/artifacts";
 import {
   createContribution,
+  getCollectiveHeatmap,
   listContributions,
 } from "@/lib/contributions/database";
 import { generateJourneyNarrative } from "@/lib/narrative/generateJourneyNarrative";
@@ -71,7 +72,10 @@ export async function GET(request: Request) {
   const after = Math.max(0, Number.parseInt(url.searchParams.get("after") ?? "0", 10) || 0);
   const limit = Math.min(100, Math.max(1, Number.parseInt(url.searchParams.get("limit") ?? "80", 10) || 80));
   return Response.json(
-    { contributions: listContributions(after, limit) },
+    {
+      contributions: listContributions(after, limit),
+      heatmap: getCollectiveHeatmap(),
+    },
     { headers: responseHeaders },
   );
 }

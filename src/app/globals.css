@@ -141,6 +141,18 @@ a:focus-visible {
   background: radial-gradient(circle at 35% 50%, rgba(255, 255, 255, 0.08), transparent 28%);
 }
 
+.collective-heat-cell {
+  background: rgba(255, 255, 255, 0.018);
+}
+
+.collective-heat-glow {
+  opacity: var(--heat-opacity);
+  background:
+    radial-gradient(circle at 28% 82%, color-mix(in srgb, var(--heat-color) 72%, transparent), transparent 58%),
+    linear-gradient(135deg, color-mix(in srgb, var(--heat-color) 20%, transparent), transparent 62%);
+  filter: saturate(1.25);
+}
+
 @keyframes category-orbit {
   from {
     transform: rotate(var(--orbit-angle));
@@ -206,5 +218,11 @@ a:focus-visible {
 
   .collective-recents {
     display: none;
+  }
+
+  .collective-heat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: none;
+    overflow-y: auto;
   }
 }

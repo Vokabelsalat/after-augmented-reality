@@ -2,14 +2,17 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { CollectiveVisualizationField } from "@/components/collective/CollectiveVisualizationField";
+import { CollectiveHeatmap } from "@/components/collective/CollectiveHeatmap";
 import { PathVisualization } from "@/components/visualization/PathVisualization";
 import { activeVisualizationCopy } from "@/config/visualization";
-import type { ExhibitionContribution } from "@/types/contribution";
+import type { CollectiveHeatDatum, ExhibitionContribution } from "@/types/contribution";
 
 const ARRIVAL_DURATION_MS = 17_000;
 
 export function CollectiveWall() {
   const [contributions, setContributions] = useState<ExhibitionContribution[]>([]);
+  const [heatmap, setHeatmap] = useState<CollectiveHeatDatum[]>([]);
+  const [view, setView] = useState<"collective" | "heatmap">("collective");
   const [active, setActive] = useState<ExhibitionContribution | null>(null);
   const [connected, setConnected] = useState(true);
   const [ready, setReady] = useState(false);
@@ -25,7 +28,10 @@ export function CollectiveWall() {
       try {
         const response = await fetch(`/api/contributions?after=${latestId.current}&limit=100`, { cache: "no-store" });
         if (!response.ok) throw new Error("Collective aquarium unavailable");
-        const data = (await response.json()) as { contributions: ExhibitionContribution[] };
+        const data = (await response.json()) as {
+          contributions: ExhibitionContribution[];
+          heatmap: CollectiveHeatDatum[];
+        };
         if (cancelled) return;
 
         if (data.contributions.length > 0) {
@@ -45,6 +51,7 @@ export function CollectiveWall() {
             }
           }
         }
+        setHeatmap(data.heatmap);
         initialized.current = true;
         setConnected(true);
         setReady(true);
@@ -88,14 +95,36 @@ export function CollectiveWall() {
   return (
     <main className="collective-wall film-grain relative h-screen overflow-hidden bg-[#030405] text-[#F3F0E8]" aria-label={`Collective exhibition ${activeVisualizationCopy.collectivePlace}`}>
       <div className="absolute inset-0 collective-aurora" aria-hidden="true" />
-      <div className="collective-swim-field absolute inset-x-0 top-0" aria-live="polite">
-        <CollectiveVisualizationField contributions={habitatCreatures} />
-      </div>
+      {view === "collective" ? (
+        <div className="collective-swim-field absolute inset-x-0 top-0" aria-live="polite">
+          <CollectiveVisualizationField contributions={habitatCreatures} />
+        </div>
+      ) : (
+        <CollectiveHeatmap data={heatmap} />
+      )}
 
       <header className="absolute inset-x-0 top-0 z-30 flex items-center justify-between px-8 py-7 lg:px-12 lg:py-9">
         <div>
           <h1 className="font-display text-xl tracking-[-0.03em] lg:text-2xl">After Augmented Reality</h1>
           <p className="mt-1 text-[10px] tracking-[0.22em] text-white/35">{activeVisualizationCopy.collectiveTitle}</p>
+        </div>
+        <div className="absolute left-1/2 flex -translate-x-1/2 rounded-full border border-white/12 bg-black/20 p-1 text-[10px] tracking-[0.18em] backdrop-blur-md" role="group" aria-label="Collective view">
+          <button
+            type="button"
+            className={`rounded-full px-4 py-2 transition-colors ${view === "collective" ? "bg-white/12 text-white/85" : "text-white/35 hover:text-white/60"}`}
+            aria-pressed={view === "collective"}
+            onClick={() => setView("collective")}
+          >
+            COLLECTIVE
+          </button>
+          <button
+            type="button"
+            className={`rounded-full px-4 py-2 transition-colors ${view === "heatmap" ? "bg-white/12 text-white/85" : "text-white/35 hover:text-white/60"}`}
+            aria-pressed={view === "heatmap"}
+            onClick={() => setView("heatmap")}
+          >
+            TIME MAP
+          </button>
         </div>
         <div className="flex items-center gap-6 text-xs tracking-[0.18em] text-white/42">
           <span>{contributions.length} {contributions.length === 1 ? activeVisualizationCopy.singular : activeVisualizationCopy.plural}</span>
@@ -106,7 +135,7 @@ export function CollectiveWall() {
         </div>
       </header>
 
-      {contributions.length === 0 && ready && (
+      {view === "collective" && contributions.length === 0 && ready && (
         <div className="absolute inset-0 flex items-center justify-center text-center">
           <div>
             <div className="mx-auto mb-8 size-2 rounded-full bg-white/70 shadow-[0_0_32px_10px_rgba(255,255,255,.24)] animate-breathe" />
@@ -116,7 +145,7 @@ export function CollectiveWall() {
         </div>
       )}
 
-      {active && (
+      {view === "collective" && active && (
         <section key={active.id} className="collective-arrival absolute inset-0 z-20 grid place-items-center" aria-label={`A new visitor ${activeVisualizationCopy.singular} has arrived`}>
           <div className="collective-arrival-glow absolute inset-0" aria-hidden="true" />
           <div className="relative grid w-[min(94vw,1280px)] grid-cols-[minmax(420px,1.25fr)_minmax(320px,.75fr)] items-center gap-[clamp(2rem,5vw,5rem)] px-6">
@@ -143,7 +172,7 @@ export function CollectiveWall() {
         </section>
       )}
 
-      {latestContribution && (
+      {view === "collective" && latestContribution && (
         <aside
           className="collective-recents absolute inset-x-0 bottom-0 z-10 h-[clamp(14rem,29vh,20rem)] bg-gradient-to-t from-[#030405] via-[#030405]/95 to-[#030405]/80 px-8 pb-7 lg:px-12 lg:pb-9"
           aria-label={`Most recently shared stories and ${activeVisualizationCopy.plural}`}

@@ -19,6 +19,13 @@ export type ExhibitionContribution = {
   createdAt: string;
 };
 
+export type CollectiveHeatDatum = {
+  artifactId: string;
+  totalDwellMs: number;
+  visitCount: number;
+  averageDwellMs: number;
+};
+
 export type ContributionSubmission = {
   sessionId: string;
   completedAt: number;
