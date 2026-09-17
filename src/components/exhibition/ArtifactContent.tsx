@@ -43,7 +43,7 @@ export function ArtifactContent({ artifact, onContinue, mini = false }: Artifact
         <p className="max-w-md border-l border-white/20 pl-3 text-sm leading-5 text-white/65">
           {artifact.creaturePart.description}
         </p>
-        <p className="max-w-md text-base leading-7 text-white/80">
+        <p className="w-full text-base leading-7 text-white/80">
           {artifact.shortText}
         </p>
         <div className="w-full relative">
