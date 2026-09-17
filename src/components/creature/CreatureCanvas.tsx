@@ -9,11 +9,13 @@ export function CreatureCanvas({
   artifactIds,
   highlightedPart,
   compact = false,
+  zoom,
   label,
 }: {
   artifactIds: string[];
   highlightedPart?: CreaturePartId;
   compact?: boolean;
+  zoom?: number;
   label?: string;
 }) {
   const pieces = creaturePiecesFromArtifactIds(artifactIds);
@@ -25,7 +27,8 @@ export function CreatureCanvas({
       aria-label={label ?? `Fish with ${pieces.length} collected ${pieces.length === 1 ? "part" : "parts"}`}
     >
       <Canvas
-        camera={{ position: [0, 0.15, compact ? 5.4 : 5], fov: compact ? 48 : 44, near: 0.1, far: 30 }}
+        orthographic
+        camera={{ position: [0, 0.1, 10], zoom: zoom ?? (compact ? 18 : 100), near: 0.1, far: 30 }}
         dpr={[1, compact ? 1.25 : 1.6]}
         gl={{ alpha: true, antialias: true, powerPreference: "high-performance" }}
       >

@@ -77,12 +77,17 @@ export function CollectiveWall() {
     () => contributions.filter((contribution) => contribution.id !== active?.id),
     [active?.id, contributions],
   );
-  const latest = contributions.at(-1);
+  const recentContributions = useMemo(
+    () => contributions.slice(-6).reverse(),
+    [contributions],
+  );
+  const latestContribution = recentContributions[0];
+  const previousContributions = recentContributions.slice(1);
 
   return (
     <main className="collective-wall film-grain relative h-screen overflow-hidden bg-[#030405] text-[#F3F0E8]" aria-label="Collective exhibition aquarium">
       <div className="absolute inset-0 collective-aurora" aria-hidden="true" />
-      <div className="absolute inset-0" aria-live="polite">
+      <div className="collective-swim-field absolute inset-x-0 top-0" aria-live="polite">
         <CollectiveCreatureField contributions={habitatCreatures} />
       </div>
 
@@ -135,10 +140,49 @@ export function CollectiveWall() {
         </section>
       )}
 
-      {latest && !active && (
-        <aside className="absolute inset-x-0 bottom-0 z-10 flex items-end justify-between px-8 pb-7 text-white/40 lg:px-12 lg:pb-9">
-          <p className="max-w-xl font-display text-lg leading-snug text-white/55">{latest.narrative[0]}</p>
-          <p className="text-[10px] tracking-[0.2em]">LATEST · {latest.parts.length} PARTS</p>
+      {latestContribution && (
+        <aside
+          className="collective-recents absolute inset-x-0 bottom-0 z-10 h-[clamp(14rem,29vh,20rem)] bg-gradient-to-t from-[#030405] via-[#030405]/95 to-[#030405]/80 px-8 pb-7 lg:px-12 lg:pb-9"
+          aria-label="Most recently shared stories and fish"
+        >
+          <div className="grid h-full grid-cols-[minmax(24rem,1.5fr)_minmax(28rem,1fr)] border-t border-white/12 pt-5">
+            <article className="grid min-w-0 grid-cols-[clamp(8rem,11vw,11rem)_1fr] items-center gap-6 border-r border-white/12 pr-8">
+              <div className="aspect-square w-full">
+                <CreatureCanvas
+                  artifactIds={latestContribution.parts.map((part) => part.artifactId)}
+                  compact
+                  zoom={34}
+                  label={`Latest fish with ${latestContribution.parts.length} parts`}
+                />
+              </div>
+              <div className="min-w-0">
+                <p className="mb-3 text-[10px] tracking-[0.25em] text-white/35">LATEST STORY</p>
+                <div className="font-display text-[clamp(1.15rem,1.45vw,1.75rem)] leading-[1.12] tracking-[-0.025em] text-white/82">
+                  {latestContribution.narrative.map((line, index) => (
+                    <p key={`${index}-${line}`} className="my-0.5">{line}</p>
+                  ))}
+                </div>
+                <p className="mt-4 text-[10px] tracking-[0.2em] text-white/30">
+                  {latestContribution.parts.length} {latestContribution.parts.length === 1 ? "ENCOUNTER" : "ENCOUNTERS"}
+                </p>
+              </div>
+            </article>
+
+            <div className="grid min-w-0 grid-cols-5 items-center gap-3 pl-8">
+              {previousContributions.map((contribution, index) => (
+                <article key={contribution.id} className="min-w-0 text-center">
+                  <div className="mx-auto aspect-square w-full max-w-32 opacity-75">
+                    <CreatureCanvas
+                      artifactIds={contribution.parts.map((part) => part.artifactId)}
+                      compact
+                      label={`Recent fish ${index + 2} with ${contribution.parts.length} parts`}
+                    />
+                  </div>
+                  <p className="mt-1 text-[9px] tracking-[0.18em] text-white/25">0{index + 2}</p>
+                </article>
+              ))}
+            </div>
+          </div>
         </aside>
       )}
     </main>

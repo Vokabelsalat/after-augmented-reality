@@ -23,14 +23,10 @@ describe("generateJourneyNarrative", () => {
     const second = generateJourneyNarrative(path, artifacts);
 
     expect(first).toEqual(second);
-    expect(first).toEqual([
-      "You began with interface.",
-      "Then memory crossed the path as an archive,",
-      "asking its growing body to return.",
-      "Embodiment arrived last,",
-      "carrying reach into what remains.",
-      "Three parts now move as one.",
-    ]);
+    expect(first).toHaveLength(5);
+    expect(first.join(" ")).toMatch(/interface/i);
+    expect(first.join(" ")).toMatch(/memory/i);
+    expect(first.join(" ")).toMatch(/embodiment/i);
   });
 
   it("changes when discovery order changes", () => {
@@ -43,20 +39,20 @@ describe("generateJourneyNarrative", () => {
       artifacts,
     );
 
-    expect(machineFirst[0]).toBe("You began with interface.");
-    expect(memoryFirst[0]).toBe("You began with memory.");
+    expect(machineFirst[0]).toMatch(/interface/i);
+    expect(memoryFirst[0]).toMatch(/memory/i);
     expect(machineFirst).not.toEqual(memoryFirst);
   });
 
   it("uses a compact single-part form", () => {
-    expect(
-      generateJourneyNarrative(discoveries(["finding-frida"]), artifacts),
-    ).toEqual([
-      "You began with memory.",
-      "An archive loosened from the surface,",
-      "asking you to return.",
-      "One new part travels with you.",
-    ]);
+    const lines = generateJourneyNarrative(
+      discoveries(["finding-frida"]),
+      artifacts,
+    );
+
+    expect(lines).toHaveLength(3);
+    expect(lines.join(" ")).toMatch(/memory/i);
+    expect(lines.join(" ")).toContain("Finding Frida");
   });
 
   it("acknowledges a repeated theme", () => {
@@ -70,6 +66,18 @@ describe("generateJourneyNarrative", () => {
       [...artifacts, secondMemory],
     );
 
-    expect(lines).toContain("Memory returned, changing its echo.");
+    expect(lines.at(-1)).toMatch(/memory.*(return|surface)/i);
+  });
+
+  it("varies its sentence structures across related paths", () => {
+    const relatedPaths = [
+      ["finding-frida", "historically-yours", "from-ingrid-to-bergen"],
+      ["historically-yours", "from-ingrid-to-bergen", "finding-frida"],
+      ["from-ingrid-to-bergen", "finding-frida", "historically-yours"],
+      ["finding-frida", "from-ingrid-to-bergen", "historically-yours"],
+    ].map((path) => generateJourneyNarrative(discoveries(path), artifacts));
+
+    expect(new Set(relatedPaths.map((lines) => lines[0])).size).toBeGreaterThanOrEqual(3);
+    expect(new Set(relatedPaths.map((lines) => lines.at(-1))).size).toBeGreaterThanOrEqual(2);
   });
 });

@@ -92,6 +92,10 @@ a:focus-visible {
     radial-gradient(circle at 56% 84%, rgba(255, 117, 87, 0.06), transparent 26%);
 }
 
+.collective-swim-field {
+  bottom: clamp(14rem, 29vh, 20rem);
+}
+
 @keyframes collective-float {
   0%, 100% { transform: translate3d(-50%, -50%, 0) rotate(-2deg); }
   33% { transform: translate3d(calc(-50% + 26px), calc(-50% - 18px), 0) rotate(2deg); }
@@ -185,6 +189,10 @@ a:focus-visible {
 }
 
 @media (max-width: 800px) {
+  .collective-swim-field {
+    bottom: 0;
+  }
+
   .collective-arrival > div:last-child {
     grid-template-columns: 1fr;
     gap: 1rem;

@@ -13,65 +13,85 @@ function seededUnit(seed: number) {
 }
 
 function FloatingCreature({ contribution }: { contribution: ExhibitionContribution }) {
-  const ref = useRef<THREE.Group>(null);
+  const swimRef = useRef<THREE.Group>(null);
+  const directionRef = useRef<THREE.Group>(null);
   const placement = useMemo(() => ({
-    x: -6.4 + seededUnit(contribution.id * 3) * 12.8,
-    y: -2.6 + seededUnit(contribution.id * 5) * 5.2,
+    xUnit: -0.84 + seededUnit(contribution.id * 3) * 1.68,
+    yUnit: -0.84 + seededUnit(contribution.id * 5) * 1.68,
     z: -1 + seededUnit(contribution.id * 7) * 2,
     scale: 0.31 + seededUnit(contribution.id * 11) * 0.22,
-    speed: 0.3 + seededUnit(contribution.id * 13) * 0.32,
+    speed: 0.32 + seededUnit(contribution.id * 13) * 0.34,
     phase: seededUnit(contribution.id * 17) * Math.PI * 2,
-    direction: seededUnit(contribution.id * 19) > 0.5 ? 1 : -1,
-    verticalSpeed: (seededUnit(contribution.id * 23) - 0.5) * 0.34,
+    heading: seededUnit(contribution.id * 19) * Math.PI * 2,
   }), [contribution.id]);
   const motion = useRef({
-    x: placement.x,
-    y: placement.y,
-    vx: placement.speed * placement.direction,
-    vy: placement.verticalSpeed,
+    initialized: false,
+    x: 0,
+    y: 0,
+    vx: Math.cos(placement.heading) * placement.speed,
+    vy: Math.sin(placement.heading) * placement.speed,
   });
 
-  useFrame(({ clock }, delta) => {
-    if (!ref.current) return;
+  useFrame(({ clock, viewport }, delta) => {
+    if (!swimRef.current || !directionRef.current) return;
     const elapsed = clock.elapsedTime;
     const state = motion.current;
-    const maxX = 7.15;
-    const maxY = 2.95;
-    const turnZone = 0.85;
+    const maxX = Math.max(1.6, viewport.width / 2 - 0.9);
+    const maxY = Math.max(1.25, viewport.height / 2 - 0.72);
+    const turnZone = 0.48;
+
+    if (!state.initialized) {
+      state.x = placement.xUnit * maxX;
+      state.y = placement.yUnit * maxY;
+      state.initialized = true;
+    }
 
     if (state.x > maxX - turnZone && state.vx > 0) state.vx = -Math.abs(state.vx);
     if (state.x < -maxX + turnZone && state.vx < 0) state.vx = Math.abs(state.vx);
-    if (state.y > maxY - turnZone && state.vy > 0) state.vy = -Math.max(0.08, Math.abs(state.vy));
-    if (state.y < -maxY + turnZone && state.vy < 0) state.vy = Math.max(0.08, Math.abs(state.vy));
+    if (state.y > maxY - turnZone && state.vy > 0) state.vy = -Math.max(0.12, Math.abs(state.vy));
+    if (state.y < -maxY + turnZone && state.vy < 0) state.vy = Math.max(0.12, Math.abs(state.vy));
 
-    state.vy += Math.sin(elapsed * 0.52 + placement.phase) * 0.045 * delta;
-    state.vy = THREE.MathUtils.clamp(state.vy, -0.24, 0.24);
+    const turn = Math.sin(elapsed * 0.34 + placement.phase) * 0.12 * delta;
+    const previousVx = state.vx;
+    state.vx = previousVx * Math.cos(turn) - state.vy * Math.sin(turn);
+    state.vy = previousVx * Math.sin(turn) + state.vy * Math.cos(turn);
+    const currentSpeed = Math.hypot(state.vx, state.vy) || placement.speed;
+    state.vx = (state.vx / currentSpeed) * placement.speed;
+    state.vy = (state.vy / currentSpeed) * placement.speed;
+
     state.x += state.vx * delta;
     state.y += state.vy * delta;
+    state.x = THREE.MathUtils.clamp(state.x, -maxX, maxX);
+    state.y = THREE.MathUtils.clamp(state.y, -maxY, maxY);
 
-    ref.current.position.x = state.x;
-    ref.current.position.y = state.y;
-    ref.current.rotation.y = THREE.MathUtils.damp(
-      ref.current.rotation.y,
+    swimRef.current.position.x = state.x;
+    swimRef.current.position.y = state.y;
+    directionRef.current.rotation.y = THREE.MathUtils.damp(
+      directionRef.current.rotation.y,
       state.vx >= 0 ? 0 : Math.PI,
       3.4,
       delta,
     );
-    ref.current.rotation.z = THREE.MathUtils.damp(
-      ref.current.rotation.z,
-      state.vy * 0.24 + Math.sin(elapsed * 0.8 + placement.phase) * 0.025,
+    const slope = Math.atan2(state.vy, Math.max(0.08, Math.abs(state.vx)));
+    const directedSlope = slope * (state.vx >= 0 ? 1 : -1);
+    swimRef.current.rotation.z = THREE.MathUtils.damp(
+      swimRef.current.rotation.z,
+      THREE.MathUtils.clamp(directedSlope, -1.08, 1.08),
       2.8,
       delta,
     );
   });
 
+  const startsFacingLeft = Math.cos(placement.heading) < 0;
+
   return (
     <group
-      ref={ref}
-      position={[placement.x, placement.y, placement.z]}
-      rotation={[0, placement.direction > 0 ? 0 : Math.PI, 0]}
+      ref={swimRef}
+      position={[0, 0, placement.z]}
     >
-      <CreatureModel pieces={contribution.parts} scale={placement.scale} />
+      <group ref={directionRef} rotation={[0, startsFacingLeft ? Math.PI : 0, 0]}>
+        <CreatureModel pieces={contribution.parts} scale={placement.scale} />
+      </group>
     </group>
   );
 }
