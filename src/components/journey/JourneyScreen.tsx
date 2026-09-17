@@ -8,7 +8,8 @@ import {
   selectDiscoveries,
   selectDiscoveredArtifacts,
 } from "@/store/selectors";
-import { CreatureCanvas } from "@/components/creature/CreatureCanvas";
+import { PathVisualization } from "@/components/visualization/PathVisualization";
+import { activeVisualizationCopy, visualizationDesign } from "@/config/visualization";
 
 export function JourneyScreen() {
   const dispatch = useAppDispatch();
@@ -21,7 +22,7 @@ export function JourneyScreen() {
       <header className="flex items-start justify-between">
         <div>
           <p className="text-[10px] tracking-[0.24em] text-white/42">Born from your path</p>
-          <h1 className="font-display mt-2 text-4xl tracking-[-0.045em]">My Fish</h1>
+          <h1 className="font-display mt-2 text-4xl tracking-[-0.045em]">{activeVisualizationCopy.personalTitle}</h1>
         </div>
         <button
           type="button"
@@ -33,26 +34,32 @@ export function JourneyScreen() {
       </header>
 
       <div className="mx-auto h-[44dvh] w-full max-w-xl">
-        <CreatureCanvas artifactIds={discoveries.map((item) => item.artifactId)} label="Your evolving exhibition fish" />
+        <PathVisualization artifactIds={discoveries.map((item) => item.artifactId)} label={`Your evolving exhibition ${activeVisualizationCopy.singular}`} />
       </div>
 
       <div className="mx-auto w-full max-w-xl flex-1">
         <p className="text-[10px] tracking-[0.22em] text-white/35">
-          Its parts, in the order you found them
+          {visualizationDesign === "constellation" ? "In the order you found them" : "Its parts, in the order you found them"}
         </p>
         <ol className="mt-4 space-y-3">
           {discoveredArtifacts.length === 0 ? (
             <li className="text-sm leading-6 text-white/42">
-              Return to the scanner. Each discovered work will give your fish a new trait.
+              {visualizationDesign === "constellation"
+                ? "Return to the scanner. Each discovered work will leave a new particle cluster here."
+                : `Return to the scanner. Each discovered work will give your ${activeVisualizationCopy.singular} a new trait.`}
             </li>
           ) : (
             discoveredArtifacts.map(({ artifact, sequence }) => (
               <li key={artifact.id} className="flex items-baseline gap-4">
                 <span className="text-[10px] text-white/30">0{sequence}</span>
-                <span>
-                  <span className="font-display block text-xl">{artifact.creaturePart.label}</span>
-                  <span className="mt-0.5 block text-[10px] text-white/38">from {artifact.title}</span>
-                </span>
+                {visualizationDesign === "constellation" ? (
+                  <span className="font-display text-xl">{artifact.title}</span>
+                ) : (
+                  <span>
+                    <span className="font-display block text-xl">{artifact.creaturePart.label}</span>
+                    <span className="mt-0.5 block text-[10px] text-white/38">from {artifact.title}</span>
+                  </span>
+                )}
                 <span className="ml-auto text-[9px] tracking-[0.14em]" style={{ color: artifact.color }}>
                   {themes[artifact.theme].label}
                 </span>
@@ -71,7 +78,7 @@ export function JourneyScreen() {
         className="mx-auto mt-7 flex min-h-14 w-full max-w-xl items-center justify-between rounded-full bg-[#F3F0E8] px-6 text-sm text-black disabled:cursor-not-allowed disabled:opacity-35"
         disabled={discoveries.length === 0}
       >
-        <span>Finish my fish</span>
+        <span>{activeVisualizationCopy.finish}</span>
         <span aria-hidden="true">→</span>
       </button>
     </main>

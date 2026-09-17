@@ -15,6 +15,22 @@ npm run dev
 
 Open [http://localhost:3066](http://localhost:3066). Tap **Start experience**. Camera access is never requested until the separate **Start camera** action.
 
+### Visualization design
+
+All visitor-path visualizations are selected through one environment variable:
+
+```bash
+NEXT_PUBLIC_VISUALIZATION_DESIGN=fish
+```
+
+Supported values are:
+
+- `constellation` — the node-link particle design from `main`;
+- `creature` — the assembled upright form from `new_form`;
+- `fish` — the articulated swimming design from `fishies` (the default).
+
+Copy `.env.example` to `.env.local`, choose one value, and restart the development server after changing it. The setting controls reveal animations, journey views, navigation miniatures, collective-field glyphs, arrival focus, and recent contributions. All modes use the same contribution API and stored `parts` data, so changing the design does not require a database migration.
+
 Useful checks:
 
 ```bash

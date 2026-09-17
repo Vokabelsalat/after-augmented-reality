@@ -4,6 +4,7 @@ import type { ExhibitionArtifact } from "@/types/exhibition";
 import { themes } from "@/data/themes";
 import { useState } from "react";
 import Image from "next/image";
+import { visualizationDesign } from "@/config/visualization";
 
 type ArtifactContentProps = {
   artifact: ExhibitionArtifact;
@@ -29,7 +30,7 @@ export function ArtifactContent({ artifact, onContinue, mini = false }: Artifact
             aria-hidden="true"
           />
           <span style={{ color: artifact.color }}>{theme.label}</span>
-          <span className="text-white/80">· {artifact.creaturePart.label} added</span>
+          <span className="text-white/80">· {visualizationDesign === "constellation" ? "Collected" : `${artifact.creaturePart.label} added`}</span>
         </div>
         <h2
           id="artifact-title"
@@ -40,9 +41,11 @@ export function ArtifactContent({ artifact, onContinue, mini = false }: Artifact
         <p className="text-[10px] tracking-[0.18em] text-white/80">
           {artifact.artist}
         </p>
-        <p className="max-w-md border-l border-white/20 pl-3 text-sm leading-5 text-white/65">
-          {artifact.creaturePart.description}
-        </p>
+        {visualizationDesign !== "constellation" && (
+          <p className="max-w-md border-l border-white/20 pl-3 text-sm leading-5 text-white/65">
+            {artifact.creaturePart.description}
+          </p>
+        )}
         <p className="w-full text-base leading-7 text-white/80">
           {artifact.shortText}
         </p>

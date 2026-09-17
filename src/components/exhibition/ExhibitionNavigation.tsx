@@ -6,7 +6,8 @@ import {
   selectDiscoveryCount,
 } from "@/store/selectors";
 import { setExperiencePhase } from "@/store/journeySlice";
-import { CreatureCanvas } from "@/components/creature/CreatureCanvas";
+import { PathVisualization } from "@/components/visualization/PathVisualization";
+import { activeVisualizationCopy } from "@/config/visualization";
 
 export function ExhibitionNavigation() {
   const dispatch = useAppDispatch();
@@ -25,12 +26,12 @@ export function ExhibitionNavigation() {
         type="button"
         onClick={() => dispatch(setExperiencePhase("journey"))}
         className="pointer-events-auto flex min-h-16 items-center gap-2 rounded-full bg-black/45 py-1 pr-4 pl-1.5 text-xs text-white backdrop-blur-md transition-colors hover:bg-black/65"
-        aria-label={`Open My Fish, ${count} parts collected`}
+        aria-label={`Open ${activeVisualizationCopy.personalTitle}, ${count} parts collected`}
       >
         <span className="size-12 overflow-hidden rounded-full bg-white/[0.035]" aria-hidden="true">
-          <CreatureCanvas artifactIds={discoveries.map((item) => item.artifactId)} compact />
+          <PathVisualization artifactIds={discoveries.map((item) => item.artifactId)} compact />
         </span>
-        <span>My Fish</span>
+        <span>{activeVisualizationCopy.personalTitle}</span>
       </button>
     </header>
   );

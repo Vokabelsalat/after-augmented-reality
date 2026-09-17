@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { activeVisualizationCopy } from "@/config/visualization";
 import type { Discovery } from "@/store/journeySlice";
 
 type ShareState = "idle" | "sharing" | "shared" | "error";
@@ -41,8 +42,8 @@ export function ShareContribution({
         className="flex min-h-14 w-full items-center justify-between rounded-full bg-[#F3F0E8] px-6 text-sm text-black transition-opacity disabled:cursor-not-allowed disabled:opacity-50"
       >
         <span>
-          {state === "sharing" && "Releasing your fish…"}
-          {state === "shared" && "Your fish is now swimming"}
+          {state === "sharing" && `Releasing your ${activeVisualizationCopy.singular}…`}
+          {state === "shared" && `Your ${activeVisualizationCopy.singular} has joined`}
           {state === "error" && "Try sharing again"}
           {state === "idle" && "Release to the collective"}
         </span>
@@ -50,10 +51,10 @@ export function ShareContribution({
       </button>
       <p className="mt-3 px-3 text-center text-[10px] leading-4 tracking-[0.08em] text-white/35" role="status" aria-live="polite">
         {state === "shared"
-          ? "Your fish has joined the collective aquarium."
+          ? `Your ${activeVisualizationCopy.singular} has joined the collective ${activeVisualizationCopy.collectivePlace}.`
           : state === "error"
             ? "The screen could not be reached. Your story is still safe on this device."
-            : "Your fish and its voice will appear anonymously in the collective aquarium."}
+            : `Your ${activeVisualizationCopy.singular} and its voice will appear anonymously in the collective ${activeVisualizationCopy.collectivePlace}.`}
       </p>
     </div>
   );

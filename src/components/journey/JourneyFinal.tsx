@@ -10,7 +10,8 @@ import { selectDiscoveries } from "@/store/selectors";
 import { selectJourney } from "@/store/selectors";
 import { ShareContribution } from "@/components/journey/ShareContribution";
 import { themes } from "@/data/themes";
-import { CreatureCanvas } from "@/components/creature/CreatureCanvas";
+import { PathVisualization } from "@/components/visualization/PathVisualization";
+import { activeVisualizationCopy } from "@/config/visualization";
 import dynamic from "next/dynamic";
 
 const GeneratedNarrative = dynamic(() =>
@@ -45,15 +46,15 @@ export function JourneyFinal() {
           After Augmented Reality
         </Link>
         <p className="text-[9px] tracking-[0.24em] text-white/42">
-          Your fish
+          Your {activeVisualizationCopy.singular}
         </p>
       </header>
 
       <section className="relative mx-auto mt-1 h-[46dvh] min-h-80 w-full max-w-3xl" aria-labelledby="reading-title">
         <h1 id="reading-title" className="absolute inset-x-0 top-6 z-10 text-center text-[10px] tracking-[0.32em] text-white/48">
-          Your fish
+          Your {activeVisualizationCopy.singular}
         </h1>
-        <CreatureCanvas artifactIds={discoveries.map((item) => item.artifactId)} label="Your finished exhibition fish" />
+        <PathVisualization artifactIds={discoveries.map((item) => item.artifactId)} label={`Your finished exhibition ${activeVisualizationCopy.singular}`} />
         <div className="absolute inset-x-0 bottom-5 flex flex-wrap justify-center gap-x-4 gap-y-1">
           {themesInOrder.map((artifact, index) => (
             <span key={`${artifact.id}-${index}`} className="flex items-center gap-1.5 text-[9px] tracking-[0.14em] text-white/48">

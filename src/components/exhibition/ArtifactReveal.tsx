@@ -12,7 +12,9 @@ import {
 import { selectActiveArtifactId } from "@/store/selectors";
 import { ArtifactContent } from "@/components/exhibition/ArtifactContent";
 import type { ExhibitionArtifact } from "@/types/exhibition";
-import { CreatureCanvas } from "@/components/creature/CreatureCanvas";
+import { ParticleNarrative } from "@/components/particles/ParticleNarrative";
+import { PathVisualization } from "@/components/visualization/PathVisualization";
+import { activeVisualizationCopy, visualizationDesign } from "@/config/visualization";
 import { selectDiscoveries } from "@/store/selectors";
 
 type RevealPresentation = "tracked-ar" | "simulated";
@@ -42,19 +44,23 @@ function ArtifactRevealSequence({
   return (
     <section className="pointer-events-none absolute inset-0 z-40 overflow-hidden" aria-live="polite">
       {!isRevisit && phase !== "complete" && (
-        <div className="absolute inset-x-0 top-[12vh] h-[52vh]">
-          <CreatureCanvas
-            artifactIds={discoveries.map((item) => item.artifactId)}
-            highlightedPart={artifact.creaturePart.id}
-            label={`${artifact.creaturePart.label} joining your fish`}
-          />
-        </div>
+        visualizationDesign === "constellation" ? (
+          <ParticleNarrative artifact={artifact} phase={phase} mode="ar-release" quality="high" />
+        ) : (
+          <div className="absolute inset-x-0 top-[12vh] h-[52vh]">
+            <PathVisualization
+              artifactIds={discoveries.map((item) => item.artifactId)}
+              highlightedPart={artifact.creaturePart.id}
+              label={`${artifact.creaturePart.label} joining your ${activeVisualizationCopy.singular}`}
+            />
+          </div>
+        )
       )}
       {!contentVisible && (
         <p className="absolute inset-x-0 bottom-[12vh] text-center text-[10px] tracking-[0.28em] text-white/65">
-          {phase === "attached" && "New trait found"}
-          {phase === "release" && `${artifact.creaturePart.label} is waking up`}
-          {phase === "formation" && "Joining your fish"}
+          {phase === "attached" && (visualizationDesign === "constellation" ? "Fragment located" : "New trait found")}
+          {phase === "release" && (visualizationDesign === "constellation" ? "Releasing narrative" : `${artifact.creaturePart.label} is waking up`)}
+          {phase === "formation" && (visualizationDesign === "constellation" ? "Resolving language" : `Joining your ${activeVisualizationCopy.singular}`)}
         </p>
       )}
       {contentVisible && (

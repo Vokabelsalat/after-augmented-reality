@@ -2,11 +2,11 @@ import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import "@/app/globals.css";
 import { StoreProvider } from "@/store/StoreProvider";
+import { activeVisualizationCopy } from "@/config/visualization";
 
 export const metadata: Metadata = {
-  title: "After Augmented Reality — Build an exhibition fish",
-  description:
-    "Scan works throughout the exhibition and build a fish from your path.",
+  title: `After Augmented Reality — Build an exhibition ${activeVisualizationCopy.singular}`,
+  description: `Scan works throughout the exhibition and build a ${activeVisualizationCopy.singular} from your path.`,
 };
 
 export const viewport: Viewport = {

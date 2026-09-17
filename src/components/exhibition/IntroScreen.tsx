@@ -3,6 +3,7 @@
 import { useAppDispatch } from "@/store/hooks";
 import { startJourney } from "@/store/journeySlice";
 import { CategoryOrbit } from "../ar/ARScanner";
+import { visualizationDesign } from "@/config/visualization";
 
 export function IntroScreen() {
   const dispatch = useAppDispatch();
@@ -32,7 +33,11 @@ export function IntroScreen() {
           </div>
           <div className="flex flex-3 safe-bottom relative z-10">
             <p className="max-w-sm text-lg leading-7 text-white/80">
-              Scan works throughout the exhibition. Each encounter gives your fish a new body part.
+              {visualizationDesign === "constellation"
+                ? "Scan works throughout the exhibition. Each encounter adds a new fragment to your path."
+                : visualizationDesign === "creature"
+                  ? "Scan works throughout the exhibition. Each encounter gives your creature a new body part."
+                  : "Scan works throughout the exhibition. Each encounter gives your fish a new body part."}
             </p>
           </div>
         </div>
