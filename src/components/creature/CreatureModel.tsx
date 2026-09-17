@@ -12,6 +12,17 @@ export type CreaturePiece = {
   color: string;
 };
 
+const mirroredPartIds = new Set<CreaturePartId>([
+  "memory-crown",
+  "archive-ears",
+  "glass-wings",
+  "surfer-feet",
+  "inner-eye",
+  "orbit-ring",
+  "heart-plume",
+  "helping-arms",
+]);
+
 type FishProfile = {
   length: number;
   height: number;
@@ -63,6 +74,48 @@ caudalTailShape.quadraticCurveTo(-0.5, 0, -0.42, -0.05);
 caudalTailShape.quadraticCurveTo(-0.55, -0.2, -0.7, -0.52);
 caudalTailShape.bezierCurveTo(-0.46, -0.54, -0.2, -0.16, 0, -0.1);
 caudalTailShape.quadraticCurveTo(0.045, 0, 0, 0.1);
+
+function createCaudalShape(draw: (shape: THREE.Shape) => void) {
+  const shape = new THREE.Shape();
+  draw(shape);
+  return shape;
+}
+
+const caudalTailShapes = [
+  caudalTailShape,
+  createCaudalShape((shape) => {
+    shape.moveTo(0, 0.11);
+    shape.bezierCurveTo(-0.24, 0.2, -0.62, 0.5, -0.78, 0.38);
+    shape.bezierCurveTo(-0.9, 0.22, -0.9, -0.22, -0.78, -0.38);
+    shape.bezierCurveTo(-0.62, -0.5, -0.24, -0.2, 0, -0.11);
+    shape.quadraticCurveTo(0.045, 0, 0, 0.11);
+  }),
+  createCaudalShape((shape) => {
+    shape.moveTo(0, 0.1);
+    shape.bezierCurveTo(-0.22, 0.18, -0.54, 0.58, -0.82, 0.62);
+    shape.quadraticCurveTo(-0.62, 0.24, -0.45, 0.08);
+    shape.quadraticCurveTo(-0.58, 0, -0.45, -0.08);
+    shape.quadraticCurveTo(-0.62, -0.24, -0.82, -0.62);
+    shape.bezierCurveTo(-0.54, -0.58, -0.22, -0.18, 0, -0.1);
+    shape.quadraticCurveTo(0.045, 0, 0, 0.1);
+  }),
+  createCaudalShape((shape) => {
+    shape.moveTo(0, 0.1);
+    shape.quadraticCurveTo(-0.28, 0.2, -0.66, 0.54);
+    shape.quadraticCurveTo(-0.8, 0.18, -0.86, 0);
+    shape.quadraticCurveTo(-0.8, -0.18, -0.66, -0.54);
+    shape.quadraticCurveTo(-0.28, -0.2, 0, -0.1);
+    shape.quadraticCurveTo(0.045, 0, 0, 0.1);
+  }),
+  createCaudalShape((shape) => {
+    shape.moveTo(0, 0.1);
+    shape.bezierCurveTo(-0.2, 0.16, -0.48, 0.44, -0.76, 0.46);
+    shape.quadraticCurveTo(-0.68, 0.14, -0.82, 0);
+    shape.quadraticCurveTo(-0.68, -0.14, -0.76, -0.46);
+    shape.bezierCurveTo(-0.48, -0.44, -0.2, -0.16, 0, -0.1);
+    shape.quadraticCurveTo(0.045, 0, 0, 0.1);
+  }),
+];
 
 type DorsalFinStyle = {
   shape: THREE.Shape;
@@ -144,6 +197,44 @@ const dorsalFinStyles: DorsalFinStyle[] = [
     x: -0.22,
     rays: [[0.43, 0.03, 0.08, 0.76], [0.17, 0.03, -0.1, 0.55], [-0.1, 0.03, -0.27, 0.4], [-0.38, 0.03, -0.48, 0.22]],
   },
+  {
+    shape: createDorsalShape((shape) => {
+      shape.moveTo(-0.92, 0);
+      shape.lineTo(0.68, 0);
+      shape.bezierCurveTo(0.48, 0.14, 0.34, 0.62, 0.12, 0.72);
+      shape.bezierCurveTo(-0.18, 0.82, -0.58, 0.58, -0.92, 0);
+    }),
+    width: 1.02,
+    height: 0.72,
+    x: -0.28,
+    rays: [[0.52, 0.03, 0.11, 0.65], [0.22, 0.03, -0.13, 0.69], [-0.12, 0.03, -0.43, 0.51], [-0.47, 0.03, -0.67, 0.28]],
+  },
+  {
+    shape: createDorsalShape((shape) => {
+      shape.moveTo(-0.82, 0);
+      shape.lineTo(0.62, 0);
+      shape.lineTo(0.27, 0.82);
+      shape.quadraticCurveTo(0.12, 0.69, -0.03, 0.47);
+      shape.lineTo(-0.3, 0.7);
+      shape.quadraticCurveTo(-0.47, 0.46, -0.82, 0);
+    }),
+    width: 0.94,
+    height: 0.86,
+    x: -0.2,
+    rays: [[0.5, 0.03, 0.27, 0.72], [0.19, 0.03, -0.01, 0.42], [-0.12, 0.03, -0.3, 0.62], [-0.43, 0.03, -0.58, 0.3]],
+  },
+  {
+    shape: createDorsalShape((shape) => {
+      shape.moveTo(-0.7, 0);
+      shape.lineTo(0.55, 0);
+      shape.bezierCurveTo(0.39, 0.13, 0.12, 0.92, -0.14, 1.18);
+      shape.bezierCurveTo(-0.32, 1.2, -0.28, 0.32, -0.7, 0);
+    }),
+    width: 0.82,
+    height: 0.88,
+    x: -0.12,
+    rays: [[0.42, 0.03, -0.13, 1.08], [0.16, 0.03, -0.2, 0.78], [-0.08, 0.03, -0.32, 0.48]],
+  },
 ];
 
 type PectoralFinStyle = {
@@ -208,6 +299,42 @@ const pectoralFinStyles: PectoralFinStyle[] = [
     height: 0.88,
     rays: [[0.07, 0, -0.28, -0.2], [0.05, -0.03, -0.5, -0.35], [0.03, -0.06, -0.72, -0.54], [0, -0.1, -0.48, -0.5], [-0.02, -0.12, -0.24, -0.39]],
   },
+  {
+    shape: createPectoralShape((shape) => {
+      shape.moveTo(0.12, 0.1);
+      shape.bezierCurveTo(-0.2, 0.03, -0.72, -0.08, -0.98, -0.34);
+      shape.bezierCurveTo(-1.08, -0.5, -0.9, -0.62, -0.61, -0.56);
+      shape.bezierCurveTo(-0.28, -0.45, -0.02, -0.22, 0.1, -0.11);
+      shape.quadraticCurveTo(0.18, 0, 0.12, 0.1);
+    }),
+    width: 1.04,
+    height: 0.8,
+    rays: [[0.07, 0, -0.3, -0.09], [0.05, -0.03, -0.62, -0.18], [0.03, -0.06, -0.88, -0.31], [0, -0.09, -0.78, -0.47], [-0.02, -0.12, -0.42, -0.43]],
+  },
+  {
+    shape: createPectoralShape((shape) => {
+      shape.moveTo(0.12, 0.1);
+      shape.bezierCurveTo(-0.18, 0.03, -0.62, -0.22, -0.78, -0.5);
+      shape.bezierCurveTo(-0.86, -0.72, -0.59, -0.86, -0.3, -0.7);
+      shape.bezierCurveTo(-0.06, -0.49, 0.06, -0.25, 0.11, -0.11);
+      shape.quadraticCurveTo(0.18, 0, 0.12, 0.1);
+    }),
+    width: 0.96,
+    height: 0.98,
+    rays: [[0.07, 0, -0.22, -0.16], [0.05, -0.03, -0.48, -0.3], [0.03, -0.06, -0.68, -0.48], [0, -0.09, -0.53, -0.68], [-0.02, -0.12, -0.27, -0.59]],
+  },
+  {
+    shape: createPectoralShape((shape) => {
+      shape.moveTo(0.12, 0.07);
+      shape.bezierCurveTo(-0.19, -0.04, -0.72, -0.5, -1.12, -0.88);
+      shape.quadraticCurveTo(-0.78, -0.83, -0.47, -0.66);
+      shape.quadraticCurveTo(-0.11, -0.38, 0.09, -0.1);
+      shape.quadraticCurveTo(0.16, -0.01, 0.12, 0.07);
+    }),
+    width: 0.98,
+    height: 0.98,
+    rays: [[0.07, 0, -0.35, -0.27], [0.05, -0.03, -0.64, -0.49], [0.02, -0.07, -0.94, -0.73], [0, -0.1, -0.67, -0.68], [-0.02, -0.12, -0.36, -0.51]],
+  },
 ];
 
 const pelvicFinStyles: PectoralFinStyle[] = [
@@ -260,6 +387,44 @@ const pelvicFinStyles: PectoralFinStyle[] = [
     height: 0.66,
     rays: [[0.05, 0, -0.2, -0.15], [0.03, -0.03, -0.4, -0.29], [0, -0.06, -0.3, -0.48]],
   },
+  {
+    shape: createPectoralShape((shape) => {
+      shape.moveTo(0.1, 0.06);
+      shape.bezierCurveTo(-0.12, -0.01, -0.46, -0.2, -0.62, -0.43);
+      shape.bezierCurveTo(-0.69, -0.57, -0.5, -0.68, -0.29, -0.57);
+      shape.quadraticCurveTo(-0.03, -0.34, 0.09, -0.09);
+      shape.quadraticCurveTo(0.15, -0.01, 0.1, 0.06);
+    }),
+    width: 0.76,
+    height: 0.7,
+    rays: [[0.05, 0, -0.2, -0.14], [0.03, -0.03, -0.42, -0.28], [0, -0.06, -0.49, -0.48], [-0.02, -0.08, -0.25, -0.49]],
+  },
+  {
+    shape: createPectoralShape((shape) => {
+      shape.moveTo(0.1, 0.05);
+      shape.bezierCurveTo(-0.1, -0.02, -0.42, -0.35, -0.65, -0.78);
+      shape.quadraticCurveTo(-0.44, -0.67, -0.27, -0.5);
+      shape.quadraticCurveTo(-0.04, -0.26, 0.09, -0.08);
+      shape.quadraticCurveTo(0.15, -0.01, 0.1, 0.05);
+    }),
+    width: 0.66,
+    height: 0.76,
+    rays: [[0.05, 0, -0.18, -0.22], [0.03, -0.03, -0.36, -0.43], [0, -0.06, -0.52, -0.66]],
+  },
+  {
+    shape: createPectoralShape((shape) => {
+      shape.moveTo(0.1, 0.05);
+      shape.bezierCurveTo(-0.13, -0.02, -0.42, -0.2, -0.62, -0.42);
+      shape.quadraticCurveTo(-0.5, -0.43, -0.34, -0.37);
+      shape.lineTo(-0.45, -0.62);
+      shape.quadraticCurveTo(-0.27, -0.55, -0.17, -0.42);
+      shape.quadraticCurveTo(-0.02, -0.24, 0.09, -0.08);
+      shape.quadraticCurveTo(0.15, -0.01, 0.1, 0.05);
+    }),
+    width: 0.78,
+    height: 0.72,
+    rays: [[0.05, 0, -0.2, -0.14], [0.03, -0.03, -0.42, -0.28], [0, -0.06, -0.36, -0.52]],
+  },
 ];
 
 export function creaturePiecesFromArtifactIds(artifactIds: string[]) {
@@ -278,6 +443,20 @@ function hashUnit(value: string) {
     hash = Math.imul(hash, 16777619);
   }
   return (hash >>> 0) / 4294967295;
+}
+
+function shiftedFinColor(
+  source: string,
+  mix: string,
+  mixAmount: number,
+  hue: number,
+  saturation: number,
+  lightness: number,
+) {
+  return new THREE.Color(source)
+    .lerp(new THREE.Color(mix), mixAmount)
+    .offsetHSL(hue, saturation, lightness)
+    .getStyle();
 }
 
 function SoftMaterial({ color, opacity = 1 }: { color: string; opacity?: number }) {
@@ -302,27 +481,33 @@ function DorsalFin({
 }) {
   return (
     <>
-      <mesh position={[0, -0.006, -0.012]} scale={[1.035, 1.035, 1]}>
+      <mesh position={[0, -0.006, 0]} scale={[1.035, 1.035, 1]}>
         <shapeGeometry args={[style.shape, 20]} />
         <meshBasicMaterial color="#080B12" side={THREE.DoubleSide} />
       </mesh>
-      <mesh>
-        <shapeGeometry args={[style.shape, 20]} />
-        <SoftMaterial color={color} opacity={0.88} />
-      </mesh>
+      {[1, -1].map((side) => (
+        <mesh key={`dorsal-surface-${side}`} position={[0, 0, side * 0.006]}>
+          <shapeGeometry args={[style.shape, 20]} />
+          <SoftMaterial color={color} opacity={0.88} />
+        </mesh>
+      ))}
       {style.rays.map(([startX, startY, endX, endY], index) => {
         const dx = endX - startX;
         const dy = endY - startY;
         const length = Math.hypot(dx, dy);
         return (
-          <mesh
-            key={`${startX}-${index}`}
-            position={[(startX + endX) / 2, (startY + endY) / 2, 0.012]}
-            rotation={[0, 0, Math.atan2(dy, dx) - Math.PI / 2]}
-          >
-            <capsuleGeometry args={[0.009, Math.max(0.02, length - 0.018), 3, 6]} />
-            <meshBasicMaterial color={rayColor} transparent opacity={0.3} />
-          </mesh>
+          <group key={`${startX}-${index}`}>
+            {[1, -1].map((side) => (
+              <mesh
+                key={side}
+                position={[(startX + endX) / 2, (startY + endY) / 2, side * 0.012]}
+                rotation={[0, 0, Math.atan2(dy, dx) - Math.PI / 2]}
+              >
+                <capsuleGeometry args={[0.009, Math.max(0.02, length - 0.018), 3, 6]} />
+                <meshBasicMaterial color={rayColor} transparent opacity={0.3} />
+              </mesh>
+            ))}
+          </group>
         );
       })}
     </>
@@ -454,13 +639,15 @@ function FishPartMesh({ piece }: { piece: CreaturePiece }) {
       );
     case "surfer-feet":
       return (
-        <group name={piece.partId} position={[-0.18, -0.66, 0.04]}>
-          {[-0.42, 0.32].map((x) => (
-            <mesh key={x} position={[x, -0.18, 0.06]} rotation={[0, 0, x < 0 ? -0.22 : 0.22]} scale={[0.7, 1.12, 0.08]}>
-              <coneGeometry args={[0.24, 0.62, 5]} />
-              {material}
-            </mesh>
-          ))}
+        <group name={piece.partId} position={[-0.2, -0.58, 0.24]} scale={[0.92, 0.86, 1]}>
+          <mesh position={[0, 0, -0.012]} scale={[1.05, 1.05, 1]}>
+            <shapeGeometry args={[pelvicFinStyles[2].shape, 20]} />
+            <meshBasicMaterial color="#080B12" side={THREE.DoubleSide} />
+          </mesh>
+          <mesh>
+            <shapeGeometry args={[pelvicFinStyles[2].shape, 20]} />
+            <SoftMaterial color={piece.color} opacity={0.9} />
+          </mesh>
         </group>
       );
     case "inner-eye":
@@ -540,14 +727,18 @@ function FishMarkings({
 
   if (pattern === "bands") {
     return (
-      <group position={[0, 0, z]}>
-        {[-0.52, -0.05, 0.42].map((x, index) => (
-          <mesh key={x} position={[x * length, 0, 0]} scale={[0.48, height * (1.15 - index * 0.08), 0.06]}>
-            <torusGeometry args={[0.42, 0.055, 6, 24]} />
-            <meshBasicMaterial color={color} transparent opacity={0.72} />
-          </mesh>
+      <>
+        {[1, -1].map((side) => (
+          <group key={side} position={[0, 0, side * z]}>
+            {[-0.52, -0.05, 0.42].map((x, index) => (
+              <mesh key={x} position={[x * length, 0, 0]} scale={[0.48, height * (1.15 - index * 0.08), 0.06]}>
+                <torusGeometry args={[0.42, 0.055, 6, 24]} />
+                <meshBasicMaterial color={color} transparent opacity={0.72} />
+              </mesh>
+            ))}
+          </group>
         ))}
-      </group>
+      </>
     );
   }
 
@@ -560,23 +751,31 @@ function FishMarkings({
       [0.58, 0.16, 0.1],
     ] as const;
     return (
-      <group position={[0, 0, z]}>
-        {spots.map(([x, y, size]) => (
-          <mesh key={`${x}:${y}`} position={[x * length, y * height, 0]} scale={[1.3, 0.9, 0.08]}>
-            <sphereGeometry args={[size, 12, 12]} />
-            <meshBasicMaterial color={color} transparent opacity={0.78} />
-          </mesh>
+      <>
+        {[1, -1].map((side) => (
+          <group key={side} position={[0, 0, side * z]}>
+            {spots.map(([x, y, size]) => (
+              <mesh key={`${x}:${y}`} position={[x * length, y * height, 0]} scale={[1.3, 0.9, 0.08]}>
+                <sphereGeometry args={[size, 12, 12]} />
+                <meshBasicMaterial color={color} transparent opacity={0.78} />
+              </mesh>
+            ))}
+          </group>
         ))}
-      </group>
+      </>
     );
   }
 
   if (pattern === "stripe") {
     return (
-      <mesh position={[-0.12 * length, 0.06 * height, z]} scale={[length * 0.76, height * 0.14, 0.055]}>
-        <sphereGeometry args={[0.72, 18, 12]} />
-        <meshBasicMaterial color={color} transparent opacity={0.74} />
-      </mesh>
+      <>
+        {[1, -1].map((side) => (
+          <mesh key={side} position={[-0.12 * length, 0.06 * height, side * z]} scale={[length * 0.76, height * 0.14, 0.055]}>
+            <sphereGeometry args={[0.72, 18, 12]} />
+            <meshBasicMaterial color={color} transparent opacity={0.74} />
+          </mesh>
+        ))}
+      </>
     );
   }
 
@@ -619,6 +818,17 @@ export function CreatureModel({
   const finColor = configuredLook?.fin ?? bellyColor;
   const markingColor = configuredLook?.marking ?? headColor;
   const pattern = configuredLook?.pattern ?? "belly";
+  const finVariation = hashUnit(`${firstArtifact?.id ?? signature}:fin-palette`) - 0.5;
+  const finPalette = {
+    tail: shiftedFinColor(finColor, bellyColor, 0.08, finVariation * 0.08, 0.04, 0.03),
+    dorsal: shiftedFinColor(finColor, markingColor, 0.12, 0.035 + finVariation * 0.12, 0.08, 0.04),
+    pectoral: shiftedFinColor(finColor, bellyColor, 0.24, -0.055 + finVariation * 0.1, 0.1, 0.055),
+    pelvic: shiftedFinColor(finColor, markingColor, 0.2, 0.085 + finVariation * 0.12, 0.12, 0.025),
+    rays: shiftedFinColor(markingColor, bellyColor, 0.24, finVariation * 0.06, 0.04, 0.08),
+  };
+  const caudalStyle = caudalTailShapes[
+    Math.min(caudalTailShapes.length - 1, Math.floor(hashUnit(`${firstArtifact?.id ?? signature}:caudal-fin`) * caudalTailShapes.length))
+  ];
   const dorsalStyle = dorsalFinStyles[
     Math.min(dorsalFinStyles.length - 1, Math.floor(hashUnit(`${firstArtifact?.id ?? signature}:dorsal-fin`) * dorsalFinStyles.length))
   ];
@@ -736,10 +946,16 @@ export function CreatureModel({
         <sphereGeometry args={[0.7, 28, 24]} />
         <meshBasicMaterial color="#080B12" side={THREE.BackSide} />
       </mesh>
-      <mesh position={[-0.12, -0.08, proportions.depth * 0.72]} scale={[proportions.length * 0.72, proportions.height * 0.62, 0.12]}>
-        <sphereGeometry args={[0.76, 24, 20]} />
-        <SoftMaterial color={bellyColor} opacity={0.42} />
-      </mesh>
+      {[1, -1].map((side) => (
+        <mesh
+          key={`belly-${side}`}
+          position={[-0.12, -0.08, side * proportions.depth * 0.72]}
+          scale={[proportions.length * 0.72, proportions.height * 0.62, 0.12]}
+        >
+          <sphereGeometry args={[0.76, 24, 20]} />
+          <SoftMaterial color={bellyColor} opacity={0.42} />
+        </mesh>
+      ))}
 
       <FishMarkings
         pattern={pattern}
@@ -754,23 +970,25 @@ export function CreatureModel({
         <meshToonMaterial color={baseColor} />
       </mesh>
 
-      <group ref={tailRef} position={[tailX, 0, 0]}>
-        <mesh position={[0, 0, -0.012]} scale={[1.055, 1.055, 1]}>
-          <shapeGeometry args={[caudalTailShape, 14]} />
+      <group ref={tailRef} position={[tailX, 0, 0]} scale={[1.12, 1.14, 1]}>
+        <mesh scale={[1.055, 1.055, 1]}>
+          <shapeGeometry args={[caudalStyle, 18]} />
           <meshBasicMaterial color="#080B12" side={THREE.DoubleSide} />
         </mesh>
-        <mesh>
-          <shapeGeometry args={[caudalTailShape, 14]} />
-          <SoftMaterial color={finColor} opacity={0.92} />
-        </mesh>
+        {[1, -1].map((side) => (
+          <mesh key={`tail-surface-${side}`} position={[0, 0, side * 0.006]}>
+            <shapeGeometry args={[caudalStyle, 18]} />
+            <SoftMaterial color={finPalette.tail} opacity={0.92} />
+          </mesh>
+        ))}
       </group>
 
       <group
         ref={dorsalRef}
         position={[dorsalStyle.x, proportions.height * 0.78, 0]}
-        scale={[dorsalStyle.width, proportions.height * dorsalStyle.height, 1]}
+        scale={[dorsalStyle.width * 1.14, proportions.height * dorsalStyle.height * 1.14, 1]}
       >
-        <DorsalFin style={dorsalStyle} color={finColor} rayColor={markingColor} />
+        <DorsalFin style={dorsalStyle} color={finPalette.dorsal} rayColor={finPalette.rays} />
       </group>
       <group
         ref={pelvicRef}
@@ -780,12 +998,12 @@ export function CreatureModel({
           <group
             key={side}
             position={[0, 0, side * (proportions.depth * 0.66 + 0.015)]}
-            scale={[pelvicStyle.width, proportions.height * pelvicStyle.height, 1]}
+            scale={[pelvicStyle.width * 1.24, proportions.height * pelvicStyle.height * 1.18, 1]}
           >
             <PectoralFin
               style={pelvicStyle}
-              color={finColor}
-              rayColor={markingColor}
+              color={finPalette.pelvic}
+              rayColor={finPalette.rays}
               side={side}
             />
           </group>
@@ -800,12 +1018,12 @@ export function CreatureModel({
           <group
             key={side}
             position={[0, 0, side * (proportions.depth * 0.9 + 0.018)]}
-            scale={[pectoralStyle.width, proportions.height * pectoralStyle.height, 1]}
+            scale={[pectoralStyle.width * 1.2, proportions.height * pectoralStyle.height * 1.16, 1]}
           >
             <PectoralFin
               style={pectoralStyle}
-              color={finColor}
-              rayColor={markingColor}
+              color={finPalette.pectoral}
+              rayColor={finPalette.rays}
               side={side}
             />
           </group>
@@ -849,6 +1067,11 @@ export function CreatureModel({
       {pieces.map((piece) => (
         <group ref={(node) => { setPartRef(piece.artifactId, node); }} key={piece.artifactId}>
           <FishPartMesh piece={piece} />
+          {mirroredPartIds.has(piece.partId) && (
+            <group scale={[1, 1, -1]}>
+              <FishPartMesh piece={piece} />
+            </group>
+          )}
         </group>
       ))}
     </group>

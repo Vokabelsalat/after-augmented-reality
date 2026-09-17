@@ -118,21 +118,22 @@ export function CollectiveWall() {
       {active && (
         <section key={active.id} className="collective-arrival absolute inset-0 z-20 grid place-items-center" aria-label="A new visitor fish has arrived">
           <div className="collective-arrival-glow absolute inset-0" aria-hidden="true" />
-          <div className="relative grid w-[min(90vw,1100px)] grid-cols-[minmax(280px,.8fr)_minmax(360px,1.2fr)] items-center gap-20">
-            <div className="collective-arrival-creature aspect-square w-full">
+          <div className="relative grid w-[min(94vw,1280px)] grid-cols-[minmax(420px,1.25fr)_minmax(320px,.75fr)] items-center gap-[clamp(2rem,5vw,5rem)] px-6">
+            <div className="collective-arrival-creature aspect-[4/3] w-full">
               <CreatureCanvas
                 artifactIds={active.parts.map((part) => part.artifactId)}
+                zoom={78}
                 label={`New fish with ${active.parts.length} parts`}
               />
             </div>
-            <div className="collective-story max-w-2xl">
+            <div className="collective-story max-w-xl">
               <p className="mb-3 text-xs tracking-[0.28em] text-white/42">A NEW FISH ENTERS THE AQUARIUM</p>
-              <p className="mb-8 text-sm text-white/45">
+              <p className="mb-6 text-sm text-white/45">
                 Made from {active.parts.length} exhibition {active.parts.length === 1 ? "encounter" : "encounters"}
               </p>
-              <div className="font-display text-[clamp(2rem,3.8vw,4.25rem)] leading-[1.08] tracking-[-0.035em]">
+              <div className="font-display text-[clamp(1.35rem,1.9vw,2.15rem)] leading-[1.16] tracking-[-0.025em]">
                 {active.narrative.map((line, index) => (
-                  <p key={`${index}-${line}`} className="my-2">{line}</p>
+                  <p key={`${index}-${line}`} className="my-1.5">{line}</p>
                 ))}
               </div>
             </div>
