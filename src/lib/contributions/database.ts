@@ -7,10 +7,12 @@ import type { ExhibitionContribution, SharedCreaturePart } from "@/types/contrib
 import { artifactById } from "@/data/artifacts";
 import { artifacts } from "@/data/artifacts";
 import { aggregateContributionDwellTimes } from "@/lib/contributions/heatmap";
+import { isAquaticForm, type AquaticForm } from "@/lib/creature/aquaticForms";
 
 type ContributionRow = {
   id: number;
   public_id: string;
+  creature_form: string;
   glyphs_json: string;
   narrative_json: string;
   created_at: string;
@@ -77,6 +79,7 @@ function openDatabase() {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       public_id TEXT NOT NULL UNIQUE,
       session_id TEXT NOT NULL UNIQUE,
+      creature_form TEXT NOT NULL DEFAULT 'fish',
       glyphs_json TEXT NOT NULL,
       narrative_json TEXT NOT NULL,
       created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
@@ -85,6 +88,12 @@ function openDatabase() {
       ON contributions(created_at DESC);
     PRAGMA optimize;
   `);
+  const contributionColumns = database
+    .prepare("PRAGMA table_info(contributions)")
+    .all() as unknown as Array<{ name: string }>;
+  if (!contributionColumns.some((column) => column.name === "creature_form")) {
+    database.exec("ALTER TABLE contributions ADD COLUMN creature_form TEXT NOT NULL DEFAULT 'fish'");
+  }
 
   globalForDatabase.exhibitionDatabase = database;
   return database;
@@ -97,6 +106,7 @@ function deserialize(row: ContributionRow): ExhibitionContribution {
   return {
     id: row.id,
     publicId: row.public_id,
+    creatureForm: isAquaticForm(row.creature_form) ? row.creature_form : "fish",
     parts: storedParts.flatMap((part) => {
       const artifact = artifactById.get(part.artifactId);
       if (!artifact) return [];
@@ -114,7 +124,7 @@ function deserialize(row: ContributionRow): ExhibitionContribution {
 export function listContributions(afterId = 0, limit = 80) {
   const rows = openDatabase()
     .prepare(
-      `SELECT id, public_id, glyphs_json, narrative_json, created_at
+      `SELECT id, public_id, creature_form, glyphs_json, narrative_json, created_at
        FROM contributions
        WHERE id > ? AND created_at >= ?
        ORDER BY id ASC
@@ -128,7 +138,7 @@ export function listContributions(afterId = 0, limit = 80) {
 export function getCollectiveHeatmap() {
   const rows = openDatabase()
     .prepare(
-      `SELECT id, public_id, glyphs_json, narrative_json, created_at
+      `SELECT id, public_id, creature_form, glyphs_json, narrative_json, created_at
        FROM contributions
        WHERE created_at >= ?
        ORDER BY id ASC`,
@@ -144,26 +154,28 @@ export function getCollectiveHeatmap() {
 export function createContribution(input: {
   publicId: string;
   sessionId: string;
+  creatureForm: AquaticForm;
   parts: SharedCreaturePart[];
   narrative: string[];
 }) {
   const database = openDatabase();
   database
     .prepare(
-      `INSERT INTO contributions (public_id, session_id, glyphs_json, narrative_json)
-       VALUES (?, ?, ?, ?)
+      `INSERT INTO contributions (public_id, session_id, creature_form, glyphs_json, narrative_json)
+       VALUES (?, ?, ?, ?, ?)
        ON CONFLICT(session_id) DO NOTHING`,
     )
     .run(
       input.publicId,
       input.sessionId,
+      input.creatureForm,
       JSON.stringify(input.parts),
       JSON.stringify(input.narrative),
     );
 
   const row = database
     .prepare(
-      `SELECT id, public_id, glyphs_json, narrative_json, created_at
+      `SELECT id, public_id, creature_form, glyphs_json, narrative_json, created_at
        FROM contributions
        WHERE session_id = ?`,
     )

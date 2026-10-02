@@ -8,10 +8,12 @@ import {
   selectDiscoveries,
   selectDiscoveredArtifacts,
   selectNarrativeState,
+  selectCreatureForm,
 } from "@/store/selectors";
 import { PathVisualization } from "@/components/visualization/PathVisualization";
 import { activeVisualizationCopy, visualizationDesign } from "@/config/visualization";
 import { BiomeBackdrop } from "@/components/visualization/BiomeBackdrop";
+import { aquaticFormLabels } from "@/lib/creature/aquaticForms";
 
 export function JourneyScreen() {
   const dispatch = useAppDispatch();
@@ -19,6 +21,7 @@ export function JourneyScreen() {
   const discoveries = useAppSelector(selectDiscoveries);
   const discoveredArtifacts = useAppSelector(selectDiscoveredArtifacts);
   const narrativeState = useAppSelector(selectNarrativeState);
+  const creatureForm = useAppSelector(selectCreatureForm);
   const readyToRelease = discoveries.length >= 3;
 
   return (
@@ -27,7 +30,9 @@ export function JourneyScreen() {
       <header className="flex items-start justify-between">
         <div>
           <p className="text-sm text-white/50">Provisional specimen record</p>
-          <h1 className="font-display mt-1 text-4xl tracking-[-0.045em]">Your unclassified fish</h1>
+          <h1 className="font-display mt-1 text-4xl tracking-[-0.045em]">
+            Your unclassified {creatureForm ? aquaticFormLabels[creatureForm] : "sea creature"}
+          </h1>
         </div>
         <button
           type="button"
@@ -39,7 +44,7 @@ export function JourneyScreen() {
       </header>
 
       <div className="mx-auto h-[38dvh] min-h-72 w-full max-w-xl">
-        <PathVisualization artifactIds={discoveries.map((item) => item.artifactId)} label={`Your evolving exhibition ${activeVisualizationCopy.singular}`} />
+        <PathVisualization artifactIds={discoveries.map((item) => item.artifactId)} creatureForm={creatureForm} fitToView label={`Your evolving exhibition ${activeVisualizationCopy.singular}`} />
       </div>
 
       <div className="mx-auto w-full max-w-xl flex-1">

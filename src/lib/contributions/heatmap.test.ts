@@ -13,6 +13,7 @@ function contribution(
   return {
     id,
     publicId: `public-${id}`,
+    creatureForm: "fish",
     parts,
     narrative: [],
     createdAt: "2026-09-17T00:00:00.000Z",

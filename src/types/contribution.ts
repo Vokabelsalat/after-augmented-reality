@@ -1,4 +1,5 @@
 import type { CreaturePartId, ThemeId } from "@/types/exhibition";
+import type { AquaticForm } from "@/lib/creature/aquaticForms";
 
 export type SharedCreaturePart = {
   artifactId: string;
@@ -14,6 +15,7 @@ export type SharedCreaturePart = {
 export type ExhibitionContribution = {
   id: number;
   publicId: string;
+  creatureForm: AquaticForm;
   parts: SharedCreaturePart[];
   narrative: string[];
   createdAt: string;
@@ -28,6 +30,7 @@ export type CollectiveHeatDatum = {
 
 export type ContributionSubmission = {
   sessionId: string;
+  creatureForm: AquaticForm;
   completedAt: number;
   discoveries: Array<{
     artifactId: string;

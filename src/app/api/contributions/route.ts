@@ -8,6 +8,7 @@ import {
 } from "@/lib/contributions/database";
 import { generateJourneyNarrative } from "@/lib/narrative/generateJourneyNarrative";
 import { calculateDwellTimes } from "@/lib/contributions/dwellTime";
+import { isAquaticForm, pickAquaticForm } from "@/lib/creature/aquaticForms";
 import type { ContributionSubmission, SharedCreaturePart } from "@/types/contribution";
 
 export const runtime = "nodejs";
@@ -65,8 +66,12 @@ function parseSubmission(value: unknown): ContributionSubmission | null {
     candidate.completedAt >= lastDiscoveredAt &&
     candidate.completedAt - firstDiscoveredAt <= 24 * 60 * 60_000;
 
+  const creatureForm = isAquaticForm(candidate.creatureForm)
+    ? candidate.creatureForm
+    : pickAquaticForm(`${candidate.sessionId}:${discoveries[0]?.artifactId ?? "unknown"}:${firstDiscoveredAt}`);
+
   return valid && validCompletion
-    ? { sessionId: candidate.sessionId, completedAt: candidate.completedAt, discoveries }
+    ? { sessionId: candidate.sessionId, creatureForm, completedAt: candidate.completedAt, discoveries }
     : null;
 }
 
@@ -120,6 +125,7 @@ export async function POST(request: Request) {
   const contribution = createContribution({
     publicId: randomUUID(),
     sessionId: submission.sessionId,
+    creatureForm: submission.creatureForm,
     parts,
     narrative,
   });

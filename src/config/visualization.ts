@@ -37,12 +37,12 @@ export const visualizationCopy = {
     finish: "Finish my creature",
   },
   fish: {
-    singular: "fish",
-    plural: "fish",
-    personalTitle: "My fish",
+    singular: "sea creature",
+    plural: "sea creatures",
+    personalTitle: "My sea creature",
     collectiveTitle: "Shared aquarium",
     collectivePlace: "aquarium",
-    finish: "Finish my fish",
+    finish: "Finish my sea creature",
   },
 } as const satisfies Record<VisualizationDesign, {
   singular: string;

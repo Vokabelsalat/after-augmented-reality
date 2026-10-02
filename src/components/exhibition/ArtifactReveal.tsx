@@ -15,7 +15,7 @@ import type { ExhibitionArtifact } from "@/types/exhibition";
 import { ParticleNarrative } from "@/components/particles/ParticleNarrative";
 import { PathVisualization } from "@/components/visualization/PathVisualization";
 import { activeVisualizationCopy, visualizationDesign } from "@/config/visualization";
-import { selectDiscoveries } from "@/store/selectors";
+import { selectCreatureForm, selectDiscoveries } from "@/store/selectors";
 
 type RevealPresentation = "tracked-ar" | "simulated";
 
@@ -30,6 +30,7 @@ function ArtifactRevealSequence({
 }) {
   const dispatch = useAppDispatch();
   const discoveries = useAppSelector(selectDiscoveries);
+  const creatureForm = useAppSelector(selectCreatureForm);
   const handleContentReady = useCallback(() => {
     dispatch(artifactCollected(artifact.id));
   }, [artifact.id, dispatch]);
@@ -50,6 +51,8 @@ function ArtifactRevealSequence({
           <div className="absolute inset-x-0 top-[12vh] h-[52vh]">
             <PathVisualization
               artifactIds={discoveries.map((item) => item.artifactId)}
+              creatureForm={creatureForm}
+              fitToView
               highlightedPart={artifact.creaturePart.id}
               label={`${artifact.marineType} altering your ${activeVisualizationCopy.singular}`}
             />

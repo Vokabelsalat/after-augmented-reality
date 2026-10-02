@@ -12,6 +12,8 @@ export const selectExperiencePhase = (state: RootState) =>
   state.journey.experiencePhase;
 export const selectNarrativeState = (state: RootState) =>
   state.journey.narrativeState;
+export const selectCreatureForm = (state: RootState) =>
+  state.journey.creatureForm;
 
 export const selectDiscoveredArtifacts = (state: RootState) =>
   state.journey.discoveries

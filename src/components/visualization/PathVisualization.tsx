@@ -7,6 +7,7 @@ import { NetworkGlyph } from "@/components/visualization/NetworkGlyph";
 import { visualizationDesign } from "@/config/visualization";
 import type { ExhibitionContribution } from "@/types/contribution";
 import type { CreaturePartId } from "@/types/exhibition";
+import type { AquaticForm } from "@/lib/creature/aquaticForms";
 
 export function PathVisualization({
   artifactIds,
@@ -15,6 +16,7 @@ export function PathVisualization({
   compact = false,
   zoom,
   fitToView = false,
+  creatureForm,
   label,
 }: {
   artifactIds: string[];
@@ -23,6 +25,7 @@ export function PathVisualization({
   compact?: boolean;
   zoom?: number;
   fitToView?: boolean;
+  creatureForm?: AquaticForm | null;
   label?: string;
 }) {
   if (visualizationDesign === "constellation") {
@@ -55,6 +58,7 @@ export function PathVisualization({
       compact={compact}
       zoom={zoom}
       fitToView={fitToView}
+      creatureForm={contribution?.creatureForm ?? creatureForm ?? "fish"}
       label={label}
     />
   );

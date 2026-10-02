@@ -4,17 +4,27 @@ import { AdaptiveDpr } from "@react-three/drei";
 import { Canvas, useThree } from "@react-three/fiber";
 import { useLayoutEffect } from "react";
 import * as THREE from "three";
-import { CreatureModel, creaturePiecesFromArtifactIds } from "@/components/creature/CreatureModel";
+import { creaturePiecesFromArtifactIds } from "@/components/creature/CreatureModel";
+import { AquaticCreatureModel } from "@/components/creature/AquaticCreatureModel";
+import { aquaticFormLabels, type AquaticForm } from "@/lib/creature/aquaticForms";
 import type { CreaturePartId } from "@/types/exhibition";
 
-function FitCreatureCamera() {
+const fittedBounds: Record<AquaticForm, { width: number; height: number }> = {
+  fish: { width: 6.2, height: 4.1 },
+  crab: { width: 4.4, height: 3.4 },
+  jellyfish: { width: 3.6, height: 4.5 },
+  octopus: { width: 4.2, height: 4.5 },
+};
+
+function FitCreatureCamera({ creatureForm }: { creatureForm: AquaticForm }) {
   const { camera, size } = useThree();
 
   useLayoutEffect(() => {
     if (!(camera instanceof THREE.OrthographicCamera)) return;
-    camera.zoom = Math.min(size.width / 6.2, size.height / 4.1);
+    const bounds = fittedBounds[creatureForm];
+    camera.zoom = Math.min(size.width / bounds.width, size.height / bounds.height);
     camera.updateProjectionMatrix();
-  }, [camera, size.height, size.width]);
+  }, [camera, creatureForm, size.height, size.width]);
 
   return null;
 }
@@ -25,6 +35,7 @@ export function CreatureCanvas({
   compact = false,
   zoom,
   fitToView = false,
+  creatureForm = "fish",
   label,
 }: {
   artifactIds: string[];
@@ -32,6 +43,7 @@ export function CreatureCanvas({
   compact?: boolean;
   zoom?: number;
   fitToView?: boolean;
+  creatureForm?: AquaticForm;
   label?: string;
 }) {
   const pieces = creaturePiecesFromArtifactIds(artifactIds);
@@ -40,7 +52,7 @@ export function CreatureCanvas({
     <div
       className="relative size-full"
       role="img"
-      aria-label={label ?? `Fish with ${pieces.length} collected ${pieces.length === 1 ? "part" : "parts"}`}
+      aria-label={label ?? `${aquaticFormLabels[creatureForm]} with ${pieces.length} collected ${pieces.length === 1 ? "trait" : "traits"}`}
     >
       <Canvas
         orthographic
@@ -48,12 +60,12 @@ export function CreatureCanvas({
         dpr={[1, compact ? 1.25 : 1.6]}
         gl={{ alpha: true, antialias: true, powerPreference: "high-performance" }}
       >
-        {fitToView && <FitCreatureCamera />}
+        {fitToView && <FitCreatureCamera creatureForm={creatureForm} />}
         <ambientLight intensity={1.5} />
         <directionalLight position={[3, 5, 6]} intensity={2.6} color="#FFF4DF" />
         <pointLight position={[-3, 0, 4]} intensity={2} color="#58D6FF" />
         <pointLight position={[3, -2, 3]} intensity={1.4} color="#FF7557" />
-        <CreatureModel pieces={pieces} highlightedPart={highlightedPart} scale={compact ? 0.86 : 1} />
+        <AquaticCreatureModel form={creatureForm} pieces={pieces} highlightedPart={highlightedPart} scale={compact ? 0.86 : 1} />
         <AdaptiveDpr pixelated />
       </Canvas>
     </div>

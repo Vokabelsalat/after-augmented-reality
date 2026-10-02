@@ -4,6 +4,7 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   selectDiscoveries,
   selectDiscoveryCount,
+  selectCreatureForm,
 } from "@/store/selectors";
 import { setExperiencePhase } from "@/store/journeySlice";
 import { PathVisualization } from "@/components/visualization/PathVisualization";
@@ -13,6 +14,7 @@ export function ExhibitionNavigation() {
   const dispatch = useAppDispatch();
   const count = useAppSelector(selectDiscoveryCount);
   const discoveries = useAppSelector(selectDiscoveries);
+  const creatureForm = useAppSelector(selectCreatureForm);
 
   return (
     <header className="safe-top pointer-events-none absolute inset-x-0 top-0 z-30 flex items-start justify-between px-4">
@@ -29,7 +31,7 @@ export function ExhibitionNavigation() {
         aria-label={`Open ${activeVisualizationCopy.personalTitle}, ${count} parts collected`}
       >
         <span className="size-12 overflow-hidden rounded-full bg-white/[0.035]" aria-hidden="true">
-          <PathVisualization artifactIds={discoveries.map((item) => item.artifactId)} compact />
+          <PathVisualization artifactIds={discoveries.map((item) => item.artifactId)} creatureForm={creatureForm} compact />
         </span>
           <span>My specimen</span>
       </button>

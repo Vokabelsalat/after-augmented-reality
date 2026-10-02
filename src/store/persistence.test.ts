@@ -32,6 +32,7 @@ describe("journey persistence", () => {
       sessionId: "session-test",
       startedAt: 100,
       completedAt: null,
+      creatureForm: "jellyfish" as const,
       discoveries: [
         { artifactId: "memory-fragment", sequence: 1, discoveredAt: 200 },
       ],

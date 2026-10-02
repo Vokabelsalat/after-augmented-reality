@@ -1,4 +1,5 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
+import { pickAquaticForm, type AquaticForm } from "@/lib/creature/aquaticForms";
 import type { NarrativeState } from "@/types/exhibition";
 
 export type ExperiencePhase =
@@ -24,12 +25,13 @@ export type JourneyState = {
   activeArtifactId: string | null;
   experiencePhase: ExperiencePhase;
   narrativeState: NarrativeState;
+  creatureForm: AquaticForm | null;
 };
 
 export type PersistedJourney = Pick<
   JourneyState,
   "sessionId" | "startedAt" | "completedAt" | "discoveries"
-> & { narrativeState?: NarrativeState };
+> & { narrativeState?: NarrativeState; creatureForm?: AquaticForm | null };
 
 export const neutralNarrativeState: NarrativeState = {
   openness: 0,
@@ -47,6 +49,7 @@ export const initialJourneyState: JourneyState = {
   activeArtifactId: null,
   experiencePhase: "intro",
   narrativeState: { ...neutralNarrativeState },
+  creatureForm: null,
 };
 
 function makeSessionId() {
@@ -93,6 +96,12 @@ const journeySlice = createSlice({
         );
 
         if (alreadyDiscovered) return;
+
+        if (!state.creatureForm) {
+          state.creatureForm = pickAquaticForm(
+            `${state.sessionId ?? "anonymous"}:${artifactId}:${discoveredAt}`,
+          );
+        }
 
         state.discoveries.push({
           artifactId,
@@ -164,6 +173,11 @@ const journeySlice = createSlice({
       state.completedAt = action.payload.completedAt;
       state.discoveries = action.payload.discoveries;
       state.narrativeState = { ...(action.payload.narrativeState ?? neutralNarrativeState) };
+      const firstDiscovery = action.payload.discoveries[0];
+      state.creatureForm = action.payload.creatureForm
+        ?? (firstDiscovery
+          ? pickAquaticForm(`${action.payload.sessionId ?? "anonymous"}:${firstDiscovery.artifactId}:${firstDiscovery.discoveredAt}`)
+          : null);
       state.activeArtifactId = null;
       state.experiencePhase = action.payload.sessionId ? "scanning" : "intro";
     },

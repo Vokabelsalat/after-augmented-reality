@@ -4,7 +4,7 @@ import { AdaptiveDpr } from "@react-three/drei";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
-import { CreatureModel } from "@/components/creature/CreatureModel";
+import { AquaticCreatureModel } from "@/components/creature/AquaticCreatureModel";
 import type { ExhibitionContribution } from "@/types/contribution";
 
 function seededUnit(seed: number) {
@@ -126,6 +126,13 @@ function FloatingCreature({ contribution, progress }: { contribution: Exhibition
   });
 
   const startsFacingLeft = Math.cos(placement.heading) < 0;
+  const formScale = contribution.creatureForm === "jellyfish"
+    ? 1.24
+    : contribution.creatureForm === "octopus"
+      ? 1.12
+      : contribution.creatureForm === "crab"
+        ? 1.04
+        : 1;
 
   return (
     <group
@@ -133,7 +140,7 @@ function FloatingCreature({ contribution, progress }: { contribution: Exhibition
       position={[0, 0, placement.z]}
     >
       <group ref={directionRef} rotation={[0, startsFacingLeft ? Math.PI : 0, 0]}>
-        <CreatureModel pieces={contribution.parts} scale={placement.scale} />
+        <AquaticCreatureModel form={contribution.creatureForm} pieces={contribution.parts} scale={placement.scale * formScale} />
       </group>
     </group>
   );

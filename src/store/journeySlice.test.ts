@@ -39,6 +39,20 @@ describe("journeySlice", () => {
     ]);
     expect(state.activeArtifactId).toBe("body-space");
     expect(state.experiencePhase).toBe("revealing");
+    expect(state.creatureForm).not.toBeNull();
+  });
+
+  it("chooses the aquatic form at the first scan and keeps it for the journey", () => {
+    let state = journeyReducer(
+      undefined,
+      startJourney({ sessionId: "session-creature", startedAt: 100 }),
+    );
+    state = journeyReducer(state, artifactDetected("first-work", 200));
+    const firstForm = state.creatureForm;
+    state = journeyReducer(state, artifactDetected("second-work", 300));
+
+    expect(firstForm).not.toBeNull();
+    expect(state.creatureForm).toBe(firstForm);
   });
 
   it("ignores duplicate scans without changing sequence or active state", () => {
@@ -80,6 +94,7 @@ describe("journeySlice", () => {
       discoveries: [],
       activeArtifactId: null,
       experiencePhase: "intro",
+      creatureForm: null,
     });
   });
 
