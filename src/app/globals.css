@@ -559,16 +559,16 @@ a:focus-visible {
   background: radial-gradient(circle at 35% 50%, rgba(255, 255, 255, 0.08), transparent 28%);
 }
 
-.collective-heat-cell {
-  background: rgba(255, 255, 255, 0.018);
+.collective-plan-stage {
+  box-shadow: inset 0 0 80px rgba(12, 104, 156, 0.08);
 }
 
-.collective-heat-glow {
-  opacity: var(--heat-opacity);
-  background:
-    radial-gradient(circle at 28% 82%, color-mix(in srgb, var(--heat-color) 72%, transparent), transparent 58%),
-    linear-gradient(135deg, color-mix(in srgb, var(--heat-color) 20%, transparent), transparent 62%);
-  filter: saturate(1.25);
+.collective-plan-object {
+  background: rgba(1, 9, 14, 0.46);
+}
+
+.collective-plan-legend {
+  background: linear-gradient(90deg, rgb(37, 99, 235), rgb(34, 197, 94));
 }
 
 @keyframes category-orbit {
@@ -638,9 +638,22 @@ a:focus-visible {
     display: none;
   }
 
-  .collective-heat-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    grid-template-rows: none;
-    overflow-y: auto;
+  .collective-plan-heatmap {
+    top: 12.5rem;
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(0, 1fr) auto;
+    gap: 1rem;
+    padding-inline: 1.25rem;
+  }
+
+  .collective-plan-heatmap aside {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  .collective-plan-heatmap aside ol,
+  .collective-plan-heatmap aside > div:first-child p:last-child {
+    display: none;
   }
 }

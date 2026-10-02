@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { aggregateContributionDwellTimes } from "@/lib/contributions/heatmap";
+import {
+  aggregateContributionDwellTimes,
+  artifactPlanLabel,
+  collectiveActivityIntensities,
+} from "@/lib/contributions/heatmap";
 import type { ExhibitionContribution } from "@/types/contribution";
 
 function contribution(
@@ -28,6 +32,15 @@ function part(artifactId: string, dwellMs?: number) {
 }
 
 describe("collective heat-map aggregation", () => {
+  it("converts artwork titles to the labels used by the exhibition plan", () => {
+    expect(artifactPlanLabel("The Grand Hotel Bald Cockatoo")).toBe(
+      "the-grand-hotel-bald-cockatoo",
+    );
+    expect(artifactPlanLabel("Between Page & Screen")).toBe(
+      "between-page-and-screen",
+    );
+  });
+
   it("combines dwell time and visit counts across every contribution", () => {
     const result = aggregateContributionDwellTimes(
       [
@@ -73,5 +86,18 @@ describe("collective heat-map aggregation", () => {
     );
 
     expect(result[0]).toMatchObject({ totalDwellMs: 0, visitCount: 0 });
+  });
+
+  it("combines visit frequency and dwell time into a bounded intensity", () => {
+    const intensities = collectiveActivityIntensities([
+      { artifactId: "quiet", totalDwellMs: 20_000, visitCount: 1, averageDwellMs: 20_000 },
+      { artifactId: "popular", totalDwellMs: 120_000, visitCount: 8, averageDwellMs: 15_000 },
+      { artifactId: "unvisited", totalDwellMs: 0, visitCount: 0, averageDwellMs: 0 },
+    ]);
+
+    expect(intensities.get("popular")).toBe(1);
+    expect(intensities.get("quiet")).toBeGreaterThan(0);
+    expect(intensities.get("quiet")).toBeLessThan(1);
+    expect(intensities.get("unvisited")).toBe(0);
   });
 });

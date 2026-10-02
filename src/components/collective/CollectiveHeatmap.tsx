@@ -1,8 +1,15 @@
 "use client";
 
-import { useMemo, type CSSProperties } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { artifacts } from "@/data/artifacts";
+import {
+  artifactPlanLabel,
+  collectiveActivityIntensities,
+} from "@/lib/contributions/heatmap";
 import type { CollectiveHeatDatum } from "@/types/contribution";
+
+const INKSCAPE_NAMESPACE = "http://www.inkscape.org/namespaces/inkscape";
+const SVG_NAMESPACE = "http://www.w3.org/2000/svg";
 
 function formatDuration(durationMs: number) {
   if (durationMs <= 0) return "0 min";
@@ -14,7 +21,21 @@ function formatDuration(durationMs: number) {
   return minutes === 0 ? `${hours} hr` : `${hours} hr ${minutes} min`;
 }
 
+function heatColor(intensity: number) {
+  const progress = Math.max(0, Math.min(1, intensity));
+  const blue = [37, 99, 235];
+  const green = [34, 197, 94];
+  const channels = blue.map((start, index) =>
+    Math.round(start + (green[index] - start) * progress),
+  );
+  return `rgb(${channels.join(", ")})`;
+}
+
 export function CollectiveHeatmap({ data }: { data: CollectiveHeatDatum[] }) {
+  const planRef = useRef<HTMLObjectElement>(null);
+  const [planLoaded, setPlanLoaded] = useState(false);
+  const [mappedArtifactIds, setMappedArtifactIds] = useState<string[]>([]);
+
   const stations = useMemo(() => {
     const byId = new Map(data.map((datum) => [datum.artifactId, datum]));
     const combined = artifacts.map((artifact) => ({
@@ -26,99 +47,134 @@ export function CollectiveHeatmap({ data }: { data: CollectiveHeatDatum[] }) {
         averageDwellMs: 0,
       },
     }));
-    const peak = Math.max(1, ...combined.map(({ datum }) => datum.totalDwellMs));
-    const ranked = [...combined].sort(
-      (a, b) => b.datum.totalDwellMs - a.datum.totalDwellMs,
-    );
-    const rankById = new Map(
-      ranked.map(({ artifact }, index) => [artifact.id, index + 1]),
-    );
+    const intensities = collectiveActivityIntensities(combined.map(({ datum }) => datum));
 
-    return combined.map((item) => ({
-      ...item,
-      intensity: item.datum.totalDwellMs / peak,
-      rank: rankById.get(item.artifact.id)!,
-    }));
+    return combined
+      .map((item) => ({
+        ...item,
+        intensity: intensities.get(item.artifact.id) ?? 0,
+        planLabel: artifactPlanLabel(item.artifact.title),
+      }))
+      .sort((a, b) => b.intensity - a.intensity);
   }, [data]);
 
-  const totalVisits = stations.reduce(
-    (sum, { datum }) => sum + datum.visitCount,
-    0,
+  const stationByPlanLabel = useMemo(
+    () => new Map(stations.map((station) => [station.planLabel, station])),
+    [stations],
   );
-  const totalDwellMs = stations.reduce(
-    (sum, { datum }) => sum + datum.totalDwellMs,
-    0,
-  );
-  const hottest = [...stations].sort(
-    (a, b) => b.datum.totalDwellMs - a.datum.totalDwellMs,
-  )[0];
+
+  useEffect(() => {
+    if (!planLoaded) return;
+    const document = planRef.current?.contentDocument;
+    const svg = document?.documentElement;
+    if (!document || !svg) return;
+
+    svg.setAttribute("role", "img");
+    svg.setAttribute("aria-label", "Exhibition plan showing collective visits and dwell time");
+    svg.style.width = "100%";
+    svg.style.height = "100%";
+
+    const mappedIds: string[] = [];
+    document.querySelectorAll("rect").forEach((rect) => {
+      const label = rect.getAttributeNS(INKSCAPE_NAMESPACE, "label")
+        ?? rect.getAttribute("inkscape:label");
+      const station = label ? stationByPlanLabel.get(label) : undefined;
+      if (!station) return;
+
+      mappedIds.push(station.artifact.id);
+      const color = heatColor(station.intensity);
+      const active = station.datum.visitCount > 0;
+      rect.style.fill = color;
+      rect.style.fillOpacity = active ? String(0.34 + station.intensity * 0.58) : "0.08";
+      rect.style.stroke = color;
+      rect.style.strokeOpacity = active ? "1" : "0.38";
+      rect.style.strokeWidth = active ? "0.85" : "0.35";
+      rect.style.filter = active
+        ? `drop-shadow(0 0 ${1.5 + station.intensity * 4}px ${color})`
+        : "none";
+      rect.style.transition = "fill 500ms ease, fill-opacity 500ms ease, stroke 500ms ease";
+      rect.style.pointerEvents = "all";
+
+      const previousTitle = Array.from(rect.children).find(
+        (child) => child.tagName.toLocaleLowerCase() === "title" && child.hasAttribute("data-heatmap-title"),
+      );
+      previousTitle?.remove();
+      const title = document.createElementNS(SVG_NAMESPACE, "title");
+      title.setAttribute("data-heatmap-title", "true");
+      title.textContent = `${station.artifact.title}: ${station.datum.visitCount} ${station.datum.visitCount === 1 ? "visit" : "visits"}, ${formatDuration(station.datum.totalDwellMs)} total`;
+      rect.prepend(title);
+    });
+    setMappedArtifactIds([...new Set(mappedIds)]);
+  }, [planLoaded, stationByPlanLabel]);
+
+  const totalVisits = stations.reduce((sum, { datum }) => sum + datum.visitCount, 0);
+  const totalDwellMs = stations.reduce((sum, { datum }) => sum + datum.totalDwellMs, 0);
+  const mappedIds = new Set(mappedArtifactIds);
+  const hottest = stations.find((station) => mappedIds.has(station.artifact.id)) ?? stations[0];
 
   return (
-    <section className="absolute inset-x-0 bottom-0 top-24 z-10 flex flex-col px-8 pb-8 pt-5 lg:px-12" aria-label="Collective dwell-time heat map">
-      <div className="mb-5 flex items-end justify-between border-b border-white/10 pb-4">
+    <section
+      className="collective-plan-heatmap absolute inset-x-0 bottom-0 top-52 z-10 grid min-h-0 grid-cols-[minmax(0,1fr)_minmax(17rem,22rem)] gap-8 px-8 pb-8 lg:px-12"
+      aria-label="Collective activity on the exhibition plan"
+    >
+      <figure className="collective-plan-stage relative min-h-0 overflow-hidden border border-white/10 bg-black/20">
+        <object
+          ref={planRef}
+          className="collective-plan-object block size-full"
+          data="/plan.svg"
+          type="image/svg+xml"
+          aria-label="Exhibition floor plan heatmap"
+          onLoad={() => setPlanLoaded(true)}
+        >
+          <p>The exhibition plan could not be loaded.</p>
+        </object>
+        {!planLoaded && (
+          <div className="absolute inset-0 grid place-items-center bg-[var(--abyss)] text-base text-white/60">
+            Loading exhibition plan…
+          </div>
+        )}
+        <figcaption className="sr-only">
+          Blue areas received less collective activity; green areas received the most visits and dwell time.
+        </figcaption>
+      </figure>
+
+      <aside className="flex min-h-0 flex-col justify-between py-1">
         <div>
-          <p className="text-[10px] tracking-[0.26em] text-white/35">TIME SPENT ACROSS ALL SHARED JOURNEYS</p>
-          <p className="mt-2 font-display text-[clamp(1.4rem,2.1vw,2.4rem)] text-white/85">
-            {hottest?.datum.totalDwellMs
+          <p className="font-display text-[clamp(1.35rem,2vw,2.2rem)] leading-tight text-white/90">
+            {hottest?.datum.visitCount
               ? `${hottest.artifact.title} holds the most attention`
-              : "Waiting for dwell-time data"}
+              : "Waiting for visitor activity"}
+          </p>
+          <p className="mt-3 text-base leading-relaxed text-white/55">
+            {totalVisits} {totalVisits === 1 ? "visit" : "visits"} · {formatDuration(totalDwellMs)} together
+          </p>
+          <p className="mt-6 text-sm text-white/45">
+            {mappedArtifactIds.length} {mappedArtifactIds.length === 1 ? "artwork is" : "artworks are"} positioned in the current plan.
           </p>
         </div>
-        <div className="flex gap-8 text-right">
-          <div>
-            <p className="text-lg text-white/80">{totalVisits}</p>
-            <p className="text-[9px] tracking-[0.2em] text-white/30">ARTWORK VISITS</p>
-          </div>
-          <div>
-            <p className="text-lg text-white/80">{formatDuration(totalDwellMs)}</p>
-            <p className="text-[9px] tracking-[0.2em] text-white/30">COLLECTIVE TIME</p>
+
+        <ol className="my-6 min-h-0 space-y-3 overflow-hidden" aria-label="Most active artworks">
+          {stations.slice(0, 5).map(({ artifact, datum, intensity }) => (
+            <li key={artifact.id} className="grid grid-cols-[.75rem_minmax(0,1fr)_auto] items-center gap-3 text-sm">
+              <span
+                className="size-2.5 rounded-full"
+                style={{ backgroundColor: heatColor(intensity), opacity: datum.visitCount > 0 ? 1 : 0.25 }}
+                aria-hidden="true"
+              />
+              <span className="truncate text-white/75">{artifact.title}</span>
+              <span className="text-white/45">{formatDuration(datum.totalDwellMs)}</span>
+            </li>
+          ))}
+        </ol>
+
+        <div>
+          <div className="collective-plan-legend h-3 w-full" aria-hidden="true" />
+          <div className="mt-2 flex justify-between text-sm text-white/50">
+            <span>Fewer visits, less time</span>
+            <span>More visits, more time</span>
           </div>
         </div>
-      </div>
-
-      <div className="collective-heat-grid grid min-h-0 flex-1 grid-cols-5 grid-rows-3 gap-2.5">
-        {stations.map(({ artifact, datum, intensity, rank }, index) => {
-          const style = {
-            "--heat-color": artifact.color,
-            "--heat-opacity": 0.14 + Math.max(0.06, intensity) * 0.72,
-          } as CSSProperties;
-          return (
-            <article
-              key={artifact.id}
-              className={`collective-heat-cell relative min-h-0 overflow-hidden border border-white/10 p-4 ${index === 0 || index === 12 ? "col-span-2" : ""}`}
-              style={style}
-              aria-label={`${artifact.title}: ${formatDuration(datum.totalDwellMs)} total across ${datum.visitCount} ${datum.visitCount === 1 ? "visit" : "visits"}`}
-            >
-              <div className="collective-heat-glow absolute inset-0" aria-hidden="true" />
-              <div className="relative flex h-full flex-col justify-between">
-                <div className="flex items-start justify-between gap-3">
-                  <p className="text-[9px] tracking-[0.2em] text-white/35">{String(index + 1).padStart(2, "0")}</p>
-                  <p className="text-[9px] tracking-[0.18em] text-white/35">RANK {String(rank).padStart(2, "0")}</p>
-                </div>
-                <div>
-                  <p className="font-display text-[clamp(.9rem,1.2vw,1.35rem)] leading-tight text-white/90">{artifact.title}</p>
-                  <p className="mt-1 truncate text-[9px] tracking-[0.08em] text-white/38">{artifact.artist}</p>
-                  <div className="mt-3 flex items-end justify-between gap-3 border-t border-white/10 pt-2">
-                    <p className="text-base text-white/85">{formatDuration(datum.totalDwellMs)}</p>
-                    <p className="text-right text-[9px] leading-relaxed tracking-[0.1em] text-white/35">
-                      {datum.visitCount} {datum.visitCount === 1 ? "VISIT" : "VISITS"}<br />
-                      {formatDuration(datum.averageDwellMs)} AVG
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </article>
-          );
-        })}
-      </div>
-
-      <div className="mt-3 flex items-center justify-end gap-3 text-[9px] tracking-[0.16em] text-white/30" aria-hidden="true">
-        <span>LESS TIME</span>
-        {[0.12, 0.3, 0.55, 0.78, 1].map((opacity) => (
-          <span key={opacity} className="size-2 rounded-full bg-[#FF7557]" style={{ opacity }} />
-        ))}
-        <span>MORE TIME</span>
-      </div>
+      </aside>
     </section>
   );
 }
