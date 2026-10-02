@@ -20,6 +20,45 @@ const globalForDatabase = globalThis as typeof globalThis & {
   exhibitionDatabase?: DatabaseSync;
 };
 
+const exhibitionClock = new Intl.DateTimeFormat("en-CA", {
+  timeZone: "Europe/Oslo",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+  hour: "2-digit",
+  minute: "2-digit",
+  second: "2-digit",
+  hourCycle: "h23",
+});
+
+function cycleStartIso(now = new Date()) {
+  const parts = Object.fromEntries(
+    exhibitionClock.formatToParts(now).map((part) => [part.type, part.value]),
+  );
+  const localMidnightAsUtc = Date.UTC(
+    Number(parts.year),
+    Number(parts.month) - 1,
+    Number(parts.day),
+  );
+  const guess = new Date(localMidnightAsUtc);
+  const guessParts = Object.fromEntries(
+    exhibitionClock.formatToParts(guess).map((part) => [part.type, part.value]),
+  );
+  const representedLocalTime = Date.UTC(
+    Number(guessParts.year),
+    Number(guessParts.month) - 1,
+    Number(guessParts.day),
+    Number(guessParts.hour),
+    Number(guessParts.minute),
+    Number(guessParts.second),
+  );
+  return new Date(localMidnightAsUtc - (representedLocalTime - localMidnightAsUtc)).toISOString();
+}
+
+export function getCycleDate(now = new Date()) {
+  return exhibitionClock.format(now).slice(0, 10);
+}
+
 function openDatabase() {
   if (globalForDatabase.exhibitionDatabase) {
     return globalForDatabase.exhibitionDatabase;
@@ -77,11 +116,11 @@ export function listContributions(afterId = 0, limit = 80) {
     .prepare(
       `SELECT id, public_id, glyphs_json, narrative_json, created_at
        FROM contributions
-       WHERE id > ?
+       WHERE id > ? AND created_at >= ?
        ORDER BY id ASC
        LIMIT ?`,
     )
-    .all(afterId, limit) as unknown as ContributionRow[];
+    .all(afterId, cycleStartIso(), limit) as unknown as ContributionRow[];
 
   return rows.map(deserialize);
 }
@@ -91,9 +130,10 @@ export function getCollectiveHeatmap() {
     .prepare(
       `SELECT id, public_id, glyphs_json, narrative_json, created_at
        FROM contributions
+       WHERE created_at >= ?
        ORDER BY id ASC`,
     )
-    .all() as unknown as ContributionRow[];
+    .all(cycleStartIso()) as unknown as ContributionRow[];
 
   return aggregateContributionDwellTimes(
     rows.map(deserialize),

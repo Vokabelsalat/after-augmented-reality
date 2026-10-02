@@ -190,7 +190,7 @@ function ARScannerComponent(
   const waiting = scannerState === "idle" || scannerState === "paused";
 
   return (
-    <div className="absolute inset-0 overflow-hidden bg-[#1111112e]">
+    <div className="absolute inset-0 overflow-hidden bg-[var(--abyss)]">
       {/* <div className="absolute inset-0 z-1" aria-hidden="true">
         <div className="absolute top-1/2 left-1/2 h-[60vh] w-[80vw] -translate-x-1/2 -translate-y-1/2 border border-white/10" style={{
           boxShadow: "0 0 0 9999px rgba(20, 30, 40, 0.85"
@@ -202,23 +202,25 @@ function ARScannerComponent(
 
       {
         (waiting || scannerState === "error") && (
-          <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/55 px-7 backdrop-blur-sm">
+          <div className="tank-grid absolute inset-0 z-10 flex items-center justify-center bg-[var(--abyss)] px-7">
             <div className="w-full max-w-sm text-center flex items-center flex-col">
-              <CategoryOrbit />
-              <h2 className="text-4xl tracking-[-0.04em]">
-                {scannerState === "error" ? "Camera unavailable" : "Find an artwork"}
+              <div className="mb-8 size-24 rounded-full border border-white/40 p-2" aria-hidden="true">
+                <div className="grid size-full place-items-center rounded-full border border-dashed border-[var(--phosphor)] font-mono text-2xl text-[var(--phosphor)]">◎</div>
+              </div>
+              <h2 className="font-display text-5xl tracking-[-0.04em]">
+                {scannerState === "error" ? "Camera unavailable" : "Find a porthole"}
               </h2>
               <p className="mx-auto mt-4 max-w-xs text-sm leading-6 text-white/80" role="status">
                 {scannerState === "error"
                   ? errorMessage
                   : scannerState === "paused"
                     ? "The camera paused when the page became hidden. Tap to restart it."
-                    : "Point your camera at one of the exhibition posters. Permission is requested only after you tap below."}
+                    : "Point your camera at the small marker beside an artwork. Hold still while the tank tries to identify it."}
               </p>
               <button
                 type="button"
                 onClick={() => void startScanner()}
-                className="mt-7 min-h-13 w-[40vw] rounded-full bg-white px-6 text-sm font-medium text-black transition-opacity hover:opacity-85 animate-pulse"
+                className="mt-7 min-h-14 w-full bg-[var(--phosphor)] px-6 text-base text-[#031015] transition-opacity hover:opacity-85"
               >
                 {scannerState === "error" ? "Try camera again" : "Start camera"}
               </button>
@@ -228,7 +230,7 @@ function ARScannerComponent(
                   onClick={onUseSimulator}
                   className="mt-3 min-h-11 px-5 text-xs text-white/55 underline decoration-white/20 underline-offset-4"
                 >
-                  Use the no-camera simulator
+                  Explore without a camera
                 </button>
               )}
             </div>
@@ -249,7 +251,7 @@ function ARScannerComponent(
       {
         scannerState === "running" && (
           <p className="absolute inset-x-0 bottom-[9rem] z-10 text-center text-[10px] tracking-[0.22em] text-white/60" role="status">
-            Move slowly across a poster
+            Hold the marker inside the porthole
           </p>
         )
       }

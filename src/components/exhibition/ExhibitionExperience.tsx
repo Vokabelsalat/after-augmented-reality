@@ -27,10 +27,7 @@ export function ExhibitionExperience() {
   const scannerRef = useRef<ARScannerHandle>(null);
   const phase = useAppSelector(selectExperiencePhase);
   const discoveries = useAppSelector(selectDiscoveries);
-  const [simulatorVisible, setSimulatorVisible] = useState(
-    // process.env.NODE_ENV === "development",
-    true
-  );
+  const [simulatorVisible, setSimulatorVisible] = useState(false);
   const [alreadyDiscovered, setAlreadyDiscovered] = useState<string | null>(null);
   const [revealPresentation, setRevealPresentation] = useState<
     "tracked-ar" | "simulated"
@@ -79,7 +76,7 @@ export function ExhibitionExperience() {
   if (phase === "journey") return <JourneyScreen />;
 
   return (
-    <main className="relative min-h-dvh overflow-hidden bg-[#050505] text-white">
+    <main className="relative min-h-dvh overflow-hidden bg-[var(--abyss)] text-white">
       <ARScanner
         ref={scannerRef}
         onTargetFound={handleTargetFound}
@@ -90,8 +87,8 @@ export function ExhibitionExperience() {
       <ExhibitionNavigation />
 
       {alreadyDiscovered && (
-        <div className="absolute top-28 left-1/2 z-30 -translate-x-1/2 rounded-full bg-black/75 px-5 py-3 text-center text-[10px] tracking-[0.16em] text-white/70 backdrop-blur-lg" role="status">
-          Already part of your journey
+        <div className="absolute top-28 left-1/2 z-30 -translate-x-1/2 border border-white/25 bg-[var(--abyss)] px-5 py-3 text-center text-sm text-white/70" role="status">
+          Already registered. Classification unchanged.
         </div>
       )}
 

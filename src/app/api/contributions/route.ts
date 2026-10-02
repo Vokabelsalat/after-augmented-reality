@@ -3,6 +3,7 @@ import { artifacts, artifactById } from "@/data/artifacts";
 import {
   createContribution,
   getCollectiveHeatmap,
+  getCycleDate,
   listContributions,
 } from "@/lib/contributions/database";
 import { generateJourneyNarrative } from "@/lib/narrative/generateJourneyNarrative";
@@ -38,6 +39,7 @@ function parseSubmission(value: unknown): ContributionSubmission | null {
       artifactId: typeof item?.artifactId === "string" ? item.artifactId : "",
       sequence: Number(item?.sequence),
       discoveredAt: Number(item?.discoveredAt),
+      choiceId: typeof item?.choiceId === "string" ? item.choiceId : undefined,
     }))
     .sort((a, b) => a.sequence - b.sequence);
 
@@ -48,6 +50,7 @@ function parseSubmission(value: unknown): ContributionSubmission | null {
       item.sequence !== index + 1 ||
       !Number.isFinite(item.discoveredAt) ||
       item.discoveredAt <= 0 ||
+      (item.choiceId !== undefined && !artifactById.get(item.artifactId)?.choice.options.some((option) => option.id === item.choiceId)) ||
       (index > 0 && item.discoveredAt < discoveries[index - 1].discoveredAt)
     ) {
       return false;
@@ -75,6 +78,7 @@ export async function GET(request: Request) {
     {
       contributions: listContributions(after, limit),
       heatmap: getCollectiveHeatmap(),
+      cycleDate: getCycleDate(),
     },
     { headers: responseHeaders },
   );

@@ -25,9 +25,212 @@ const visualFamilies: Record<"memory" | "machine" | "body", VisualFamily> = {
 
 type ArtifactSource = Omit<
   ExhibitionArtifact,
-  "particleForm" | "color" | "posterImageSrc"
+  | "particleForm"
+  | "color"
+  | "posterImageSrc"
+  | "marineType"
+  | "classification"
+  | "visualTraits"
+  | "stateEffects"
+  | "storylet"
+  | "choice"
 > & {
   visualFamily: keyof typeof visualFamilies;
+};
+
+type AquariumLayer = Pick<
+  ExhibitionArtifact,
+  | "marineType"
+  | "classification"
+  | "visualTraits"
+  | "stateEffects"
+  | "storylet"
+  | "choice"
+>;
+
+const aquariumLayers: Record<string, AquariumLayer> = {
+  "finding-frida": {
+    marineType: "archive coral",
+    classification: "Phototrophic memory colony",
+    visualTraits: ["photograph scales", "woven roots"],
+    stateEffects: { memory: 2, openness: 1, coherence: -1 },
+    storylet: "A photograph sank into the substrate. By morning, it had grown roots.",
+    choice: {
+      prompt: "The archive is beginning to grow.",
+      options: [
+        { id: "tend", label: "Tend the roots", effects: { memory: 2, openness: 1 } },
+        { id: "leave", label: "Let them wander", effects: { openness: 2, coherence: -1 } },
+      ],
+    },
+  },
+  "historically-yours": {
+    marineType: "synthetic jellyfish chorus",
+    classification: "Speculative voice cluster",
+    visualTraits: ["transcript tentacles", "borrowed voices"],
+    stateEffects: { voice: 2, coherence: -1, memory: 1 },
+    storylet: "Three voices drifted up from the underworld. None would confirm its identity.",
+    choice: {
+      prompt: "A voice is coming from inside the jellyfish.",
+      options: [
+        { id: "listen", label: "Listen", effects: { voice: 2, memory: 1 } },
+        { id: "question", label: "Question it", effects: { agency: 2, coherence: -1 } },
+      ],
+    },
+  },
+  "from-ingrid-to-bergen": {
+    marineType: "ghost current",
+    classification: "Long-duration remembrance tide",
+    visualTraits: ["forest current", "vanishing photographs"],
+    stateEffects: { memory: 2, openness: 1, coherence: -1 },
+    storylet: "A current crossed nineteen years without deciding where the past ended.",
+    choice: {
+      prompt: "Something disappeared from the archive.",
+      options: [
+        { id: "reconstruct", label: "Reconstruct it", effects: { memory: 2, coherence: 1 } },
+        { id: "gap", label: "Leave the gap", effects: { openness: 2, coherence: -2 } },
+      ],
+    },
+  },
+  "your-update-has-failed": {
+    marineType: "uncorrectable organism",
+    classification: "Persistent system anomaly",
+    visualTraits: ["failed progress bar", "glitch skin"],
+    stateEffects: { agency: 2, openness: 2, coherence: -2 },
+    storylet: "The tank attempted an update. The organism survived every correction.",
+    choice: {
+      prompt: "The aquarium detected an irregular organism.",
+      options: [
+        { id: "correct", label: "Correct it", effects: { coherence: 2, openness: -2 } },
+        { id: "change", label: "Let it change", effects: { agency: 2, openness: 2, coherence: -1 } },
+      ],
+    },
+  },
+  "grand-hotel-bald-cockatoo": {
+    marineType: "fortune-bearing nestfish",
+    classification: "Oneiric recombination species",
+    visualTraits: ["printed fortunes", "dream plumage"],
+    stateEffects: { openness: 2, coherence: -2, voice: 1 },
+    storylet: "A hotel nested inside the tank and printed a fortune for the tide.",
+    choice: {
+      prompt: "The manager offers a future in two pieces.",
+      options: [
+        { id: "keep", label: "Keep the fortune", effects: { memory: 2, coherence: 1 } },
+        { id: "shuffle", label: "Shuffle it", effects: { openness: 2, coherence: -2 } },
+      ],
+    },
+  },
+  "glass-like-fabric": {
+    marineType: "refractive skin",
+    classification: "Unresolved surface animal",
+    visualTraits: ["glass fins", "folded interface"],
+    stateEffects: { openness: 1, coherence: -1, agency: 1 },
+    storylet: "The surface folded. For a moment, the glass forgot which side was inside.",
+    choice: {
+      prompt: "The surface asks to be touched.",
+      options: [
+        { id: "press", label: "Press closer", effects: { agency: 1, coherence: 1 } },
+        { id: "fold", label: "Fold the surface", effects: { openness: 2, coherence: -1 } },
+      ],
+    },
+  },
+  "between-page-and-screen": {
+    marineType: "letter-exchanging pair",
+    classification: "Amphibious correspondence",
+    visualTraits: ["QR shells", "anagram scales"],
+    stateEffects: { voice: 2, openness: 1, coherence: -1 },
+    storylet: "P sent a letter through the glass. S answered from the water.",
+    choice: {
+      prompt: "A letter is floating between page and screen.",
+      options: [
+        { id: "read", label: "Read it aloud", effects: { voice: 2, coherence: 1 } },
+        { id: "reply", label: "Rearrange the reply", effects: { agency: 1, coherence: -2 } },
+      ],
+    },
+  },
+  "bybanen-slop-surfer": {
+    marineType: "synthetic city ray",
+    classification: "Algorithmic urban mimic",
+    visualTraits: ["repeated skyline", "slop wake"],
+    stateEffects: { agency: 1, coherence: -2, openness: 1 },
+    storylet: "Bergen repeated itself until the copy learned how to surf.",
+    choice: {
+      prompt: "The city has been flattened into a cheerful current.",
+      options: [
+        { id: "ride", label: "Ride the copy", effects: { openness: 2, agency: 1 } },
+        { id: "interrupt", label: "Interrupt the loop", effects: { agency: 2, coherence: -1 } },
+      ],
+    },
+  },
+  emperor: {
+    marineType: "aphasic deep-sea signal",
+    classification: "Partially legible interior current",
+    visualTraits: ["hand-drawn terrain", "quiet waveform"],
+    stateEffects: { memory: 1, voice: -1, openness: 1 },
+    storylet: "A word descended beyond reach. A hand-drawn light followed it down.",
+    choice: {
+      prompt: "A word is present, but will not surface.",
+      options: [
+        { id: "wait", label: "Wait with it", effects: { memory: 1, openness: 2 } },
+        { id: "gesture", label: "Answer with a gesture", effects: { agency: 1, voice: 1 } },
+      ],
+    },
+  },
+  "grand-hotel-galactic-center": {
+    marineType: "orbital hotel current",
+    classification: "Interstellar hospitality form",
+    visualTraits: ["orbit rings", "distant signals"],
+    stateEffects: { openness: 2, voice: 1, coherence: -1 },
+    storylet: "A corridor opened onto another sea. The vacancy sign began to orbit.",
+    choice: {
+      prompt: "A distant room is transmitting through the water.",
+      options: [
+        { id: "enter", label: "Enter the room", effects: { openness: 2, agency: 1 } },
+        { id: "signal", label: "Return the signal", effects: { voice: 2, memory: 1 } },
+      ],
+    },
+  },
+  "her-name-was-gisberta": {
+    marineType: "memorial light current",
+    classification: "Uncontained act of witness",
+    visualTraits: ["central light", "resistant tide"],
+    stateEffects: { memory: 2, agency: 2, voice: 1 },
+    storylet: "The water held a name carefully. The system called this an error in forgetting.",
+    choice: {
+      prompt: "A name remains lit beneath the surface.",
+      options: [
+        { id: "witness", label: "Stay and witness", effects: { memory: 2, voice: 1 } },
+        { id: "carry", label: "Carry it onward", effects: { agency: 2, openness: 1 } },
+      ],
+    },
+  },
+  "missing-10-hours": {
+    marineType: "bystander current",
+    classification: "Decision-sensitive tide",
+    visualTraits: ["forked current", "distress pulse"],
+    stateEffects: { agency: 2, coherence: -1, voice: 1 },
+    storylet: "The current split around a person in danger. Refusing to choose was also a direction.",
+    choice: {
+      prompt: "The current is pulling someone out of sight.",
+      options: [
+        { id: "reach", label: "Reach toward them", effects: { agency: 2, voice: 1 } },
+        { id: "call", label: "Call others closer", effects: { voice: 2, agency: 1 } },
+      ],
+    },
+  },
+  goliath: {
+    marineType: "networked deep-sea giant",
+    classification: "Plural-reality social organism",
+    visualTraits: ["multiplayer nodes", "reality comb"],
+    stateEffects: { openness: 2, voice: 2, coherence: -1 },
+    storylet: "A solitary giant found a network. The dark filled with other players.",
+    choice: {
+      prompt: "A signal is waiting beyond the isolated trench.",
+      options: [
+        { id: "connect", label: "Join the network", effects: { voice: 2, openness: 1 } },
+        { id: "explore", label: "Enter another reality", effects: { openness: 2, coherence: -1 } },
+      ],
+    },
+  },
 };
 
 const exhibitionSources: ArtifactSource[] = [
@@ -54,7 +257,8 @@ const exhibitionSources: ArtifactSource[] = [
     artist: "Lina Harder",
     visualFamily: "memory",
     theme: "memory",
-    shortText: "Description forthcoming.",
+    shortText:
+      "Historically Yours is an interactive podcast broadcasting from the Underworld. Visitors send a question or grievance to three fictional hosts inspired by Cleopatra, Marie Antoinette and Henrietta Swan Leavitt. AI turns each contribution into a conversation spoken by persuasive synthetic voices, asking who gets to represent the past and why approximations are so easy to believe.",
     narrativeWords: ["remember", "record", "revisit", "inherit"],
     creaturePart: {
       id: "archive-ears",
@@ -69,7 +273,8 @@ const exhibitionSources: ArtifactSource[] = [
     artist: "Pedro Velho",
     visualFamily: "memory",
     theme: "memory",
-    shortText: "Description forthcoming.",
+    shortText:
+      "From Ingrid to Bergen is an interactive documentary about grief, memory, theatre and the technologies used to maintain relationships with what is no longer there. Personal archives, photographs, paintings, videos and texts from nineteen years form a shifting map of loss and reconstruction.",
     narrativeWords: ["trace", "route", "carry", "return"],
     creaturePart: {
       id: "route-tail",
@@ -84,7 +289,8 @@ const exhibitionSources: ArtifactSource[] = [
     artist: "Sérgio Galvão Roxo",
     visualFamily: "machine",
     theme: "interface",
-    shortText: "Description forthcoming.",
+    shortText:
+      "Your Update Has Failed traces the digital evolution of efforts to change or suppress LGBTQIA+ identity. Across rooms shaped by 1997, 2003, 2016 and 2026, questionnaires become software, wellness platforms, moderation tools and AI classification. The language changes, but queer life persists through every attempted correction.",
     narrativeWords: ["update", "error", "restart", "persist"],
     creaturePart: {
       id: "signal-antenna",
@@ -99,7 +305,8 @@ const exhibitionSources: ArtifactSource[] = [
     artist: "Scott Rettberg, Caitlin Fisher, Roderick Coover",
     visualFamily: "machine",
     theme: "worldmaking",
-    shortText: "Description forthcoming.",
+    shortText:
+      "The Grand Hotel Bald Cockatoo is an immersive hotel of dreams managed by a fortune-telling cockatoo. Inside a nest-like installation, recombining dream fragments, generated images and separated voices surround visitors before an interactive device prints a fortune to take away.",
     narrativeWords: ["enter", "corridor", "wander", "transform"],
     creaturePart: {
       id: "cockatoo-beak",
@@ -114,7 +321,8 @@ const exhibitionSources: ArtifactSource[] = [
     artist: "Jason Nelson",
     visualFamily: "machine",
     theme: "interface",
-    shortText: "Description forthcoming.",
+    shortText:
+      "Bybanen Slop Surfer is a playable descent into AI slop: Bergen flattened, exaggerated and reassembled through algorithmic culture. The familiar city is subjected to simplification, repetition, imitation and endless recombination until it becomes a cheerful synthetic approximation of itself.",
     narrativeWords: ["touch", "surface", "refract", "fold"],
     creaturePart: {
       id: "glass-wings",
@@ -176,7 +384,8 @@ const exhibitionSources: ArtifactSource[] = [
     artist: "Scott Robert Rettberg",
     visualFamily: "machine",
     theme: "worldmaking",
-    shortText: "Description forthcoming.",
+    shortText:
+      "The Grand Hotel Galactic Center is a VR place of wonder and despair: looping clouds, flickering stars and glitzy exteriors conceal neglected infrastructure. Built with text-to-VR environments and gaussian splats, it turns the promise of spectacle into a repeated performance whose cracks gradually show.",
     narrativeWords: ["orbit", "signal", "navigate", "connect"],
     creaturePart: {
       id: "orbit-ring",
@@ -238,6 +447,7 @@ export const artifacts: ExhibitionArtifact[] = exhibitionSources.map(
   ({ visualFamily, ...artifact }) => ({
     ...artifact,
     ...visualFamilies[visualFamily],
+    ...aquariumLayers[artifact.id],
   }),
 );
 

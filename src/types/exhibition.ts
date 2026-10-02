@@ -28,6 +28,23 @@ export type CreaturePart = {
   description: string;
 };
 
+export type NarrativeAxis =
+  | "openness"
+  | "memory"
+  | "agency"
+  | "coherence"
+  | "voice";
+
+export type NarrativeState = Record<NarrativeAxis, number>;
+
+export type ArtifactChoice = {
+  prompt: string;
+  options: [
+    { id: string; label: string; effects: Partial<NarrativeState> },
+    { id: string; label: string; effects: Partial<NarrativeState> },
+  ];
+};
+
 export type ExhibitionArtifact = {
   id: string;
   targetIndex: number;
@@ -40,6 +57,12 @@ export type ExhibitionArtifact = {
   shortText: string;
   narrativeWords: string[];
   creaturePart: CreaturePart;
+  marineType: string;
+  classification: string;
+  visualTraits: string[];
+  stateEffects: Partial<NarrativeState>;
+  storylet: string;
+  choice: ArtifactChoice;
 };
 
 export type ThemeDefinition = {

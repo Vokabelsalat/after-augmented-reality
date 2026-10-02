@@ -1,4 +1,5 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
+import type { NarrativeState } from "@/types/exhibition";
 
 export type ExperiencePhase =
   | "intro"
@@ -12,6 +13,7 @@ export type Discovery = {
   artifactId: string;
   sequence: number;
   discoveredAt: number;
+  choiceId?: string;
 };
 
 export type JourneyState = {
@@ -21,12 +23,21 @@ export type JourneyState = {
   discoveries: Discovery[];
   activeArtifactId: string | null;
   experiencePhase: ExperiencePhase;
+  narrativeState: NarrativeState;
 };
 
 export type PersistedJourney = Pick<
   JourneyState,
   "sessionId" | "startedAt" | "completedAt" | "discoveries"
->;
+> & { narrativeState?: NarrativeState };
+
+export const neutralNarrativeState: NarrativeState = {
+  openness: 0,
+  memory: 0,
+  agency: 0,
+  coherence: 0,
+  voice: 0,
+};
 
 export const initialJourneyState: JourneyState = {
   sessionId: null,
@@ -35,6 +46,7 @@ export const initialJourneyState: JourneyState = {
   discoveries: [],
   activeArtifactId: null,
   experiencePhase: "intro",
+  narrativeState: { ...neutralNarrativeState },
 };
 
 function makeSessionId() {
@@ -108,6 +120,28 @@ const journeySlice = createSlice({
       state.activeArtifactId = action.payload;
       state.experiencePhase = "revealing";
     },
+    choiceMade(
+      state,
+      action: PayloadAction<{
+        artifactId: string;
+        choiceId: string;
+        effects: Partial<NarrativeState>;
+      }>,
+    ) {
+      const discovery = state.discoveries.find(
+        (item) => item.artifactId === action.payload.artifactId,
+      );
+      if (!discovery || discovery.choiceId) return;
+      discovery.choiceId = action.payload.choiceId;
+      (Object.keys(action.payload.effects) as Array<keyof NarrativeState>).forEach(
+        (axis) => {
+          state.narrativeState[axis] = Math.max(
+            -8,
+            Math.min(8, state.narrativeState[axis] + (action.payload.effects[axis] ?? 0)),
+          );
+        },
+      );
+    },
     setActiveArtifact(state, action: PayloadAction<string | null>) {
       state.activeArtifactId = action.payload;
     },
@@ -129,6 +163,7 @@ const journeySlice = createSlice({
       state.startedAt = action.payload.startedAt;
       state.completedAt = action.payload.completedAt;
       state.discoveries = action.payload.discoveries;
+      state.narrativeState = { ...(action.payload.narrativeState ?? neutralNarrativeState) };
       state.activeArtifactId = null;
       state.experiencePhase = action.payload.sessionId ? "scanning" : "intro";
     },
@@ -142,6 +177,7 @@ export const {
   artifactCollected,
   artifactDetected,
   artifactRevisited,
+  choiceMade,
   finishJourney,
   hydrateJourney,
   resetJourney,

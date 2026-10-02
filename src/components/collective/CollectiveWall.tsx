@@ -20,6 +20,7 @@ export function CollectiveWall() {
   const initialized = useRef(false);
   const activeRef = useRef<ExhibitionContribution | null>(null);
   const queueRef = useRef<ExhibitionContribution[]>([]);
+  const cycleDateRef = useRef<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -31,8 +32,18 @@ export function CollectiveWall() {
         const data = (await response.json()) as {
           contributions: ExhibitionContribution[];
           heatmap: CollectiveHeatDatum[];
+          cycleDate: string;
         };
         if (cancelled) return;
+
+        if (cycleDateRef.current && cycleDateRef.current !== data.cycleDate) {
+          latestId.current = 0;
+          queueRef.current = [];
+          activeRef.current = null;
+          setActive(null);
+          setContributions([]);
+        }
+        cycleDateRef.current = data.cycleDate;
 
         if (data.contributions.length > 0) {
           latestId.current = Math.max(...data.contributions.map((item) => item.id));
@@ -93,8 +104,14 @@ export function CollectiveWall() {
   const previousContributions = recentContributions.slice(1);
 
   return (
-    <main className="collective-wall film-grain relative h-screen overflow-hidden bg-[#030405] text-[#F3F0E8]" aria-label={`Collective exhibition ${activeVisualizationCopy.collectivePlace}`}>
+    <main className="collective-wall tank-grid film-grain relative h-screen overflow-hidden bg-[var(--abyss)] text-[var(--foam)]" aria-label={`Collective exhibition ${activeVisualizationCopy.collectivePlace}`}>
       <div className="absolute inset-0 collective-aurora" aria-hidden="true" />
+      <div className="tank-taxonomy pointer-events-none absolute inset-0" aria-hidden="true">
+        <span>zone 01 / memory shelf</span>
+        <span>zone 02 / synthetic voice</span>
+        <span>zone 03 / uncontained</span>
+        <span>zone 04 / open water</span>
+      </div>
       {view === "collective" ? (
         <div className="collective-swim-field absolute inset-x-0 top-0" aria-live="polite">
           <CollectiveVisualizationField contributions={habitatCreatures} />
@@ -105,8 +122,8 @@ export function CollectiveWall() {
 
       <header className="absolute inset-x-0 top-0 z-30 flex items-center justify-between px-8 py-7 lg:px-12 lg:py-9">
         <div>
-          <h1 className="font-display text-xl tracking-[-0.03em] lg:text-2xl">After Augmented Reality</h1>
-          <p className="mt-1 text-[10px] tracking-[0.22em] text-white/35">{activeVisualizationCopy.collectiveTitle}</p>
+          <h1 className="font-display text-xl tracking-[-0.03em] lg:text-2xl">The Tank Is Leaking</h1>
+          <p className="mt-1 text-sm text-white/45">Shared aquarium · daily cycle</p>
         </div>
         <div className="absolute left-1/2 flex -translate-x-1/2 rounded-full border border-white/12 bg-black/20 p-1 text-[10px] tracking-[0.18em] backdrop-blur-md" role="group" aria-label="Collective view">
           <button
@@ -115,7 +132,7 @@ export function CollectiveWall() {
             aria-pressed={view === "collective"}
             onClick={() => setView("collective")}
           >
-            COLLECTIVE
+            Aquarium
           </button>
           <button
             type="button"
@@ -123,14 +140,14 @@ export function CollectiveWall() {
             aria-pressed={view === "heatmap"}
             onClick={() => setView("heatmap")}
           >
-            TIME MAP
+            Activity
           </button>
         </div>
         <div className="flex items-center gap-6 text-xs tracking-[0.18em] text-white/42">
           <span>{contributions.length} {contributions.length === 1 ? activeVisualizationCopy.singular : activeVisualizationCopy.plural}</span>
           <span className="flex items-center gap-2">
             <span className={`size-1.5 rounded-full ${connected ? "bg-emerald-300" : "bg-amber-300"}`} aria-hidden="true" />
-            {connected ? "LISTENING" : "RECONNECTING"}
+            {connected ? "listening" : "reconnecting"}
           </span>
         </div>
       </header>
@@ -139,8 +156,8 @@ export function CollectiveWall() {
         <div className="absolute inset-0 flex items-center justify-center text-center">
           <div>
             <div className="mx-auto mb-8 size-2 rounded-full bg-white/70 shadow-[0_0_32px_10px_rgba(255,255,255,.24)] animate-breathe" />
-            <p className="font-display text-3xl text-white/72">Waiting for the first {activeVisualizationCopy.singular}</p>
-            <p className="mt-3 text-xs tracking-[0.2em] text-white/30">THE {activeVisualizationCopy.collectivePlace.toUpperCase()} IS OPEN</p>
+            <p className="font-display text-3xl text-white/72">The tank is ordered. For now.</p>
+            <p className="mt-3 text-sm text-white/40">Waiting for the first visitor specimen</p>
           </div>
         </div>
       )}
@@ -158,9 +175,12 @@ export function CollectiveWall() {
               />
             </div>
             <div className="collective-story max-w-xl">
-              <p className="mb-3 text-xs tracking-[0.28em] text-white/42">A NEW {activeVisualizationCopy.singular.toUpperCase()} ENTERS THE {activeVisualizationCopy.collectivePlace.toUpperCase()}</p>
+              <p className="mb-3 text-base text-[var(--phosphor)]">A new specimen has entered the tank</p>
               <p className="mb-6 text-sm text-white/45">
                 Made from {active.parts.length} exhibition {active.parts.length === 1 ? "encounter" : "encounters"}
+              </p>
+              <p className="mb-7 font-mono text-sm text-white/55">
+                Specimen {String(active.id).padStart(3, "0")} has been successfully <s>classified</s> <s>contained</s> <s>understood</s>
               </p>
               <div className="font-display text-[clamp(1.35rem,1.9vw,2.15rem)] leading-[1.16] tracking-[-0.025em]">
                 {active.narrative.map((line, index) => (
@@ -189,14 +209,14 @@ export function CollectiveWall() {
                 />
               </div>
               <div className="min-w-0">
-                <p className="mb-3 text-[10px] tracking-[0.25em] text-white/35">LATEST STORY</p>
+                <p className="mb-3 text-sm text-white/40">Latest released story</p>
                 <div className="font-display text-[clamp(1.15rem,1.45vw,1.75rem)] leading-[1.12] tracking-[-0.025em] text-white/82">
                   {latestContribution.narrative.map((line, index) => (
                     <p key={`${index}-${line}`} className="my-0.5">{line}</p>
                   ))}
                 </div>
                 <p className="mt-4 text-[10px] tracking-[0.2em] text-white/30">
-                  {latestContribution.parts.length} {latestContribution.parts.length === 1 ? "ENCOUNTER" : "ENCOUNTERS"}
+                  {latestContribution.parts.length} {latestContribution.parts.length === 1 ? "encounter" : "encounters"}
                 </p>
               </div>
             </article>

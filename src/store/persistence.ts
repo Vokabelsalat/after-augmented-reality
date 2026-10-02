@@ -5,6 +5,14 @@ export const JOURNEY_STORAGE_KEY = "say-hi:journey:v1";
 
 type StorageLike = Pick<Storage, "getItem" | "setItem" | "removeItem">;
 
+function isNarrativeState(value: unknown) {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as Record<string, unknown>;
+  return ["openness", "memory", "agency", "coherence", "voice"].every(
+    (axis) => typeof candidate[axis] === "number" && Number.isFinite(candidate[axis]),
+  );
+}
+
 function isDiscovery(value: unknown): value is Discovery {
   if (!value || typeof value !== "object") return false;
   const candidate = value as Partial<Discovery>;
@@ -26,7 +34,8 @@ export function loadJourney(storage: StorageLike): PersistedJourney | null {
       !value.discoveries.every(isDiscovery) ||
       (value.sessionId !== null && typeof value.sessionId !== "string") ||
       (value.startedAt !== null && typeof value.startedAt !== "number") ||
-      (value.completedAt != null && typeof value.completedAt !== "number")
+      (value.completedAt != null && typeof value.completedAt !== "number") ||
+      (value.narrativeState !== undefined && !isNarrativeState(value.narrativeState))
     ) {
       return null;
     }
@@ -35,6 +44,7 @@ export function loadJourney(storage: StorageLike): PersistedJourney | null {
       sessionId: value.sessionId ?? null,
       startedAt: value.startedAt ?? null,
       completedAt: value.completedAt ?? null,
+      ...(value.narrativeState ? { narrativeState: value.narrativeState } : {}),
       discoveries: value.discoveries
         .slice()
         .sort((a, b) => a.sequence - b.sequence),
@@ -61,13 +71,13 @@ export function subscribeToJourneyPersistence(
 ) {
   let previous = "";
   return store.subscribe(() => {
-    const { sessionId, startedAt, completedAt, discoveries } = store.getState().journey;
+    const { sessionId, startedAt, completedAt, discoveries, narrativeState } = store.getState().journey;
     if (!sessionId && startedAt === null && discoveries.length === 0) {
       previous = "";
       storage.removeItem(JOURNEY_STORAGE_KEY);
       return;
     }
-    const serialized = JSON.stringify({ sessionId, startedAt, completedAt, discoveries });
+    const serialized = JSON.stringify({ sessionId, startedAt, completedAt, discoveries, narrativeState });
     if (serialized === previous) return;
     previous = serialized;
     storage.setItem(JOURNEY_STORAGE_KEY, serialized);

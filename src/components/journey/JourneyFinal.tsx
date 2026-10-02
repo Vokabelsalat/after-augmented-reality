@@ -25,8 +25,8 @@ export function JourneyFinal() {
   const discoveries = useAppSelector(selectDiscoveries);
   const journey = useAppSelector(selectJourney);
   const lines = useMemo(
-    () => generateJourneyNarrative(discoveries, artifacts),
-    [discoveries],
+    () => generateJourneyNarrative(discoveries, artifacts, journey.narrativeState),
+    [discoveries, journey.narrativeState],
   );
   const themesInOrder = discoveries.flatMap((discovery) => {
     const artifact = artifactById.get(discovery.artifactId);
@@ -40,19 +40,19 @@ export function JourneyFinal() {
   }, [dispatch, journey.completedAt]);
 
   return (
-    <main className="film-grain safe-top safe-bottom min-h-dvh overflow-x-hidden bg-[#050505] px-5">
+    <main className="tank-grid film-grain safe-top safe-bottom min-h-dvh overflow-x-hidden bg-[var(--abyss)] px-5">
       <header className="relative z-10 flex items-center justify-between">
         <Link href="/" className="font-display text-2xl tracking-[-0.04em]">
-          After Augmented Reality
+          The Tank Is Leaking
         </Link>
         <p className="text-[9px] tracking-[0.24em] text-white/42">
-          Your {activeVisualizationCopy.singular}
+          Release chamber
         </p>
       </header>
 
       <section className="relative mx-auto mt-1 h-[46dvh] min-h-80 w-full max-w-3xl" aria-labelledby="reading-title">
         <h1 id="reading-title" className="absolute inset-x-0 top-6 z-10 text-center text-[10px] tracking-[0.32em] text-white/48">
-          Your {activeVisualizationCopy.singular}
+          Specimen pending release
         </h1>
         <PathVisualization artifactIds={discoveries.map((item) => item.artifactId)} label={`Your finished exhibition ${activeVisualizationCopy.singular}`} />
         <div className="absolute inset-x-0 bottom-5 flex flex-wrap justify-center gap-x-4 gap-y-1">
@@ -66,7 +66,7 @@ export function JourneyFinal() {
       </section>
 
       <section className="relative z-10 mx-auto max-w-xl pb-8">
-        <p className="mb-6 text-[9px] tracking-[0.24em] text-white/35">The voice it found along your path</p>
+        <p className="mb-6 text-sm text-white/45">The story assembled from your path</p>
         <GeneratedNarrative lines={lines} />
 
         <div className="mt-14">

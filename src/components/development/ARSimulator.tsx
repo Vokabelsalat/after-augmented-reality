@@ -2,8 +2,9 @@
 
 import { useRouter } from "next/navigation";
 import { artifacts } from "@/data/artifacts";
-import { useAppDispatch } from "@/store/hooks";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { finishJourney, resetJourney } from "@/store/journeySlice";
+import { selectDiscoveryCount } from "@/store/selectors";
 
 type ARSimulatorProps = {
   onArtifactDetected: (artifactId: string) => void;
@@ -16,6 +17,7 @@ export function ARSimulator({
 }: ARSimulatorProps) {
   const dispatch = useAppDispatch();
   const router = useRouter();
+  const discoveryCount = useAppSelector(selectDiscoveryCount);
 
   return (
     <aside className="safe-bottom absolute inset-x-3 bottom-3 z-30 rounded-[1.5rem] bg-[#101010]/92 p-3 text-white shadow-2xl backdrop-blur-xl" aria-label="AR simulator controls">
@@ -55,9 +57,10 @@ export function ARSimulator({
             dispatch(finishJourney());
             router.push("/journey");
           }}
-          className="min-h-10 rounded-full bg-white px-3 text-[11px] text-black transition-opacity hover:opacity-80"
+          disabled={discoveryCount < 3}
+          className="min-h-10 rounded-full bg-white px-3 text-[11px] text-black transition-opacity hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-35"
         >
-          Finish journey
+          {discoveryCount < 3 ? `${3 - discoveryCount} more needed` : "Finish journey"}
         </button>
       </div>
     </aside>

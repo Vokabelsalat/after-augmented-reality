@@ -51,16 +51,16 @@ function ArtifactRevealSequence({
             <PathVisualization
               artifactIds={discoveries.map((item) => item.artifactId)}
               highlightedPart={artifact.creaturePart.id}
-              label={`${artifact.creaturePart.label} joining your ${activeVisualizationCopy.singular}`}
+              label={`${artifact.marineType} altering your ${activeVisualizationCopy.singular}`}
             />
           </div>
         )
       )}
       {!contentVisible && (
         <p className="absolute inset-x-0 bottom-[12vh] text-center text-[10px] tracking-[0.28em] text-white/65">
-          {phase === "attached" && (visualizationDesign === "constellation" ? "Fragment located" : "New trait found")}
-          {phase === "release" && (visualizationDesign === "constellation" ? "Releasing narrative" : `${artifact.creaturePart.label} is waking up`)}
-          {phase === "formation" && (visualizationDesign === "constellation" ? "Resolving language" : `Joining your ${activeVisualizationCopy.singular}`)}
+          {phase === "attached" && (visualizationDesign === "constellation" ? "Signal located" : "Specimen detected")}
+          {phase === "release" && (visualizationDesign === "constellation" ? "Releasing language" : `${artifact.marineType} is crossing the glass`)}
+          {phase === "formation" && (visualizationDesign === "constellation" ? "Classification unstable" : `Rewriting your ${activeVisualizationCopy.singular}`)}
         </p>
       )}
       {contentVisible && (

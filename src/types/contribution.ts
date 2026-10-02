@@ -33,5 +33,6 @@ export type ContributionSubmission = {
     artifactId: string;
     sequence: number;
     discoveredAt: number;
+    choiceId?: string;
   }>;
 };

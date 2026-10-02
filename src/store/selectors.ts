@@ -10,6 +10,8 @@ export const selectActiveArtifactId = (state: RootState) =>
   state.journey.activeArtifactId;
 export const selectExperiencePhase = (state: RootState) =>
   state.journey.experiencePhase;
+export const selectNarrativeState = (state: RootState) =>
+  state.journey.narrativeState;
 
 export const selectDiscoveredArtifacts = (state: RootState) =>
   state.journey.discoveries

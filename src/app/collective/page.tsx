@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
 import { CollectiveWall } from "@/components/collective/CollectiveWall";
-import { activeVisualizationCopy } from "@/config/visualization";
 
 export const metadata: Metadata = {
-  title: "Collective Field — After Augmented Reality",
-  description: `A live ${activeVisualizationCopy.collectivePlace} of ${activeVisualizationCopy.plural} made by exhibition visitors.`,
+  title: "Shared Aquarium — The Tank Is Leaking",
+  description: "A live aquarium of visitor-made creatures, stories and failed classifications.",
 };
 
 export default function CollectivePage() {
