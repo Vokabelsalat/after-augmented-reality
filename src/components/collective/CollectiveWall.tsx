@@ -1,13 +1,42 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { CollectiveVisualizationField } from "@/components/collective/CollectiveVisualizationField";
 import { CollectiveHeatmap } from "@/components/collective/CollectiveHeatmap";
 import { PathVisualization } from "@/components/visualization/PathVisualization";
 import { activeVisualizationCopy } from "@/config/visualization";
+import { artifacts } from "@/data/artifacts";
+import { aggregateContributionDwellTimes } from "@/lib/contributions/heatmap";
 import type { CollectiveHeatDatum, ExhibitionContribution } from "@/types/contribution";
 
 const ARRIVAL_DURATION_MS = 17_000;
+const MINUTES_IN_DAY = 24 * 60 - 1;
+const osloClock = new Intl.DateTimeFormat("en-GB", {
+  timeZone: "Europe/Oslo",
+  hour: "2-digit",
+  minute: "2-digit",
+  hourCycle: "h23",
+});
+
+function minuteOfDay(value: Date | string) {
+  const parts = Object.fromEntries(
+    osloClock.formatToParts(new Date(value)).map((part) => [part.type, part.value]),
+  );
+  return Number(parts.hour) * 60 + Number(parts.minute);
+}
+
+function formatMinute(value: number) {
+  const hours = Math.floor(value / 60);
+  const minutes = value % 60;
+  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+}
+
+function tankState(progress: number) {
+  if (progress < 0.25) return "cataloguing";
+  if (progress < 0.5) return "pressure rising";
+  if (progress < 0.75) return "labels loosening";
+  return "open water";
+}
 
 export function CollectiveWall() {
   const [contributions, setContributions] = useState<ExhibitionContribution[]>([]);
@@ -16,6 +45,8 @@ export function CollectiveWall() {
   const [active, setActive] = useState<ExhibitionContribution | null>(null);
   const [connected, setConnected] = useState(true);
   const [ready, setReady] = useState(false);
+  const [clockMinutes, setClockMinutes] = useState(() => minuteOfDay(new Date()));
+  const [liveTime, setLiveTime] = useState(true);
   const latestId = useRef(0);
   const initialized = useRef(false);
   const activeRef = useRef<ExhibitionContribution | null>(null);
@@ -83,6 +114,14 @@ export function CollectiveWall() {
   }, []);
 
   useEffect(() => {
+    if (!liveTime) return;
+    const updateClock = () => setClockMinutes(minuteOfDay(new Date()));
+    updateClock();
+    const interval = window.setInterval(updateClock, 30_000);
+    return () => window.clearInterval(interval);
+  }, [liveTime]);
+
+  useEffect(() => {
     if (!active) return;
     const timeout = window.setTimeout(() => {
       const next = queueRef.current.shift() ?? null;
@@ -92,20 +131,36 @@ export function CollectiveWall() {
     return () => window.clearTimeout(timeout);
   }, [active]);
 
+  const visibleContributions = useMemo(
+    () => contributions.filter((contribution) => minuteOfDay(contribution.createdAt) <= clockMinutes),
+    [clockMinutes, contributions],
+  );
+  const visibleActive = liveTime && active && minuteOfDay(active.createdAt) <= clockMinutes ? active : null;
   const habitatCreatures = useMemo(
-    () => contributions.filter((contribution) => contribution.id !== active?.id),
-    [active?.id, contributions],
+    () => visibleContributions.filter((contribution) => contribution.id !== visibleActive?.id),
+    [visibleActive?.id, visibleContributions],
   );
   const recentContributions = useMemo(
-    () => contributions.slice(-6).reverse(),
-    [contributions],
+    () => visibleContributions.slice(-6).reverse(),
+    [visibleContributions],
+  );
+  const visibleHeatmap = useMemo(
+    () => liveTime
+      ? heatmap
+      : aggregateContributionDwellTimes(visibleContributions, artifacts.map((artifact) => artifact.id)),
+    [heatmap, liveTime, visibleContributions],
   );
   const latestContribution = recentContributions[0];
   const previousContributions = recentContributions.slice(1);
+  const dayProgress = clockMinutes / MINUTES_IN_DAY;
+  const wallStyle = { "--tank-progress": dayProgress } as CSSProperties;
 
   return (
-    <main className="collective-wall tank-grid film-grain relative h-screen overflow-hidden bg-[var(--abyss)] text-[var(--foam)]" aria-label={`Collective exhibition ${activeVisualizationCopy.collectivePlace}`}>
+    <main className="collective-wall tank-grid film-grain relative h-screen overflow-hidden bg-[var(--abyss)] text-[var(--foam)]" style={wallStyle} aria-label={`Collective exhibition ${activeVisualizationCopy.collectivePlace}`}>
       <div className="absolute inset-0 collective-aurora" aria-hidden="true" />
+      <div className="tank-leak-stage pointer-events-none absolute inset-0" aria-hidden="true">
+        <span /><span /><span />
+      </div>
       <div className="tank-taxonomy pointer-events-none absolute inset-0" aria-hidden="true">
         <span>zone 01 / memory shelf</span>
         <span>zone 02 / synthetic voice</span>
@@ -117,7 +172,7 @@ export function CollectiveWall() {
           <CollectiveVisualizationField contributions={habitatCreatures} />
         </div>
       ) : (
-        <CollectiveHeatmap data={heatmap} />
+        <CollectiveHeatmap data={visibleHeatmap} />
       )}
 
       <header className="absolute inset-x-0 top-0 z-30 flex items-center justify-between px-8 py-7 lg:px-12 lg:py-9">
@@ -144,7 +199,7 @@ export function CollectiveWall() {
           </button>
         </div>
         <div className="flex items-center gap-6 text-xs tracking-[0.18em] text-white/42">
-          <span>{contributions.length} {contributions.length === 1 ? activeVisualizationCopy.singular : activeVisualizationCopy.plural}</span>
+          <span>{visibleContributions.length} {visibleContributions.length === 1 ? activeVisualizationCopy.singular : activeVisualizationCopy.plural}</span>
           <span className="flex items-center gap-2">
             <span className={`size-1.5 rounded-full ${connected ? "bg-emerald-300" : "bg-amber-300"}`} aria-hidden="true" />
             {connected ? "listening" : "reconnecting"}
@@ -152,7 +207,46 @@ export function CollectiveWall() {
         </div>
       </header>
 
-      {view === "collective" && contributions.length === 0 && ready && (
+      <section className="tank-time-control absolute left-1/2 top-24 z-40 w-[min(42rem,calc(100vw-3rem))] -translate-x-1/2 border border-white/20 bg-[var(--abyss)] px-5 py-4" aria-label="Test aquarium time progression">
+        <div className="mb-3 flex items-end justify-between gap-4">
+          <div>
+            <p className="text-sm text-white/50">Test time of day</p>
+            <p className="font-display text-3xl text-[var(--phosphor)]">{formatMinute(clockMinutes)}</p>
+          </div>
+          <div className="text-right">
+            <p className="text-base text-white/80">{tankState(dayProgress)}</p>
+            <button
+              type="button"
+              onClick={() => setLiveTime(true)}
+              className="mt-1 min-h-8 text-sm text-white/50 underline decoration-white/25 underline-offset-4 disabled:no-underline"
+              disabled={liveTime}
+            >
+              {liveTime ? "following live time" : "return to live time"}
+            </button>
+          </div>
+        </div>
+        <label className="sr-only" htmlFor="tank-time-slider">Time of day</label>
+        <input
+          id="tank-time-slider"
+          className="tank-time-slider w-full"
+          type="range"
+          min="0"
+          max={MINUTES_IN_DAY}
+          step="1"
+          value={clockMinutes}
+          onChange={(event) => {
+            setLiveTime(false);
+            setClockMinutes(Number(event.target.value));
+          }}
+        />
+        <div className="mt-1 flex justify-between text-xs text-white/35" aria-hidden="true">
+          <span>00:00 · ordered</span>
+          <span>12:00 · unstable</span>
+          <span>23:59 · open</span>
+        </div>
+      </section>
+
+      {view === "collective" && visibleContributions.length === 0 && ready && (
         <div className="absolute inset-0 flex items-center justify-center text-center">
           <div>
             <div className="mx-auto mb-8 size-2 rounded-full bg-white/70 shadow-[0_0_32px_10px_rgba(255,255,255,.24)] animate-breathe" />
@@ -162,28 +256,28 @@ export function CollectiveWall() {
         </div>
       )}
 
-      {view === "collective" && active && (
-        <section key={active.id} className="collective-arrival absolute inset-0 z-20 grid place-items-center" aria-label={`A new visitor ${activeVisualizationCopy.singular} has arrived`}>
+      {view === "collective" && visibleActive && (
+        <section key={visibleActive.id} className="collective-arrival absolute inset-0 z-20 grid place-items-center" aria-label={`A new visitor ${activeVisualizationCopy.singular} has arrived`}>
           <div className="collective-arrival-glow absolute inset-0" aria-hidden="true" />
           <div className="relative grid w-[min(94vw,1280px)] grid-cols-[minmax(420px,1.25fr)_minmax(320px,.75fr)] items-center gap-[clamp(2rem,5vw,5rem)] px-6">
             <div className="collective-arrival-creature aspect-[4/3] w-full">
               <PathVisualization
-                artifactIds={active.parts.map((part) => part.artifactId)}
-                contribution={active}
+                artifactIds={visibleActive.parts.map((part) => part.artifactId)}
+                contribution={visibleActive}
                 zoom={78}
-                label={`New ${activeVisualizationCopy.singular} with ${active.parts.length} parts`}
+                label={`New ${activeVisualizationCopy.singular} with ${visibleActive.parts.length} parts`}
               />
             </div>
             <div className="collective-story max-w-xl">
               <p className="mb-3 text-base text-[var(--phosphor)]">A new specimen has entered the tank</p>
               <p className="mb-6 text-sm text-white/45">
-                Made from {active.parts.length} exhibition {active.parts.length === 1 ? "encounter" : "encounters"}
+                Made from {visibleActive.parts.length} exhibition {visibleActive.parts.length === 1 ? "encounter" : "encounters"}
               </p>
               <p className="mb-7 font-mono text-sm text-white/55">
-                Specimen {String(active.id).padStart(3, "0")} has been successfully <s>classified</s> <s>contained</s> <s>understood</s>
+                Specimen {String(visibleActive.id).padStart(3, "0")} has been successfully <s>classified</s> <s>contained</s> <s>understood</s>
               </p>
               <div className="font-display text-[clamp(1.35rem,1.9vw,2.15rem)] leading-[1.16] tracking-[-0.025em]">
-                {active.narrative.map((line, index) => (
+                {visibleActive.narrative.map((line, index) => (
                   <p key={`${index}-${line}`} className="my-1.5">{line}</p>
                 ))}
               </div>
