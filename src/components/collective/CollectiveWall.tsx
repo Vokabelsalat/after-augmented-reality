@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react"
 import { CollectiveVisualizationField } from "@/components/collective/CollectiveVisualizationField";
 import { CollectiveHeatmap } from "@/components/collective/CollectiveHeatmap";
 import { PathVisualization } from "@/components/visualization/PathVisualization";
+import { BiomeBackdrop } from "@/components/visualization/BiomeBackdrop";
 import { activeVisualizationCopy } from "@/config/visualization";
 import { artifacts } from "@/data/artifacts";
 import { aggregateContributionDwellTimes } from "@/lib/contributions/heatmap";
@@ -156,8 +157,8 @@ export function CollectiveWall() {
   const wallStyle = { "--tank-progress": dayProgress } as CSSProperties;
 
   return (
-    <main className="collective-wall tank-grid film-grain relative h-screen overflow-hidden bg-[var(--abyss)] text-[var(--foam)]" style={wallStyle} aria-label={`Collective exhibition ${activeVisualizationCopy.collectivePlace}`}>
-      <div className="absolute inset-0 collective-aurora" aria-hidden="true" />
+    <main className="collective-wall biome-field film-grain relative h-screen overflow-hidden bg-[var(--abyss)] text-[var(--foam)]" style={wallStyle} aria-label={`Collective exhibition ${activeVisualizationCopy.collectivePlace}`}>
+      <BiomeBackdrop progress={dayProgress} />
       <div className="tank-leak-stage pointer-events-none absolute inset-0" aria-hidden="true">
         <span /><span /><span />
       </div>

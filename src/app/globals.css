@@ -48,13 +48,6 @@ a:focus-visible {
   font-family: "Iowan Old Style", Baskerville, "Times New Roman", serif;
 }
 
-.tank-grid {
-  background-image:
-    linear-gradient(rgba(232, 245, 239, 0.045) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(232, 245, 239, 0.045) 1px, transparent 1px);
-  background-size: 3rem 3rem;
-}
-
 .tank-panel {
   background: rgba(3, 16, 21, 0.96);
   border-top: 1px solid rgba(232, 245, 239, 0.24);
@@ -186,14 +179,171 @@ a:focus-visible {
     radial-gradient(circle at 56% 84%, rgba(255, 117, 87, 0.06), transparent 26%);
 }
 
+.biome-field {
+  background:
+    radial-gradient(ellipse at 50% -10%, rgba(185, 255, 220, 0.16), transparent 42%),
+    radial-gradient(ellipse at 12% 72%, rgba(62, 146, 153, 0.14), transparent 36%),
+    radial-gradient(ellipse at 88% 66%, rgba(255, 138, 98, 0.1), transparent 34%),
+    var(--abyss);
+}
+
+.biome-screen > .biome-water {
+  z-index: 0;
+}
+
+.biome-screen > :not(.biome-water) {
+  position: relative;
+  z-index: 1;
+}
+
+.biome-water {
+  overflow: hidden;
+}
+
+.biome-water-quiet .biome-current,
+.biome-water-quiet .biome-floor,
+.biome-water-quiet .biome-bloom {
+  opacity: 0.12;
+}
+
+.biome-water-quiet .biome-caustic {
+  opacity: 0.07;
+}
+
+.biome-water-quiet .biome-snow i {
+  opacity: 0.2;
+}
+
+.biome-current {
+  position: absolute;
+  width: 76vw;
+  height: 15vh;
+  border-radius: 50%;
+  opacity: calc(0.1 + var(--tank-progress, 0) * 0.16);
+  filter: blur(2.6rem);
+  mix-blend-mode: screen;
+  animation: biome-current-drift 22s ease-in-out infinite alternate;
+}
+
+.biome-current-one {
+  top: 23%;
+  left: -24%;
+  transform: rotate(-9deg);
+  background: rgba(88, 214, 255, 0.24);
+}
+
+.biome-current-two {
+  top: 49%;
+  right: -31%;
+  animation-delay: -8s;
+  transform: rotate(12deg);
+  background: rgba(185, 255, 220, 0.2);
+}
+
+.biome-current-three {
+  bottom: 8%;
+  left: 8%;
+  animation-delay: -14s;
+  transform: rotate(-4deg);
+  background: rgba(255, 138, 98, 0.14);
+}
+
+.biome-floor {
+  position: absolute;
+  inset: auto -10% -21% -10%;
+  height: 44%;
+  border-radius: 50% 50% 0 0;
+  opacity: 0.58;
+  background:
+    radial-gradient(ellipse at 23% 25%, rgba(185, 255, 220, 0.18), transparent 16%),
+    radial-gradient(ellipse at 71% 18%, rgba(255, 138, 98, 0.16), transparent 13%),
+    radial-gradient(ellipse at 48% 44%, rgba(62, 146, 153, 0.3), transparent 37%);
+  filter: blur(1.2rem);
+  transform: translateY(calc(var(--tank-progress, 0) * 3vh));
+}
+
+.biome-caustic {
+  position: absolute;
+  top: -18%;
+  width: 2px;
+  height: 78%;
+  opacity: 0.12;
+  background: linear-gradient(to bottom, var(--phosphor), transparent);
+  filter: blur(2px);
+  transform-origin: top center;
+  animation: biome-caustic-sway 14s ease-in-out infinite alternate;
+}
+
+.biome-caustic-one { left: 22%; transform: rotate(13deg); }
+.biome-caustic-two { left: 51%; animation-delay: -5s; transform: rotate(-9deg); }
+.biome-caustic-three { right: 19%; animation-delay: -9s; transform: rotate(16deg); }
+
+.biome-bloom {
+  position: absolute;
+  border-radius: 50%;
+  opacity: calc(0.24 + var(--tank-progress, 0) * 0.28);
+  filter: blur(1.3rem);
+  animation: biome-breathe 9s ease-in-out infinite alternate;
+}
+
+.biome-bloom-one {
+  left: 7%;
+  bottom: 17%;
+  width: min(22vw, 19rem);
+  aspect-ratio: 1.8;
+  background: rgba(185, 255, 220, 0.12);
+}
+
+.biome-bloom-two {
+  right: 9%;
+  bottom: 13%;
+  width: min(17vw, 14rem);
+  aspect-ratio: 1.3;
+  animation-delay: -4s;
+  background: rgba(255, 138, 98, 0.1);
+}
+
+.biome-snow i {
+  position: absolute;
+  top: -2rem;
+  left: var(--snow-x);
+  width: var(--snow-size);
+  height: var(--snow-size);
+  border-radius: 50%;
+  opacity: 0.36;
+  background: var(--foam);
+  animation: biome-snow-fall var(--snow-duration) linear var(--snow-delay) infinite;
+}
+
+@keyframes biome-current-drift {
+  from { translate: -3vw -1vh; scale: 0.94 1; }
+  to { translate: 7vw 2vh; scale: 1.1 0.82; }
+}
+
+@keyframes biome-caustic-sway {
+  from { rotate: -4deg; scale: 1 0.9; opacity: 0.06; }
+  to { rotate: 7deg; scale: 1 1.12; opacity: 0.18; }
+}
+
+@keyframes biome-breathe {
+  from { transform: scale(0.82) translateY(0); }
+  to { transform: scale(1.18) translateY(-1.2rem); }
+}
+
+@keyframes biome-snow-fall {
+  from { transform: translate3d(0, -4vh, 0); opacity: 0; }
+  12% { opacity: 0.38; }
+  86% { opacity: 0.24; }
+  to { transform: translate3d(3vw, 104vh, 0); opacity: 0; }
+}
+
 .collective-swim-field {
   bottom: clamp(14rem, 29vh, 20rem);
 }
 
 .tank-taxonomy {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  padding: 7rem 3rem 18rem;
+  position: absolute;
+  inset: 0;
   color: rgba(232, 245, 239, 0.2);
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 0.75rem;
@@ -203,24 +353,33 @@ a:focus-visible {
 }
 
 .tank-taxonomy span {
-  border-left: 1px solid rgba(232, 245, 239, 0.12);
-  padding: 0.75rem;
+  position: absolute;
+  padding: 0.35rem 0.55rem;
+  background: rgba(3, 16, 21, 0.38);
   transition: transform 300ms ease;
 }
 
 .tank-taxonomy span:nth-child(1) {
+  top: 28%;
+  left: 8%;
   transform: translateX(calc(var(--tank-progress, 0) * -4vw)) rotate(calc(var(--tank-progress, 0) * -4deg));
 }
 
 .tank-taxonomy span:nth-child(2) {
+  top: 38%;
+  left: 36%;
   transform: translateY(calc(var(--tank-progress, 0) * 6vh)) rotate(calc(var(--tank-progress, 0) * 3deg));
 }
 
 .tank-taxonomy span:nth-child(3) {
+  top: 25%;
+  right: 13%;
   transform: translateY(calc(var(--tank-progress, 0) * -5vh)) rotate(calc(var(--tank-progress, 0) * -3deg));
 }
 
 .tank-taxonomy span:nth-child(4) {
+  bottom: 32%;
+  right: 28%;
   transform: translateX(calc(var(--tank-progress, 0) * 5vw)) rotate(calc(var(--tank-progress, 0) * 5deg));
 }
 

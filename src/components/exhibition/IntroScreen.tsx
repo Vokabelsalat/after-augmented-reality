@@ -2,12 +2,14 @@
 
 import { useAppDispatch } from "@/store/hooks";
 import { startJourney } from "@/store/journeySlice";
+import { BiomeBackdrop } from "@/components/visualization/BiomeBackdrop";
 
 export function IntroScreen() {
   const dispatch = useAppDispatch();
 
   return (
-    <main className="tank-grid film-grain relative min-h-dvh overflow-hidden bg-[var(--abyss)] px-5 text-[var(--foam)]">
+    <main className="biome-field biome-screen film-grain relative min-h-dvh overflow-hidden bg-[var(--abyss)] px-5 text-[var(--foam)]">
+      <BiomeBackdrop progress={0.26} quiet />
       <div className="safe-top relative z-10 mx-auto flex min-h-dvh w-full max-w-5xl flex-col">
         <header className="flex items-start justify-between border-b border-white/20 pb-3 text-sm">
           <span>After Augmented Reality</span>

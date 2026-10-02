@@ -15,6 +15,7 @@ import type {
   TargetDetectionResult,
 } from "@/components/ar/MindARAdapter";
 import { artifacts } from "@/data/artifacts";
+import { BiomeBackdrop } from "@/components/visualization/BiomeBackdrop";
 
 const orbitCategories = Array.from(
   new Map(artifacts.map(({ theme, color }) => [theme, color])).entries(),
@@ -202,8 +203,9 @@ function ARScannerComponent(
 
       {
         (waiting || scannerState === "error") && (
-          <div className="tank-grid absolute inset-0 z-10 flex items-center justify-center bg-[var(--abyss)] px-7">
-            <div className="w-full max-w-sm text-center flex items-center flex-col">
+          <div className="biome-field absolute inset-0 z-10 flex items-center justify-center bg-[var(--abyss)] px-7">
+            <BiomeBackdrop progress={0.42} quiet />
+            <div className="relative z-10 w-full max-w-sm text-center flex items-center flex-col">
               <div className="mb-8 size-24 rounded-full border border-white/40 p-2" aria-hidden="true">
                 <div className="grid size-full place-items-center rounded-full border border-dashed border-[var(--phosphor)] font-mono text-2xl text-[var(--phosphor)]">◎</div>
               </div>

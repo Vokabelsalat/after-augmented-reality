@@ -13,6 +13,7 @@ import { themes } from "@/data/themes";
 import { PathVisualization } from "@/components/visualization/PathVisualization";
 import { activeVisualizationCopy } from "@/config/visualization";
 import dynamic from "next/dynamic";
+import { BiomeBackdrop } from "@/components/visualization/BiomeBackdrop";
 
 const GeneratedNarrative = dynamic(() =>
   import("@/components/journey/GeneratedNarrative").then(
@@ -40,7 +41,8 @@ export function JourneyFinal() {
   }, [dispatch, journey.completedAt]);
 
   return (
-    <main className="tank-grid film-grain safe-top safe-bottom min-h-dvh overflow-x-hidden bg-[var(--abyss)] px-5">
+    <main className="biome-field biome-screen film-grain safe-top safe-bottom relative min-h-dvh overflow-x-hidden bg-[var(--abyss)] px-5">
+      <BiomeBackdrop progress={0.88} />
       <header className="relative z-10 flex items-center justify-between">
         <Link href="/" className="font-display text-2xl tracking-[-0.04em]">
           The Tank Is Leaking

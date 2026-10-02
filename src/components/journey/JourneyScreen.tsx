@@ -11,6 +11,7 @@ import {
 } from "@/store/selectors";
 import { PathVisualization } from "@/components/visualization/PathVisualization";
 import { activeVisualizationCopy, visualizationDesign } from "@/config/visualization";
+import { BiomeBackdrop } from "@/components/visualization/BiomeBackdrop";
 
 export function JourneyScreen() {
   const dispatch = useAppDispatch();
@@ -21,7 +22,8 @@ export function JourneyScreen() {
   const readyToRelease = discoveries.length >= 3;
 
   return (
-    <main className="tank-grid film-grain safe-top safe-bottom flex min-h-dvh flex-col overflow-x-hidden bg-[var(--abyss)] px-5">
+    <main className="biome-field biome-screen film-grain safe-top safe-bottom relative flex min-h-dvh flex-col overflow-x-hidden bg-[var(--abyss)] px-5">
+      <BiomeBackdrop progress={Math.min(0.82, 0.24 + discoveries.length * 0.1)} quiet />
       <header className="flex items-start justify-between">
         <div>
           <p className="text-sm text-white/50">Provisional specimen record</p>
