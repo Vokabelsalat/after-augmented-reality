@@ -14,6 +14,14 @@ const fittedBounds: Record<AquaticForm, { width: number; height: number }> = {
   crab: { width: 4.4, height: 3.4 },
   jellyfish: { width: 3.6, height: 4.5 },
   octopus: { width: 4.2, height: 4.5 },
+  turtle: { width: 5.3, height: 3.5 },
+  ray: { width: 5.8, height: 3.7 },
+  starfish: { width: 4.4, height: 4.4 },
+  seahorse: { width: 3.5, height: 4.8 },
+  eel: { width: 6.4, height: 3.6 },
+  seal: { width: 5.6, height: 3.7 },
+  clam: { width: 4.2, height: 3.8 },
+  pufferfish: { width: 4.4, height: 4.2 },
 };
 
 function FitCreatureCamera({ creatureForm }: { creatureForm: AquaticForm }) {

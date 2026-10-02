@@ -1,4 +1,17 @@
-export const aquaticForms = ["fish", "crab", "jellyfish", "octopus"] as const;
+export const aquaticForms = [
+  "fish",
+  "crab",
+  "jellyfish",
+  "octopus",
+  "turtle",
+  "ray",
+  "starfish",
+  "seahorse",
+  "eel",
+  "seal",
+  "clam",
+  "pufferfish",
+] as const;
 
 export type AquaticForm = (typeof aquaticForms)[number];
 
@@ -7,6 +20,14 @@ export const aquaticFormLabels: Record<AquaticForm, string> = {
   crab: "crab",
   jellyfish: "jellyfish",
   octopus: "octopus",
+  turtle: "turtle",
+  ray: "ray",
+  starfish: "starfish",
+  seahorse: "seahorse",
+  eel: "eel",
+  seal: "seal",
+  clam: "clam",
+  pufferfish: "pufferfish",
 };
 
 export function isAquaticForm(value: unknown): value is AquaticForm {

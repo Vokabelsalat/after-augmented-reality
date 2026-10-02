@@ -4,57 +4,10 @@ import { useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
 import { CreatureModel, type CreaturePiece } from "@/components/creature/CreatureModel";
+import { AdditionalAquaticModel } from "@/components/creature/AdditionalAquaticModels";
+import { aquaticPalette, TraitMarks } from "@/components/creature/AquaticModelShared";
 import type { AquaticForm } from "@/lib/creature/aquaticForms";
 import type { CreaturePartId } from "@/types/exhibition";
-
-function palette(pieces: CreaturePiece[]) {
-  const base = new THREE.Color(pieces[0]?.color ?? "#3E9299");
-  const accent = new THREE.Color(pieces.at(-1)?.color ?? "#E2A53A");
-  return {
-    body: base.getStyle(),
-    light: base.clone().lerp(new THREE.Color("#E7F4E9"), 0.38).getStyle(),
-    dark: base.clone().lerp(new THREE.Color("#07141C"), 0.42).getStyle(),
-    accent: accent.getStyle(),
-  };
-}
-
-function TraitMarks({
-  pieces,
-  form,
-  highlightedPart,
-}: {
-  pieces: CreaturePiece[];
-  form: Exclude<AquaticForm, "fish">;
-  highlightedPart?: CreaturePartId;
-}) {
-  return pieces.map((piece, index) => {
-    const angle = index * 2.39996;
-    const positions: Record<Exclude<AquaticForm, "fish">, [number, number, number]> = {
-      crab: [Math.cos(angle) * 0.76, Math.sin(angle) * 0.38 + 0.08, 0.38],
-      jellyfish: [Math.cos(angle) * 0.68, 0.38 + Math.sin(angle) * 0.38, 0.42],
-      octopus: [Math.cos(angle) * 0.55, 0.42 + Math.sin(angle) * 0.56, 0.5],
-    };
-    const highlighted = piece.partId === highlightedPart;
-    const markerScale = (highlighted ? 0.19 : 0.12) + (index % 3) * 0.012;
-
-    return (
-      <group key={piece.artifactId} position={positions[form]} scale={markerScale}>
-        <mesh>
-          {index % 4 === 0 && <octahedronGeometry args={[1, 0]} />}
-          {index % 4 === 1 && <sphereGeometry args={[0.9, 12, 10]} />}
-          {index % 4 === 2 && <torusGeometry args={[0.62, 0.19, 8, 18]} />}
-          {index % 4 === 3 && <boxGeometry args={[1.25, 0.72, 0.38]} />}
-          <meshStandardMaterial
-            color={piece.color}
-            emissive={piece.color}
-            emissiveIntensity={highlighted ? 1.1 : 0.3}
-            roughness={0.44}
-          />
-        </mesh>
-      </group>
-    );
-  });
-}
 
 function CrabModel({
   pieces,
@@ -65,7 +18,7 @@ function CrabModel({
   const groupRef = useRef<THREE.Group>(null);
   const leftClaw = useRef<THREE.Group>(null);
   const rightClaw = useRef<THREE.Group>(null);
-  const colors = palette(pieces);
+  const colors = aquaticPalette(pieces);
 
   useFrame(({ clock }) => {
     if (animated === false || !groupRef.current) return;
@@ -157,7 +110,7 @@ function JellyfishModel({
   scale,
 }: AquaticModelProps) {
   const groupRef = useRef<THREE.Group>(null);
-  const colors = palette(pieces);
+  const colors = aquaticPalette(pieces);
   const curves = useMemo(() => Array.from({ length: 7 }, (_, index) => makeTentacleCurve(index)), []);
 
   useFrame(({ clock }) => {
@@ -207,7 +160,7 @@ function OctopusModel({
   scale,
 }: AquaticModelProps) {
   const groupRef = useRef<THREE.Group>(null);
-  const colors = palette(pieces);
+  const colors = aquaticPalette(pieces);
   const arms = useMemo(() => Array.from({ length: 8 }, (_, index) => makeOctopusArm(index)), []);
 
   useFrame(({ clock }) => {
@@ -250,7 +203,7 @@ function OctopusModel({
   );
 }
 
-type AquaticModelProps = {
+export type AquaticModelProps = {
   pieces: CreaturePiece[];
   animated?: boolean;
   highlightedPart?: CreaturePartId;
@@ -272,6 +225,9 @@ export function AquaticCreatureModel({
   }
   if (form === "octopus") {
     return <OctopusModel pieces={pieces} animated={animated} highlightedPart={highlightedPart} scale={scale} />;
+  }
+  if (form !== "fish") {
+    return <AdditionalAquaticModel form={form} pieces={pieces} animated={animated} highlightedPart={highlightedPart} scale={scale} />;
   }
   return <CreatureModel pieces={pieces} animated={animated} highlightedPart={highlightedPart} scale={scale} />;
 }

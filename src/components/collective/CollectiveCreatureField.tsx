@@ -5,6 +5,7 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
 import { AquaticCreatureModel } from "@/components/creature/AquaticCreatureModel";
+import type { AquaticForm } from "@/lib/creature/aquaticForms";
 import type { ExhibitionContribution } from "@/types/contribution";
 
 function seededUnit(seed: number) {
@@ -15,6 +16,20 @@ function seededUnit(seed: number) {
 const compartmentBounds = [-1, -0.64, -0.08, 0.2, 0.68, 1] as const;
 const wallThresholds = [0.14, 0.32, 0.5, 0.68] as const;
 const wallHolePositions = [34, 66, 43, 72] as const;
+const collectiveFormScale: Record<AquaticForm, number> = {
+  fish: 1,
+  crab: 1.04,
+  jellyfish: 1.24,
+  octopus: 1.12,
+  turtle: 1.08,
+  ray: 1.05,
+  starfish: 0.96,
+  seahorse: 1.2,
+  eel: 0.92,
+  seal: 1.05,
+  clam: 1.08,
+  pufferfish: 1,
+};
 
 function wallOpening(progress: number, wallIndex: number) {
   return THREE.MathUtils.clamp(
@@ -126,13 +141,7 @@ function FloatingCreature({ contribution, progress }: { contribution: Exhibition
   });
 
   const startsFacingLeft = Math.cos(placement.heading) < 0;
-  const formScale = contribution.creatureForm === "jellyfish"
-    ? 1.24
-    : contribution.creatureForm === "octopus"
-      ? 1.12
-      : contribution.creatureForm === "crab"
-        ? 1.04
-        : 1;
+  const formScale = collectiveFormScale[contribution.creatureForm];
 
   return (
     <group
