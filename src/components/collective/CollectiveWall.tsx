@@ -155,22 +155,45 @@ export function CollectiveWall() {
   const previousContributions = recentContributions.slice(1);
   const dayProgress = clockMinutes / MINUTES_IN_DAY;
   const wallStyle = { "--tank-progress": dayProgress } as CSSProperties;
+  const wallOpenings = [0.14, 0.32, 0.5, 0.68].map((threshold) =>
+    Math.max(0, Math.min(1, (dayProgress - threshold) / 0.16)),
+  );
+  const wallPositions = [18, 46, 60, 84];
+  const holePositions = [34, 66, 43, 72];
 
   return (
     <main className="collective-wall biome-field film-grain relative h-screen overflow-hidden bg-[var(--abyss)] text-[var(--foam)]" style={wallStyle} aria-label={`Collective exhibition ${activeVisualizationCopy.collectivePlace}`}>
       <BiomeBackdrop progress={dayProgress} />
-      <div className="tank-leak-stage pointer-events-none absolute inset-0" aria-hidden="true">
-        <span /><span /><span />
+      <div className="tank-compartments pointer-events-none absolute inset-0" aria-hidden="true">
+        <div className="tank-compartment tank-compartment-one"><span>memory shelf</span></div>
+        <div className="tank-compartment tank-compartment-two"><span>synthetic voice</span></div>
+        <div className="tank-compartment tank-compartment-three"><span>stable specimens</span></div>
+        <div className="tank-compartment tank-compartment-four"><span>correspondence</span></div>
+        <div className="tank-compartment tank-compartment-five"><span>irregular organisms</span></div>
+        {wallOpenings.map((opening, index) => (
+          <div
+            key={wallPositions[index]}
+            className="compartment-wall"
+            style={{
+              "--wall-left": `${wallPositions[index]}%`,
+              "--wall-open": opening,
+              "--wall-hole": holePositions[index],
+              "--wall-top-height": `${Math.max(0, holePositions[index] - opening * 31)}%`,
+              "--wall-bottom-height": `${Math.max(0, 100 - holePositions[index] - opening * 31)}%`,
+            } as CSSProperties}
+          >
+            <i className="compartment-wall-top" />
+            <i className="compartment-wall-bottom" />
+            <b className="compartment-breach" />
+          </div>
+        ))}
       </div>
-      <div className="tank-taxonomy pointer-events-none absolute inset-0" aria-hidden="true">
-        <span>zone 01 / memory shelf</span>
-        <span>zone 02 / synthetic voice</span>
-        <span>zone 03 / uncontained</span>
-        <span>zone 04 / open water</span>
+      <div className="compartment-flows pointer-events-none absolute inset-0" aria-hidden="true">
+        <span /><span /><span /><span />
       </div>
       {view === "collective" ? (
-        <div className="collective-swim-field absolute inset-x-0 top-0" aria-live="polite">
-          <CollectiveVisualizationField contributions={habitatCreatures} />
+        <div className="collective-swim-field absolute" aria-live="polite">
+          <CollectiveVisualizationField contributions={habitatCreatures} progress={dayProgress} />
         </div>
       ) : (
         <CollectiveHeatmap data={visibleHeatmap} />

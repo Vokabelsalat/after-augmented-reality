@@ -12,7 +12,19 @@ function seededUnit(seed: number) {
   return value - Math.floor(value);
 }
 
-function FloatingCreature({ contribution }: { contribution: ExhibitionContribution }) {
+const compartmentBounds = [-1, -0.64, -0.08, 0.2, 0.68, 1] as const;
+const wallThresholds = [0.14, 0.32, 0.5, 0.68] as const;
+const wallHolePositions = [34, 66, 43, 72] as const;
+
+function wallOpening(progress: number, wallIndex: number) {
+  return THREE.MathUtils.clamp(
+    (progress - wallThresholds[wallIndex]) / 0.16,
+    0,
+    1,
+  );
+}
+
+function FloatingCreature({ contribution, progress }: { contribution: ExhibitionContribution; progress: number }) {
   const swimRef = useRef<THREE.Group>(null);
   const directionRef = useRef<THREE.Group>(null);
   const placement = useMemo(() => ({
@@ -31,6 +43,8 @@ function FloatingCreature({ contribution }: { contribution: ExhibitionContributi
     vx: Math.cos(placement.heading) * placement.speed,
     vy: Math.sin(placement.heading) * placement.speed,
   });
+  const spawnCompartment = contribution.id % 5;
+  const previousProgress = useRef(progress);
 
   useFrame(({ clock, viewport }, delta) => {
     if (!swimRef.current || !directionRef.current) return;
@@ -38,13 +52,17 @@ function FloatingCreature({ contribution }: { contribution: ExhibitionContributi
     const state = motion.current;
     const maxX = Math.max(1.6, viewport.width / 2 - 0.9);
     const maxY = Math.max(1.25, viewport.height / 2 - 0.72);
+    const spawnMinX = compartmentBounds[spawnCompartment] * maxX;
+    const spawnMaxX = compartmentBounds[spawnCompartment + 1] * maxX;
+    const spawnCenterX = (spawnMinX + spawnMaxX) / 2;
     const turnZone = 0.48;
 
-    if (!state.initialized) {
-      state.x = placement.xUnit * maxX;
+    if (!state.initialized || progress < previousProgress.current - 0.025) {
+      state.x = spawnCenterX + placement.xUnit * (spawnMaxX - spawnMinX) * 0.34;
       state.y = placement.yUnit * maxY;
       state.initialized = true;
     }
+    previousProgress.current = progress;
 
     if (state.x > maxX - turnZone && state.vx > 0) state.vx = -Math.abs(state.vx);
     if (state.x < -maxX + turnZone && state.vx < 0) state.vx = Math.abs(state.vx);
@@ -59,7 +77,32 @@ function FloatingCreature({ contribution }: { contribution: ExhibitionContributi
     state.vx = (state.vx / currentSpeed) * placement.speed;
     state.vy = (state.vy / currentSpeed) * placement.speed;
 
-    state.x += state.vx * delta;
+    const proposedX = state.x + state.vx * delta;
+    const walls = compartmentBounds.slice(1, -1).map((boundary) => boundary * maxX);
+    const currentCompartment = walls.findIndex((wallX) => state.x < wallX);
+    const currentIndex = currentCompartment === -1 ? 4 : currentCompartment;
+    let blocked = false;
+
+    if (state.vx > 0 && currentIndex < 4 && proposedX >= walls[currentIndex]) {
+      const opening = wallOpening(progress, currentIndex);
+      const holeCenterY = (1 - (wallHolePositions[currentIndex] / 50)) * maxY;
+      const holeHalfHeight = maxY * 0.62 * opening;
+      blocked = opening <= 0 || Math.abs(state.y - holeCenterY) > holeHalfHeight;
+      if (blocked) state.x = walls[currentIndex] - 0.04;
+    } else if (state.vx < 0 && currentIndex > 0 && proposedX <= walls[currentIndex - 1]) {
+      const wallIndex = currentIndex - 1;
+      const opening = wallOpening(progress, wallIndex);
+      const holeCenterY = (1 - (wallHolePositions[wallIndex] / 50)) * maxY;
+      const holeHalfHeight = maxY * 0.62 * opening;
+      blocked = opening <= 0 || Math.abs(state.y - holeCenterY) > holeHalfHeight;
+      if (blocked) state.x = walls[wallIndex] + 0.04;
+    }
+
+    if (blocked) {
+      state.vx *= -1;
+    } else {
+      state.x = proposedX;
+    }
     state.y += state.vy * delta;
     state.x = THREE.MathUtils.clamp(state.x, -maxX, maxX);
     state.y = THREE.MathUtils.clamp(state.y, -maxY, maxY);
@@ -96,7 +139,7 @@ function FloatingCreature({ contribution }: { contribution: ExhibitionContributi
   );
 }
 
-export function CollectiveCreatureField({ contributions }: { contributions: ExhibitionContribution[] }) {
+export function CollectiveCreatureField({ contributions, progress = 1 }: { contributions: ExhibitionContribution[]; progress?: number }) {
   return (
     <Canvas
       orthographic
@@ -109,7 +152,7 @@ export function CollectiveCreatureField({ contributions }: { contributions: Exhi
       <pointLight position={[-5, 1, 5]} intensity={2.2} color="#58D6FF" />
       <pointLight position={[5, -2, 5]} intensity={1.8} color="#FF7557" />
       {contributions.slice(-32).map((contribution) => (
-        <FloatingCreature key={contribution.id} contribution={contribution} />
+        <FloatingCreature key={contribution.id} contribution={contribution} progress={progress} />
       ))}
       <AdaptiveDpr pixelated />
     </Canvas>
