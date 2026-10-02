@@ -164,6 +164,220 @@ MindAR transforms, cameras, and render loops are not shared with the R3F rendere
 
 Artifact content, target mapping, particles, persistence, constellation encoding, and narrative generation all read configuration data; no individual reveal component needs exhibition-specific logic.
 
+## Production deployment on Ubuntu with Caddy
+
+Run the application as one persistent Next.js Node process behind Caddy. This is not a static-export deployment: the contribution API and SQLite storage require the Node server runtime. Caddy terminates HTTPS, which is also required for camera access on visitor devices.
+
+The commands below use:
+
+- `/opt/after-augmented-reality` for the application checkout;
+- `/var/lib/after-augmented-reality` for persistent SQLite data;
+- `afterar` as the unprivileged service account;
+- `127.0.0.1:3066` as the private Next.js listener.
+
+Replace `exhibition.example.com` with the real public domain. Its DNS `A` and/or `AAAA` record must point to the Ubuntu server, and inbound ports 80 and 443 must be open.
+
+### 1. Prepare the service account and directories
+
+Install Node.js 20 or newer, then check the installed paths and versions:
+
+```bash
+node --version
+npm --version
+command -v npm
+```
+
+Create the account and directories:
+
+```bash
+sudo adduser \
+  --system \
+  --group \
+  --home /opt/after-augmented-reality \
+  afterar
+
+sudo install -d \
+  -o afterar \
+  -g afterar \
+  /opt/after-augmented-reality \
+  /var/lib/after-augmented-reality
+```
+
+Clone or copy this repository into `/opt/after-augmented-reality`, then give the service account ownership:
+
+```bash
+sudo chown -R afterar:afterar /opt/after-augmented-reality
+```
+
+### 2. Add the production environment
+
+Create a service environment file that is readable by the service account but not by other users:
+
+```bash
+sudo install \
+  -m 0640 \
+  -o root \
+  -g afterar \
+  /dev/null \
+  /etc/after-augmented-reality.env
+
+sudoedit /etc/after-augmented-reality.env
+```
+
+Add:
+
+```ini
+NODE_ENV=production
+EXHIBITION_DATABASE_PATH=/var/lib/after-augmented-reality/exhibition.sqlite
+NEXT_PUBLIC_VISUALIZATION_DESIGN=fish
+```
+
+`NEXT_PUBLIC_VISUALIZATION_DESIGN` must be set while running `npm run build`; Next.js embeds public environment variables into the client bundle. Change `fish` to `creature` or `constellation` before building if a different visualization is required.
+
+### 3. Install dependencies and build on the server
+
+```bash
+sudo -u afterar sh -c '
+  cd /opt/after-augmented-reality
+  set -a
+  . /etc/after-augmented-reality.env
+  set +a
+  npm ci
+  npm run build
+'
+```
+
+### 4. Run Next.js as a systemd service
+
+Create `/etc/systemd/system/after-augmented-reality.service`:
+
+```bash
+sudoedit /etc/systemd/system/after-augmented-reality.service
+```
+
+Add:
+
+```ini
+[Unit]
+Description=After Augmented Reality exhibition
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=afterar
+Group=afterar
+WorkingDirectory=/opt/after-augmented-reality
+EnvironmentFile=/etc/after-augmented-reality.env
+
+ExecStart=/usr/bin/npm run start -- --hostname 127.0.0.1 --port 3066
+
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=30
+KillSignal=SIGTERM
+UMask=0027
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=full
+
+[Install]
+WantedBy=multi-user.target
+```
+
+If `command -v npm` did not report `/usr/bin/npm`, replace the path in `ExecStart` with the reported absolute path.
+
+Enable and start the service:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable --now after-augmented-reality
+sudo systemctl status after-augmented-reality
+```
+
+Check that Next.js is available only on the server's loopback interface:
+
+```bash
+curl -I http://127.0.0.1:3066
+sudo journalctl -u after-augmented-reality -f
+```
+
+Do not expose port 3066 through the public firewall.
+
+### 5. Install Caddy
+
+Use the [official Caddy Debian/Ubuntu package](https://caddyserver.com/docs/install):
+
+```bash
+sudo apt install -y \
+  debian-keyring \
+  debian-archive-keyring \
+  apt-transport-https \
+  curl
+
+curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' \
+  | sudo gpg --dearmor \
+  -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+
+curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' \
+  | sudo tee /etc/apt/sources.list.d/caddy-stable.list
+
+sudo chmod o+r \
+  /usr/share/keyrings/caddy-stable-archive-keyring.gpg \
+  /etc/apt/sources.list.d/caddy-stable.list
+
+sudo apt update
+sudo apt install caddy
+```
+
+### 6. Configure HTTPS and the reverse proxy
+
+Edit `/etc/caddy/Caddyfile`:
+
+```bash
+sudoedit /etc/caddy/Caddyfile
+```
+
+Add:
+
+```caddyfile
+exhibition.example.com {
+    encode zstd gzip
+    reverse_proxy 127.0.0.1:3066
+}
+```
+
+Caddy automatically obtains and renews the TLS certificate and redirects HTTP to HTTPS when the domain resolves to this server. Validate and reload the configuration:
+
+```bash
+sudo caddy validate --config /etc/caddy/Caddyfile
+sudo systemctl reload caddy
+sudo systemctl status caddy
+```
+
+If UFW is enabled, allow HTTP and HTTPS through the packaged Caddy profile:
+
+```bash
+sudo ufw allow 'Caddy Full'
+```
+
+Verify the public endpoint:
+
+```bash
+curl -I https://exhibition.example.com
+```
+
+Useful production logs are available with:
+
+```bash
+sudo journalctl -u after-augmented-reality --since "10 minutes ago"
+sudo journalctl -u caddy --since "10 minutes ago"
+```
+
+The submitted exhibition stories live in `/var/lib/after-augmented-reality/exhibition.sqlite`. Include that directory in the server backup plan; deploying a new application checkout must not replace it.
+
 ## Persistence
 
 The localStorage key is `say-hi:journey:v1`. It stores only session ID, start and completion times, artifact IDs, discovery order, and scan timestamps. Hydration validates malformed data before handing it to Redux. **Start again** or the development reset returns to a clean intro state. Shared journeys are separate, anonymous server records; resetting the phone does not remove a story already shared with the exhibition.
