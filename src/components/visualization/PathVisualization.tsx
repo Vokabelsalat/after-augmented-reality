@@ -14,6 +14,7 @@ export function PathVisualization({
   highlightedPart,
   compact = false,
   zoom,
+  fitToView = false,
   label,
 }: {
   artifactIds: string[];
@@ -21,6 +22,7 @@ export function PathVisualization({
   highlightedPart?: CreaturePartId;
   compact?: boolean;
   zoom?: number;
+  fitToView?: boolean;
   label?: string;
 }) {
   if (visualizationDesign === "constellation") {
@@ -52,6 +54,7 @@ export function PathVisualization({
       highlightedPart={highlightedPart}
       compact={compact}
       zoom={zoom}
+      fitToView={fitToView}
       label={label}
     />
   );

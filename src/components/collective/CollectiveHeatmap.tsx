@@ -35,6 +35,7 @@ export function CollectiveHeatmap({ data }: { data: CollectiveHeatDatum[] }) {
   const planRef = useRef<HTMLObjectElement>(null);
   const [planLoaded, setPlanLoaded] = useState(false);
   const [mappedArtifactIds, setMappedArtifactIds] = useState<string[]>([]);
+  const [showPlanLayer, setShowPlanLayer] = useState(false);
 
   const stations = useMemo(() => {
     const byId = new Map(data.map((datum) => [datum.artifactId, datum]));
@@ -74,8 +75,17 @@ export function CollectiveHeatmap({ data }: { data: CollectiveHeatDatum[] }) {
     svg.style.width = "100%";
     svg.style.height = "100%";
 
+    const sourceLayer = document.getElementById("layer1") as SVGGraphicsElement | null;
+    sourceLayer?.style.setProperty("display", showPlanLayer ? "inline" : "none");
+    document.getElementById("collective-heatmap-overlay")?.remove();
+
+    const overlay = document.createElementNS(SVG_NAMESPACE, "g");
+    overlay.setAttribute("id", "collective-heatmap-overlay");
+    const sourceTransform = sourceLayer?.getAttribute("transform");
+    if (sourceTransform) overlay.setAttribute("transform", sourceTransform);
+
     const mappedIds: string[] = [];
-    document.querySelectorAll("rect").forEach((rect) => {
+    sourceLayer?.querySelectorAll("rect").forEach((rect) => {
       const label = rect.getAttributeNS(INKSCAPE_NAMESPACE, "label")
         ?? rect.getAttribute("inkscape:label");
       const station = label ? stationByPlanLabel.get(label) : undefined;
@@ -84,28 +94,28 @@ export function CollectiveHeatmap({ data }: { data: CollectiveHeatDatum[] }) {
       mappedIds.push(station.artifact.id);
       const color = heatColor(station.intensity);
       const active = station.datum.visitCount > 0;
-      rect.style.fill = color;
-      rect.style.fillOpacity = active ? String(0.34 + station.intensity * 0.58) : "0.08";
-      rect.style.stroke = color;
-      rect.style.strokeOpacity = active ? "1" : "0.38";
-      rect.style.strokeWidth = active ? "0.85" : "0.35";
-      rect.style.filter = active
+      const heatRect = rect.cloneNode(false) as SVGRectElement;
+      heatRect.removeAttribute("id");
+      heatRect.removeAttribute("style");
+      heatRect.style.fill = color;
+      heatRect.style.fillOpacity = active ? String(0.34 + station.intensity * 0.58) : "0.08";
+      heatRect.style.stroke = color;
+      heatRect.style.strokeOpacity = active ? "1" : "0.38";
+      heatRect.style.strokeWidth = active ? "0.85" : "0.35";
+      heatRect.style.filter = active
         ? `drop-shadow(0 0 ${1.5 + station.intensity * 4}px ${color})`
         : "none";
-      rect.style.transition = "fill 500ms ease, fill-opacity 500ms ease, stroke 500ms ease";
-      rect.style.pointerEvents = "all";
+      heatRect.style.transition = "fill 500ms ease, fill-opacity 500ms ease, stroke 500ms ease";
+      heatRect.style.pointerEvents = "all";
 
-      const previousTitle = Array.from(rect.children).find(
-        (child) => child.tagName.toLocaleLowerCase() === "title" && child.hasAttribute("data-heatmap-title"),
-      );
-      previousTitle?.remove();
       const title = document.createElementNS(SVG_NAMESPACE, "title");
-      title.setAttribute("data-heatmap-title", "true");
       title.textContent = `${station.artifact.title}: ${station.datum.visitCount} ${station.datum.visitCount === 1 ? "visit" : "visits"}, ${formatDuration(station.datum.totalDwellMs)} total`;
-      rect.prepend(title);
+      heatRect.prepend(title);
+      overlay.append(heatRect);
     });
+    svg.append(overlay);
     setMappedArtifactIds([...new Set(mappedIds)]);
-  }, [planLoaded, stationByPlanLabel]);
+  }, [planLoaded, showPlanLayer, stationByPlanLabel]);
 
   const totalVisits = stations.reduce((sum, { datum }) => sum + datum.visitCount, 0);
   const totalDwellMs = stations.reduce((sum, { datum }) => sum + datum.totalDwellMs, 0);
@@ -173,6 +183,14 @@ export function CollectiveHeatmap({ data }: { data: CollectiveHeatDatum[] }) {
             <span>Fewer visits, less time</span>
             <span>More visits, more time</span>
           </div>
+          <button
+            type="button"
+            className="mt-5 min-h-11 w-full border border-white/15 px-4 text-sm text-white/65 transition-colors hover:bg-white/[0.06] hover:text-white"
+            aria-pressed={showPlanLayer}
+            onClick={() => setShowPlanLayer((visible) => !visible)}
+          >
+            {showPlanLayer ? "Hide plan layer (debug)" : "Show plan layer (debug)"}
+          </button>
         </div>
       </aside>
     </section>

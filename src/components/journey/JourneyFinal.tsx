@@ -52,11 +52,15 @@ export function JourneyFinal() {
         </p>
       </header>
 
-      <section className="relative mx-auto mt-1 h-[46dvh] min-h-80 w-full max-w-3xl" aria-labelledby="reading-title">
+      <section className="relative left-1/2 mt-1 h-[46dvh] min-h-80 w-screen -translate-x-1/2 overflow-visible" aria-labelledby="reading-title">
         <h1 id="reading-title" className="absolute inset-x-0 top-6 z-10 text-center text-[10px] tracking-[0.32em] text-white/48">
           Specimen pending release
         </h1>
-        <PathVisualization artifactIds={discoveries.map((item) => item.artifactId)} label={`Your finished exhibition ${activeVisualizationCopy.singular}`} />
+        <PathVisualization
+          artifactIds={discoveries.map((item) => item.artifactId)}
+          fitToView
+          label={`Your finished exhibition ${activeVisualizationCopy.singular}`}
+        />
         <div className="absolute inset-x-0 bottom-5 flex flex-wrap justify-center gap-x-4 gap-y-1">
           {themesInOrder.map((artifact, index) => (
             <span key={`${artifact.id}-${index}`} className="flex items-center gap-1.5 text-[9px] tracking-[0.14em] text-white/48">

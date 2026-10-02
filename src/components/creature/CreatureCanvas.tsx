@@ -1,21 +1,37 @@
 "use client";
 
 import { AdaptiveDpr } from "@react-three/drei";
-import { Canvas } from "@react-three/fiber";
+import { Canvas, useThree } from "@react-three/fiber";
+import { useLayoutEffect } from "react";
+import * as THREE from "three";
 import { CreatureModel, creaturePiecesFromArtifactIds } from "@/components/creature/CreatureModel";
 import type { CreaturePartId } from "@/types/exhibition";
+
+function FitCreatureCamera() {
+  const { camera, size } = useThree();
+
+  useLayoutEffect(() => {
+    if (!(camera instanceof THREE.OrthographicCamera)) return;
+    camera.zoom = Math.min(size.width / 6.2, size.height / 4.1);
+    camera.updateProjectionMatrix();
+  }, [camera, size.height, size.width]);
+
+  return null;
+}
 
 export function CreatureCanvas({
   artifactIds,
   highlightedPart,
   compact = false,
   zoom,
+  fitToView = false,
   label,
 }: {
   artifactIds: string[];
   highlightedPart?: CreaturePartId;
   compact?: boolean;
   zoom?: number;
+  fitToView?: boolean;
   label?: string;
 }) {
   const pieces = creaturePiecesFromArtifactIds(artifactIds);
@@ -32,6 +48,7 @@ export function CreatureCanvas({
         dpr={[1, compact ? 1.25 : 1.6]}
         gl={{ alpha: true, antialias: true, powerPreference: "high-performance" }}
       >
+        {fitToView && <FitCreatureCamera />}
         <ambientLight intensity={1.5} />
         <directionalLight position={[3, 5, 6]} intensity={2.6} color="#FFF4DF" />
         <pointLight position={[-3, 0, 4]} intensity={2} color="#58D6FF" />
