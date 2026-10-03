@@ -299,16 +299,16 @@ export function CollectiveWall() {
       {view === "collective" && visibleActive && (
         <section key={visibleActive.id} className="collective-arrival absolute inset-0 z-20 grid place-items-center" aria-label={`A new visitor ${activeVisualizationCopy.singular} has arrived`}>
           <div className="collective-arrival-glow absolute inset-0" aria-hidden="true" />
-          <div className="relative grid w-[min(94vw,1280px)] grid-cols-[minmax(420px,1.25fr)_minmax(320px,.75fr)] items-center gap-[clamp(2rem,5vw,5rem)] px-6">
-            <div className="collective-arrival-creature aspect-[4/3] w-full">
-              <PathVisualization
-                artifactIds={visibleActive.parts.map((part) => part.artifactId)}
-                contribution={visibleActive}
-                zoom={78}
-                label={`New ${activeVisualizationCopy.singular} with ${visibleActive.parts.length} parts`}
-              />
-            </div>
-            <div className="collective-story max-w-xl">
+          <div className="collective-arrival-creature absolute inset-y-0 left-0 w-[68vw]">
+            <PathVisualization
+              artifactIds={visibleActive.parts.map((part) => part.artifactId)}
+              contribution={visibleActive}
+              fitToView
+              fitScale={1.25}
+              label={`New ${activeVisualizationCopy.singular} with ${visibleActive.parts.length} parts`}
+            />
+          </div>
+          <div className="collective-story relative z-10 ml-auto mr-[6vw] w-[min(34vw,36rem)]">
               <p className="mb-3 text-base text-[var(--phosphor)]">A new specimen has entered the tank</p>
               <p className="mb-6 text-sm text-white/45">
                 Made from {visibleActive.parts.length} exhibition {visibleActive.parts.length === 1 ? "encounter" : "encounters"}
@@ -321,7 +321,6 @@ export function CollectiveWall() {
                   <p key={`${index}-${line}`} className="my-1.5">{line}</p>
                 ))}
               </div>
-            </div>
           </div>
         </section>
       )}

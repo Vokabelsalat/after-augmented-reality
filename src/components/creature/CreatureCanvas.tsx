@@ -23,7 +23,7 @@ const fittedBounds: Record<AquaticForm, { width: number; height: number }> = {
   pufferfish: { width: 4.4, height: 4.2 },
 };
 
-function FitCreatureCamera({ creatureForm }: { creatureForm: AquaticForm }) {
+function FitCreatureCamera({ creatureForm, scale = 1 }: { creatureForm: AquaticForm; scale?: number }) {
   const size = useThree((state) => state.size);
   const get = useThree((state) => state.get);
   const set = useThree((state) => state.set);
@@ -33,10 +33,10 @@ function FitCreatureCamera({ creatureForm }: { creatureForm: AquaticForm }) {
     if (!(currentCamera instanceof THREE.OrthographicCamera)) return;
     const bounds = fittedBounds[creatureForm];
     const fittedCamera = currentCamera.clone();
-    fittedCamera.zoom = Math.min(size.width / bounds.width, size.height / bounds.height);
+    fittedCamera.zoom = Math.min(size.width / bounds.width, size.height / bounds.height) * 0.82 * scale;
     fittedCamera.updateProjectionMatrix();
     set({ camera: fittedCamera });
-  }, [creatureForm, get, set, size.height, size.width]);
+  }, [creatureForm, get, scale, set, size.height, size.width]);
 
   return null;
 }
@@ -47,6 +47,7 @@ export function CreatureCanvas({
   compact = false,
   zoom,
   fitToView = false,
+  fitScale = 1,
   creatureForm = "fish",
   label,
 }: {
@@ -55,6 +56,7 @@ export function CreatureCanvas({
   compact?: boolean;
   zoom?: number;
   fitToView?: boolean;
+  fitScale?: number;
   creatureForm?: AquaticForm;
   label?: string;
 }) {
@@ -72,7 +74,7 @@ export function CreatureCanvas({
         dpr={[1, compact ? 1.25 : 1.6]}
         gl={{ alpha: true, antialias: true, powerPreference: "high-performance" }}
       >
-        {fitToView && <FitCreatureCamera creatureForm={creatureForm} />}
+        {fitToView && <FitCreatureCamera creatureForm={creatureForm} scale={fitScale} />}
         <ambientLight intensity={1.5} />
         <directionalLight position={[3, 5, 6]} intensity={2.6} color="#FFF4DF" />
         <pointLight position={[-3, 0, 4]} intensity={2} color="#58D6FF" />

@@ -16,6 +16,7 @@ export function PathVisualization({
   compact = false,
   zoom,
   fitToView = false,
+  fitScale = 1,
   creatureForm,
   label,
 }: {
@@ -25,6 +26,7 @@ export function PathVisualization({
   compact?: boolean;
   zoom?: number;
   fitToView?: boolean;
+  fitScale?: number;
   creatureForm?: AquaticForm | null;
   label?: string;
 }) {
@@ -58,6 +60,7 @@ export function PathVisualization({
       compact={compact}
       zoom={zoom}
       fitToView={fitToView}
+      fitScale={fitScale}
       creatureForm={contribution?.creatureForm ?? creatureForm ?? "fish"}
       label={label}
     />
