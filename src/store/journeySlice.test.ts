@@ -55,6 +55,20 @@ describe("journeySlice", () => {
     expect(state.creatureForm).toBe(firstForm);
   });
 
+  it("lets a scan shape the narrative without requiring a choice", () => {
+    const state = journeyReducer(
+      undefined,
+      artifactDetected("grand-hotel-bald-cockatoo", 200),
+    );
+
+    expect(state.discoveries[0]).not.toHaveProperty("choiceId");
+    expect(state.narrativeState).toMatchObject({
+      openness: 2,
+      coherence: -2,
+      voice: 1,
+    });
+  });
+
   it("ignores duplicate scans without changing sequence or active state", () => {
     let state = journeyReducer(undefined, artifactDetected("memory-fragment", 100));
     state = journeyReducer(state, artifactCollected("memory-fragment"));

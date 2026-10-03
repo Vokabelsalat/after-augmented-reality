@@ -4,6 +4,7 @@ import {
   createContribution,
   getCollectiveHeatmap,
   getCycleDate,
+  getSyntheticContributionCount,
   listContributions,
 } from "@/lib/contributions/database";
 import { generateJourneyNarrative } from "@/lib/narrative/generateJourneyNarrative";
@@ -84,6 +85,7 @@ export async function GET(request: Request) {
       contributions: listContributions(after, limit),
       heatmap: getCollectiveHeatmap(),
       cycleDate: getCycleDate(),
+      syntheticCount: getSyntheticContributionCount(),
     },
     { headers: responseHeaders },
   );

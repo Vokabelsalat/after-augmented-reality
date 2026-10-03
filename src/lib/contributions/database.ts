@@ -20,7 +20,10 @@ type ContributionRow = {
 
 const globalForDatabase = globalThis as typeof globalThis & {
   exhibitionDatabase?: DatabaseSync;
+  exhibitionDatabaseSchemaVersion?: number;
 };
+
+const DATABASE_SCHEMA_VERSION = 2;
 
 const exhibitionClock = new Intl.DateTimeFormat("en-CA", {
   timeZone: "Europe/Oslo",
@@ -61,41 +64,51 @@ export function getCycleDate(now = new Date()) {
   return exhibitionClock.format(now).slice(0, 10);
 }
 
+export function getCycleStartIso(now = new Date()) {
+  return cycleStartIso(now);
+}
+
 function openDatabase() {
-  if (globalForDatabase.exhibitionDatabase) {
-    return globalForDatabase.exhibitionDatabase;
+  let database = globalForDatabase.exhibitionDatabase;
+  if (!database) {
+    const databasePath =
+      process.env.EXHIBITION_DATABASE_PATH ??
+      join(process.cwd(), "data", "exhibition.sqlite");
+    mkdirSync(dirname(databasePath), { recursive: true });
+    database = new DatabaseSync(databasePath);
+    globalForDatabase.exhibitionDatabase = database;
   }
 
-  const databasePath =
-    process.env.EXHIBITION_DATABASE_PATH ??
-    join(process.cwd(), "data", "exhibition.sqlite");
-  mkdirSync(dirname(databasePath), { recursive: true });
-
-  const database = new DatabaseSync(databasePath);
-  database.exec(`
-    PRAGMA journal_mode = WAL;
-    PRAGMA foreign_keys = ON;
-    CREATE TABLE IF NOT EXISTS contributions (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      public_id TEXT NOT NULL UNIQUE,
-      session_id TEXT NOT NULL UNIQUE,
-      creature_form TEXT NOT NULL DEFAULT 'fish',
-      glyphs_json TEXT NOT NULL,
-      narrative_json TEXT NOT NULL,
-      created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
-    );
-    CREATE INDEX IF NOT EXISTS idx_contributions_created_at
-      ON contributions(created_at DESC);
-    PRAGMA optimize;
-  `);
-  const contributionColumns = database
-    .prepare("PRAGMA table_info(contributions)")
-    .all() as unknown as Array<{ name: string }>;
-  if (!contributionColumns.some((column) => column.name === "creature_form")) {
-    database.exec("ALTER TABLE contributions ADD COLUMN creature_form TEXT NOT NULL DEFAULT 'fish'");
+  if (globalForDatabase.exhibitionDatabaseSchemaVersion !== DATABASE_SCHEMA_VERSION) {
+    database.exec(`
+      PRAGMA journal_mode = WAL;
+      PRAGMA foreign_keys = ON;
+      CREATE TABLE IF NOT EXISTS contributions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        public_id TEXT NOT NULL UNIQUE,
+        session_id TEXT NOT NULL UNIQUE,
+        creature_form TEXT NOT NULL DEFAULT 'fish',
+        glyphs_json TEXT NOT NULL,
+        narrative_json TEXT NOT NULL,
+        is_synthetic INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+      );
+      CREATE INDEX IF NOT EXISTS idx_contributions_created_at
+        ON contributions(created_at DESC);
+      PRAGMA optimize;
+    `);
+    const contributionColumns = database
+      .prepare("PRAGMA table_info(contributions)")
+      .all() as unknown as Array<{ name: string }>;
+    if (!contributionColumns.some((column) => column.name === "creature_form")) {
+      database.exec("ALTER TABLE contributions ADD COLUMN creature_form TEXT NOT NULL DEFAULT 'fish'");
+    }
+    if (!contributionColumns.some((column) => column.name === "is_synthetic")) {
+      database.exec("ALTER TABLE contributions ADD COLUMN is_synthetic INTEGER NOT NULL DEFAULT 0");
+    }
+    globalForDatabase.exhibitionDatabaseSchemaVersion = DATABASE_SCHEMA_VERSION;
   }
 
-  globalForDatabase.exhibitionDatabase = database;
   return database;
 }
 
@@ -157,12 +170,14 @@ export function createContribution(input: {
   creatureForm: AquaticForm;
   parts: SharedCreaturePart[];
   narrative: string[];
+  createdAt?: string;
+  synthetic?: boolean;
 }) {
   const database = openDatabase();
   database
     .prepare(
-      `INSERT INTO contributions (public_id, session_id, creature_form, glyphs_json, narrative_json)
-       VALUES (?, ?, ?, ?, ?)
+      `INSERT INTO contributions (public_id, session_id, creature_form, glyphs_json, narrative_json, is_synthetic, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT(session_id) DO NOTHING`,
     )
     .run(
@@ -171,6 +186,8 @@ export function createContribution(input: {
       input.creatureForm,
       JSON.stringify(input.parts),
       JSON.stringify(input.narrative),
+      input.synthetic ? 1 : 0,
+      input.createdAt ?? new Date().toISOString(),
     );
 
   const row = database
@@ -182,4 +199,22 @@ export function createContribution(input: {
     .get(input.sessionId) as unknown as ContributionRow;
 
   return deserialize(row);
+}
+
+export function getSyntheticContributionCount() {
+  const row = openDatabase()
+    .prepare(
+      `SELECT COUNT(*) AS count
+       FROM contributions
+       WHERE is_synthetic = 1 AND created_at >= ?`,
+    )
+    .get(cycleStartIso()) as unknown as { count: number };
+  return row.count;
+}
+
+export function clearSyntheticContributions() {
+  const result = openDatabase()
+    .prepare("DELETE FROM contributions WHERE is_synthetic = 1")
+    .run();
+  return Number(result.changes);
 }

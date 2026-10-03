@@ -26,8 +26,8 @@ export function JourneyFinal() {
   const discoveries = useAppSelector(selectDiscoveries);
   const journey = useAppSelector(selectJourney);
   const lines = useMemo(
-    () => generateJourneyNarrative(discoveries, artifacts, journey.narrativeState),
-    [discoveries, journey.narrativeState],
+    () => generateJourneyNarrative(discoveries, artifacts),
+    [discoveries],
   );
   const themesInOrder = discoveries.flatMap((discovery) => {
     const artifact = artifactById.get(discovery.artifactId);
@@ -73,7 +73,7 @@ export function JourneyFinal() {
       </section>
 
       <section className="relative z-10 mx-auto max-w-xl pb-8">
-        <p className="mb-6 text-sm text-white/45">The story assembled from your path</p>
+        <p className="mb-6 text-sm text-white/45">The aquarium, remembered from inside</p>
         <GeneratedNarrative lines={lines} />
 
         <div className="mt-14">

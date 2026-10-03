@@ -1,4 +1,5 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
+import { artifactById } from "@/data/artifacts";
 import { pickAquaticForm, type AquaticForm } from "@/lib/creature/aquaticForms";
 import type { NarrativeState } from "@/types/exhibition";
 
@@ -108,6 +109,20 @@ const journeySlice = createSlice({
           discoveredAt,
           sequence: state.discoveries.length + 1,
         });
+        const artifact = artifactById.get(artifactId);
+        if (artifact) {
+          (Object.keys(artifact.stateEffects) as Array<keyof NarrativeState>).forEach(
+            (axis) => {
+              state.narrativeState[axis] = Math.max(
+                -8,
+                Math.min(
+                  8,
+                  state.narrativeState[axis] + (artifact.stateEffects[axis] ?? 0),
+                ),
+              );
+            },
+          );
+        }
         state.completedAt = null;
         state.activeArtifactId = artifactId;
         state.experiencePhase = "revealing";

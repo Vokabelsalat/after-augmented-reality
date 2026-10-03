@@ -53,6 +53,7 @@ export function CollectiveWall() {
   const activeRef = useRef<ExhibitionContribution | null>(null);
   const queueRef = useRef<ExhibitionContribution[]>([]);
   const cycleDateRef = useRef<string | null>(null);
+  const syntheticCountRef = useRef<number | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -65,6 +66,7 @@ export function CollectiveWall() {
           contributions: ExhibitionContribution[];
           heatmap: CollectiveHeatDatum[];
           cycleDate: string;
+          syntheticCount: number;
         };
         if (cancelled) return;
 
@@ -76,6 +78,20 @@ export function CollectiveWall() {
           setContributions([]);
         }
         cycleDateRef.current = data.cycleDate;
+
+        const syntheticDatasetWasRemoved =
+          syntheticCountRef.current !== null &&
+          data.syntheticCount < syntheticCountRef.current;
+        syntheticCountRef.current = data.syntheticCount;
+        if (syntheticDatasetWasRemoved) {
+          latestId.current = 0;
+          queueRef.current = [];
+          activeRef.current = null;
+          setActive(null);
+          setContributions([]);
+          setHeatmap(data.heatmap);
+          return;
+        }
 
         if (data.contributions.length > 0) {
           latestId.current = Math.max(...data.contributions.map((item) => item.id));

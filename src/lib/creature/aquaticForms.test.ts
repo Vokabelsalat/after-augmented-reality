@@ -22,6 +22,7 @@ describe("aquatic creature forms", () => {
 
   it("validates values received from persistence and the contribution API", () => {
     expect(isAquaticForm("jellyfish")).toBe(true);
+    expect(isAquaticForm("eel")).toBe(false);
     expect(isAquaticForm("seagull")).toBe(false);
   });
 });

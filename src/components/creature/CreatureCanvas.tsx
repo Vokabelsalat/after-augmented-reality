@@ -15,24 +15,28 @@ const fittedBounds: Record<AquaticForm, { width: number; height: number }> = {
   jellyfish: { width: 3.6, height: 4.5 },
   octopus: { width: 4.2, height: 4.5 },
   turtle: { width: 5.3, height: 3.5 },
-  ray: { width: 5.8, height: 3.7 },
+  ray: { width: 6.5, height: 4.2 },
   starfish: { width: 4.4, height: 4.4 },
   seahorse: { width: 3.5, height: 4.8 },
-  eel: { width: 6.4, height: 3.6 },
   seal: { width: 5.6, height: 3.7 },
   clam: { width: 4.2, height: 3.8 },
   pufferfish: { width: 4.4, height: 4.2 },
 };
 
 function FitCreatureCamera({ creatureForm }: { creatureForm: AquaticForm }) {
-  const { camera, size } = useThree();
+  const size = useThree((state) => state.size);
+  const get = useThree((state) => state.get);
+  const set = useThree((state) => state.set);
 
   useLayoutEffect(() => {
-    if (!(camera instanceof THREE.OrthographicCamera)) return;
+    const currentCamera = get().camera;
+    if (!(currentCamera instanceof THREE.OrthographicCamera)) return;
     const bounds = fittedBounds[creatureForm];
-    camera.zoom = Math.min(size.width / bounds.width, size.height / bounds.height);
-    camera.updateProjectionMatrix();
-  }, [camera, creatureForm, size.height, size.width]);
+    const fittedCamera = currentCamera.clone();
+    fittedCamera.zoom = Math.min(size.width / bounds.width, size.height / bounds.height);
+    fittedCamera.updateProjectionMatrix();
+    set({ camera: fittedCamera });
+  }, [creatureForm, get, set, size.height, size.width]);
 
   return null;
 }

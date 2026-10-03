@@ -29,6 +29,8 @@ export function loadJourney(storage: StorageLike): PersistedJourney | null {
     const raw = storage.getItem(JOURNEY_STORAGE_KEY);
     if (!raw) return null;
     const value = JSON.parse(raw) as Partial<PersistedJourney>;
+    const storedCreatureForm = (value as { creatureForm?: unknown }).creatureForm;
+    const creatureForm = storedCreatureForm === "eel" ? "ray" : storedCreatureForm;
 
     if (
       !Array.isArray(value.discoveries) ||
@@ -36,7 +38,7 @@ export function loadJourney(storage: StorageLike): PersistedJourney | null {
       (value.sessionId !== null && typeof value.sessionId !== "string") ||
       (value.startedAt !== null && typeof value.startedAt !== "number") ||
       (value.completedAt != null && typeof value.completedAt !== "number") ||
-      (value.creatureForm !== undefined && value.creatureForm !== null && !isAquaticForm(value.creatureForm)) ||
+      (creatureForm !== undefined && creatureForm !== null && !isAquaticForm(creatureForm)) ||
       (value.narrativeState !== undefined && !isNarrativeState(value.narrativeState))
     ) {
       return null;
@@ -46,7 +48,7 @@ export function loadJourney(storage: StorageLike): PersistedJourney | null {
       sessionId: value.sessionId ?? null,
       startedAt: value.startedAt ?? null,
       completedAt: value.completedAt ?? null,
-      ...(value.creatureForm ? { creatureForm: value.creatureForm } : {}),
+      ...(creatureForm ? { creatureForm } : {}),
       ...(value.narrativeState ? { narrativeState: value.narrativeState } : {}),
       discoveries: value.discoveries
         .slice()

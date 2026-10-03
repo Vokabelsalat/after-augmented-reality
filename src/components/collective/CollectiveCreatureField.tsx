@@ -25,7 +25,6 @@ const collectiveFormScale: Record<AquaticForm, number> = {
   ray: 1.05,
   starfish: 0.96,
   seahorse: 1.2,
-  eel: 0.92,
   seal: 1.05,
   clam: 1.08,
   pufferfish: 1,

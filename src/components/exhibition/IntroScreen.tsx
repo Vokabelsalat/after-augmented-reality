@@ -23,7 +23,7 @@ export function IntroScreen() {
               <span className="block translate-x-[8vw] italic text-[var(--phosphor)] md:translate-x-20">Is Leaking</span>
             </h1>
             <p className="mt-8 max-w-md text-lg leading-7 text-white/74">
-              This aquarium is trying to classify the exhibition. Scan the markers, make small choices, and grow a creature it cannot fully contain.
+              This aquarium is trying to classify the exhibition. Scan the markers, gather fragments of a story, and grow a creature it cannot fully contain.
             </p>
           </div>
 

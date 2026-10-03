@@ -93,29 +93,73 @@ function TurtleModel(props: AquaticModelProps) {
 
 function RayModel(props: AquaticModelProps) {
   const colors = aquaticPalette(props.pieces);
+  const disc = useMemo(() => {
+    const shape = new THREE.Shape();
+    shape.moveTo(-0.82, 0);
+    shape.bezierCurveTo(-0.72, 0.5, -0.3, 0.94, 0.2, 1.08);
+    shape.bezierCurveTo(0.7, 0.96, 1.18, 0.46, 1.42, 0.04);
+    shape.bezierCurveTo(1.18, -0.46, 0.7, -0.96, 0.2, -1.08);
+    shape.bezierCurveTo(-0.3, -0.94, -0.72, -0.5, -0.82, 0);
+    return shape;
+  }, []);
   const tail = useMemo(() => new THREE.CatmullRomCurve3([
-    new THREE.Vector3(-0.75, -0.05, 0),
-    new THREE.Vector3(-1.45, -0.12, 0),
-    new THREE.Vector3(-2.15, 0.05, 0),
-    new THREE.Vector3(-2.75, -0.1, 0),
+    new THREE.Vector3(-0.78, 0, 0.02),
+    new THREE.Vector3(-1.55, -0.08, 0.01),
+    new THREE.Vector3(-2.4, 0.08, 0),
+    new THREE.Vector3(-3.35, -0.06, -0.01),
   ]), []);
   return (
     <LivingGroup animated={props.animated} scale={props.scale} motion="glide">
-      <mesh scale={[1.72, 0.72, 0.16]}>
-        <sphereGeometry args={[0.82, 30, 20]} />
+      <mesh position={[0, 0, -0.12]}>
+        <extrudeGeometry args={[disc, { depth: 0.18, bevelEnabled: true, bevelSegments: 3, steps: 1, bevelSize: 0.1, bevelThickness: 0.08, curveSegments: 28 }]} />
         <meshToonMaterial color={colors.body} />
       </mesh>
+      <mesh position={[0.42, 0, 0.1]} scale={[0.92, 0.54, 0.16]}>
+        <sphereGeometry args={[0.92, 28, 18]} />
+        <meshToonMaterial color={colors.light} />
+      </mesh>
       {[-1, 1].map((side) => (
-        <mesh key={side} position={[0, side * 0.54, 0]} rotation={[0, 0, side * 0.08]} scale={[1.1, 0.52, 0.08]}>
-          <sphereGeometry args={[0.9, 24, 14]} />
-          <meshToonMaterial color={side > 0 ? colors.light : colors.dark} />
+        <mesh
+          key={side}
+          position={[0.12, side * 0.93, 0.04]}
+          rotation={[side * 0.18, 0, side * -0.2]}
+          scale={[0.68, 0.2, 0.08]}
+        >
+          <sphereGeometry args={[1, 18, 12]} />
+          <meshToonMaterial color={colors.dark} />
         </mesh>
       ))}
       <mesh>
-        <tubeGeometry args={[tail, 26, 0.035, 7, false]} />
-        <meshToonMaterial color={colors.accent} />
+        <tubeGeometry args={[tail, 40, 0.028, 7, false]} />
+        <meshToonMaterial color={colors.dark} />
       </mesh>
-      {PairOfEyes({ x: 0.3, y: 0.18, z: 0.2 })}
+      {[-1, 1].map((side) => (
+        <group key={`eye-${side}`} position={[0.75, side * 0.24, 0.31]}>
+          <mesh scale={[0.105, 0.075, 0.06]}>
+            <sphereGeometry args={[1, 14, 10]} />
+            <meshToonMaterial color="#F3F0E8" />
+          </mesh>
+          <mesh position={[0.025, 0, 0.055]} scale={[0.042, 0.034, 0.025]}>
+            <sphereGeometry args={[1, 10, 8]} />
+            <meshBasicMaterial color="#071015" />
+          </mesh>
+        </group>
+      ))}
+      {[-1, 1].flatMap((side) => [0, 1, 2].map((index) => (
+        <mesh
+          key={`gill-${side}-${index}`}
+          position={[0.38 - index * 0.12, side * (0.24 + index * 0.055), 0.275]}
+          rotation={[0, 0, side * 0.18]}
+          scale={[0.08, 0.018, 0.012]}
+        >
+          <capsuleGeometry args={[0.5, 1, 4, 8]} />
+          <meshBasicMaterial color={colors.dark} />
+        </mesh>
+      )))}
+      <mesh position={[0.72, 0, 0.29]} rotation={[Math.PI / 2, 0, 0]} scale={[0.12, 0.08, 0.04]}>
+        <torusGeometry args={[1, 0.16, 7, 18]} />
+        <meshBasicMaterial color={colors.dark} />
+      </mesh>
       <TraitMarks pieces={props.pieces} form="ray" highlightedPart={props.highlightedPart} />
     </LivingGroup>
   );
@@ -181,35 +225,6 @@ function SeahorseModel(props: AquaticModelProps) {
         </mesh>
       ))}
       <TraitMarks pieces={props.pieces} form="seahorse" highlightedPart={props.highlightedPart} />
-    </LivingGroup>
-  );
-}
-
-function EelModel(props: AquaticModelProps) {
-  const colors = aquaticPalette(props.pieces);
-  const body = useMemo(() => new THREE.CatmullRomCurve3([
-    new THREE.Vector3(-2.1, -0.35, 0),
-    new THREE.Vector3(-1.2, 0.28, 0),
-    new THREE.Vector3(-0.25, -0.22, 0),
-    new THREE.Vector3(0.8, 0.25, 0),
-    new THREE.Vector3(1.75, 0.05, 0),
-  ]), []);
-  return (
-    <LivingGroup animated={props.animated} scale={props.scale} motion="coil">
-      <mesh><tubeGeometry args={[body, 42, 0.24, 12, false]} /><meshToonMaterial color={colors.body} /></mesh>
-      <mesh position={[1.88, 0.05, 0]} scale={[0.48, 0.35, 0.3]}>
-        <sphereGeometry args={[0.72, 22, 16]} />
-        <meshToonMaterial color={colors.light} />
-      </mesh>
-      <mesh position={[2.08, 0.15, 0.27]} scale={0.065}>
-        <sphereGeometry args={[1, 12, 10]} />
-        <meshBasicMaterial color="#071015" />
-      </mesh>
-      <mesh position={[-2.24, -0.38, 0]} rotation={[0, 0, Math.PI / 2]} scale={[0.24, 0.52, 0.08]}>
-        <coneGeometry args={[1, 1, 10]} />
-        <meshToonMaterial color={colors.accent} />
-      </mesh>
-      <TraitMarks pieces={props.pieces} form="eel" highlightedPart={props.highlightedPart} />
     </LivingGroup>
   );
 }
@@ -309,7 +324,6 @@ export function AdditionalAquaticModel({ form, ...props }: AquaticModelProps & {
   if (form === "ray") return <RayModel {...props} />;
   if (form === "starfish") return <StarfishModel {...props} />;
   if (form === "seahorse") return <SeahorseModel {...props} />;
-  if (form === "eel") return <EelModel {...props} />;
   if (form === "seal") return <SealModel {...props} />;
   if (form === "clam") return <ClamModel {...props} />;
   return <PufferfishModel {...props} />;

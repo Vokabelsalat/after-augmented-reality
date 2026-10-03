@@ -1,11 +1,18 @@
-import type { ExhibitionArtifact, NarrativeAxis, NarrativeState } from "@/types/exhibition";
+import type { ExhibitionArtifact, ThemeId } from "@/types/exhibition";
 import type { Discovery } from "@/store/journeySlice";
-import { neutralNarrativeState } from "@/store/journeySlice";
-import {
-  narrativeSentenceTemplates,
-  narrativeWordBanks,
-  type NarrativeWordBankKey,
-} from "@/data/narrativeLexicon";
+
+const movements = ["enter", "cross", "follow", "circle", "drift through", "sound"] as const;
+const qualities = ["open", "dim", "folded", "tidal", "quiet", "unfixed"] as const;
+const motions = ["drifting", "turning", "listening", "surfacing", "circling", "opening"] as const;
+const responses = ["holds", "alters", "follows", "loosens", "remembers", "repeats"] as const;
+
+const habitats: Record<ThemeId, readonly string[]> = {
+  memory: ["archive", "rooted water", "remembering basin"],
+  interface: ["glass passage", "signal current", "lit surface"],
+  worldmaking: ["dream channel", "unmapped room", "invented tide"],
+  embodiment: ["moving body", "skin of water", "felt depth"],
+  agency: ["forked current", "witnessing water", "answering tide"],
+};
 
 function stableHash(value: string) {
   let hash = 2166136261;
@@ -31,101 +38,44 @@ function pick<T>(items: readonly T[], random: () => number): T {
   return items[Math.floor(random() * items.length)];
 }
 
-function lowerFirst(value: string) {
-  return value.charAt(0).toLocaleLowerCase() + value.slice(1);
+function sentence(value: string) {
+  return `${value.charAt(0).toLocaleUpperCase()}${value.slice(1)}.`;
 }
 
-function renderTemplate(
-  template: string,
-  context: Record<string, string>,
-  random: () => number,
-) {
-  return template.replace(/\{(\w+)\}/g, (token, key: string) => {
-    if (context[key]) return context[key];
-    if (key in narrativeWordBanks) {
-      return pick(narrativeWordBanks[key as NarrativeWordBankKey], random);
-    }
-    return token;
-  });
-}
+function stanza(artifact: ExhibitionArtifact, random: () => number) {
+  const traits = artifact.visualTraits.length > 1
+    ? artifact.visualTraits
+    : [artifact.visualTraits[0], artifact.marineType];
+  const route = pick(habitats[artifact.theme], random);
+  const lineCount = 1 + Math.floor(random() * 3);
 
-function combineState(
-  discoveries: Array<Pick<Discovery, "artifactId" | "choiceId">>,
-  artifactMap: Map<string, ExhibitionArtifact>,
-) {
-  const state = { ...neutralNarrativeState };
-  discoveries.forEach((discovery) => {
-    const artifact = artifactMap.get(discovery.artifactId);
-    if (!artifact) return;
-    const choice = artifact.choice.options.find((option) => option.id === discovery.choiceId);
-    const effects = { ...artifact.stateEffects };
-    (Object.keys(choice?.effects ?? {}) as NarrativeAxis[]).forEach((axis) => {
-      effects[axis] = (effects[axis] ?? 0) + (choice?.effects[axis] ?? 0);
-    });
-    (Object.keys(effects) as NarrativeAxis[]).forEach((axis) => {
-      state[axis] += effects[axis] ?? 0;
-    });
-  });
-  return state;
+  return [
+    `${pick(movements, random)} the ${pick(qualities, random)} ${route} —`,
+    sentence(`${traits[0]}, ${pick(motions, random)}`),
+    sentence(`${traits[1]} ${pick(responses, random)} the water`),
+  ].slice(0, lineCount).join("\n");
 }
 
 export function generateJourneyNarrative(
-  discoveries: Array<Pick<Discovery, "artifactId" | "sequence" | "choiceId" | "discoveredAt">>,
+  discoveries: Array<Pick<Discovery, "artifactId" | "sequence" | "discoveredAt">>,
   exhibitionArtifacts: ExhibitionArtifact[],
-  suppliedState?: NarrativeState,
 ): string[] {
   const artifactMap = new Map(exhibitionArtifacts.map((artifact) => [artifact.id, artifact]));
-  const orderedDiscoveries = discoveries.slice().sort((a, b) => a.sequence - b.sequence);
-  const validDiscoveries = orderedDiscoveries.filter((discovery) => artifactMap.has(discovery.artifactId));
+  const orderedDiscoveries = discoveries
+    .slice()
+    .sort((a, b) => a.sequence - b.sequence)
+    .filter((discovery) => artifactMap.has(discovery.artifactId));
 
-  if (validDiscoveries.length === 0) {
-    return [
-      "The aquarium is waiting.",
-      "Find a porthole.",
-      "Let something cross the glass.",
-    ];
-  }
+  if (orderedDiscoveries.length === 0) return ["The fishbowl waits."];
 
-  const seed = stableHash(orderedDiscoveries
-    .map((item) => `${item.artifactId}:${item.choiceId ?? "_"}:${item.discoveredAt}`)
-    .join("|"));
-  const random = seededRandom(seed);
-  const state = suppliedState ?? combineState(orderedDiscoveries, artifactMap);
-  const dominantAxis = (Object.entries(state) as Array<[NarrativeAxis, number]>).sort(
-    (a, b) => Math.abs(b[1]) - Math.abs(a[1]),
-  )[0]?.[0] ?? "openness";
+  const random = seededRandom(stableHash(
+    orderedDiscoveries
+      .map((item) => `${item.artifactId}:${item.discoveredAt}`)
+      .join("|"),
+  ));
 
-  const selectedDiscoveries = validDiscoveries.length <= 4
-    ? validDiscoveries
-    : [
-        validDiscoveries[0],
-        validDiscoveries[Math.floor(validDiscoveries.length / 2)],
-        validDiscoveries[validDiscoveries.length - 1],
-      ];
-  const lines = [renderTemplate(pick(narrativeSentenceTemplates.opening, random), {}, random)];
-
-  selectedDiscoveries.forEach((discovery) => {
+  return orderedDiscoveries.flatMap((discovery) => {
     const artifact = artifactMap.get(discovery.artifactId);
-    if (!artifact) return;
-    const choice = artifact.choice.options.find((option) => option.id === discovery.choiceId);
-    const templates = choice
-      ? [...narrativeSentenceTemplates.encounter, ...narrativeSentenceTemplates.choice]
-      : narrativeSentenceTemplates.encounter;
-    const context = {
-      title: artifact.title,
-      classification: lowerFirst(artifact.classification),
-      marineType: artifact.marineType,
-      visualTrait: pick(artifact.visualTraits, random),
-      narrativeWord: pick(artifact.narrativeWords, random),
-      storylet: artifact.storylet,
-      choiceAction: choice ? lowerFirst(choice.label) : "leave it undecided",
-    };
-    lines.push(renderTemplate(pick(templates, random), context, random));
+    return artifact ? [stanza(artifact, random)] : [];
   });
-
-  const axisEndings = state[dominantAxis] >= 0
-    ? narrativeSentenceTemplates.ending[dominantAxis].positive
-    : narrativeSentenceTemplates.ending[dominantAxis].negative;
-  lines.push(renderTemplate(pick(axisEndings, random), {}, random));
-  return lines;
 }
