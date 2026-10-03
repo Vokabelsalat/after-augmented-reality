@@ -8,6 +8,7 @@ import { visualizationDesign } from "@/config/visualization";
 import type { ExhibitionContribution } from "@/types/contribution";
 import type { CreaturePartId } from "@/types/exhibition";
 import type { AquaticForm } from "@/lib/creature/aquaticForms";
+import { creatureSizeScale } from "@/lib/creature/aquaticForms";
 
 export function PathVisualization({
   artifactIds,
@@ -61,6 +62,7 @@ export function PathVisualization({
       zoom={zoom}
       fitToView={fitToView}
       fitScale={fitScale}
+      creatureScale={contribution ? creatureSizeScale(contribution.publicId) : 1}
       creatureForm={contribution?.creatureForm ?? creatureForm ?? "fish"}
       label={label}
     />

@@ -48,6 +48,7 @@ export function CreatureCanvas({
   zoom,
   fitToView = false,
   fitScale = 1,
+  creatureScale = 1,
   creatureForm = "fish",
   label,
 }: {
@@ -57,6 +58,7 @@ export function CreatureCanvas({
   zoom?: number;
   fitToView?: boolean;
   fitScale?: number;
+  creatureScale?: number;
   creatureForm?: AquaticForm;
   label?: string;
 }) {
@@ -79,7 +81,7 @@ export function CreatureCanvas({
         <directionalLight position={[3, 5, 6]} intensity={2.6} color="#FFF4DF" />
         <pointLight position={[-3, 0, 4]} intensity={2} color="#58D6FF" />
         <pointLight position={[3, -2, 3]} intensity={1.4} color="#FF7557" />
-        <AquaticCreatureModel form={creatureForm} pieces={pieces} highlightedPart={highlightedPart} scale={compact ? 0.86 : 1} />
+        <AquaticCreatureModel form={creatureForm} pieces={pieces} highlightedPart={highlightedPart} scale={(compact ? 0.86 : 1) * creatureScale} />
         <AdaptiveDpr pixelated />
       </Canvas>
     </div>

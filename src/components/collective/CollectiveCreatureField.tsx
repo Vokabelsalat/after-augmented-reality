@@ -5,7 +5,7 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
 import { AquaticCreatureModel } from "@/components/creature/AquaticCreatureModel";
-import type { AquaticForm } from "@/lib/creature/aquaticForms";
+import { creatureSizeScale, type AquaticForm } from "@/lib/creature/aquaticForms";
 import type { ExhibitionContribution } from "@/types/contribution";
 
 function seededUnit(seed: number) {
@@ -45,7 +45,7 @@ function FloatingCreature({ contribution, progress }: { contribution: Exhibition
     xUnit: -0.84 + seededUnit(contribution.id * 3) * 1.68,
     yUnit: -0.84 + seededUnit(contribution.id * 5) * 1.68,
     z: -1 + seededUnit(contribution.id * 7) * 2,
-    scale: 0.31 + seededUnit(contribution.id * 11) * 0.22,
+    scale: 0.4,
     speed: 0.32 + seededUnit(contribution.id * 13) * 0.34,
     phase: seededUnit(contribution.id * 17) * Math.PI * 2,
     heading: seededUnit(contribution.id * 19) * Math.PI * 2,
@@ -141,6 +141,7 @@ function FloatingCreature({ contribution, progress }: { contribution: Exhibition
 
   const startsFacingLeft = Math.cos(placement.heading) < 0;
   const formScale = collectiveFormScale[contribution.creatureForm];
+  const individualScale = creatureSizeScale(contribution.publicId);
 
   return (
     <group
@@ -148,7 +149,7 @@ function FloatingCreature({ contribution, progress }: { contribution: Exhibition
       position={[0, 0, placement.z]}
     >
       <group ref={directionRef} rotation={[0, startsFacingLeft ? Math.PI : 0, 0]}>
-        <AquaticCreatureModel form={contribution.creatureForm} pieces={contribution.parts} scale={placement.scale * formScale} />
+        <AquaticCreatureModel form={contribution.creatureForm} pieces={contribution.parts} scale={placement.scale * formScale * individualScale} />
       </group>
     </group>
   );

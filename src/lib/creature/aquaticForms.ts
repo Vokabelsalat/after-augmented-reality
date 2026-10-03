@@ -40,3 +40,15 @@ export function pickAquaticForm(seed: string): AquaticForm {
   }
   return aquaticForms[(hash >>> 0) % aquaticForms.length];
 }
+
+const creatureSizeTiers = [0.72, 0.86, 1, 1.16, 1.32] as const;
+
+export function creatureSizeScale(seed: string | number) {
+  const value = String(seed);
+  let hash = 2166136261;
+  for (let index = 0; index < value.length; index += 1) {
+    hash ^= value.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  return creatureSizeTiers[(hash >>> 0) % creatureSizeTiers.length];
+}
