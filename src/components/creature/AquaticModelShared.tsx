@@ -35,7 +35,7 @@ export function TraitMarks({
       seahorse: { x: 0.38, y: 0.78, cy: 0.08, z: 0.38 },
       seal: { x: 0.96, y: 0.42, cy: 0.02, z: 0.42 },
       clam: { x: 0.72, y: 0.42, cy: 0.04, z: 0.46 },
-      pufferfish: { x: 0.68, y: 0.68, cy: 0, z: 0.72 },
+      pufferfish: { x: 0.84, y: 0.56, cy: 0, z: 0.65 },
     };
     const layout = layouts[form];
     const position: [number, number, number] = [

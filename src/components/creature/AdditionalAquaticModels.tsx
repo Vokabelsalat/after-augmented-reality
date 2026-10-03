@@ -296,21 +296,53 @@ function PufferfishModel(props: AquaticModelProps) {
   const colors = aquaticPalette(props.pieces);
   return (
     <LivingGroup animated={props.animated} scale={props.scale} motion="pulse">
-      <mesh scale={[0.92, 0.86, 0.72]}>
+      <mesh scale={[1.16, 0.82, 0.62]}>
         <sphereGeometry args={[1, 28, 22]} />
         <meshToonMaterial color={colors.body} />
       </mesh>
       {Array.from({ length: 18 }, (_, index) => {
         const angle = (index / 18) * Math.PI * 2;
         return (
-          <mesh key={index} position={[Math.cos(angle) * 0.93, Math.sin(angle) * 0.86, 0]} rotation={[0, 0, angle - Math.PI / 2]} scale={[0.09, 0.28 + (index % 3) * 0.05, 0.09]}>
+          <mesh key={index} position={[Math.cos(angle) * 1.15, Math.sin(angle) * 0.82, 0]} rotation={[0, 0, angle - Math.PI / 2]} scale={[0.085, 0.25 + (index % 3) * 0.045, 0.085]}>
             <coneGeometry args={[1, 1, 8]} />
             <meshToonMaterial color={index % 2 ? colors.light : colors.accent} />
           </mesh>
         );
       })}
-      {PairOfEyes({ x: 0.32, y: 0.22, z: 0.72 })}
-      <mesh position={[0, -0.13, 0.78]} rotation={[Math.PI / 2, 0, 0]} scale={[0.12, 0.12, 0.05]}>
+      {[-1, 1].map((side) => (
+        <mesh
+          key={`tail-${side}`}
+          position={[-1.28, side * 0.22, -0.02]}
+          rotation={[0, 0, side * 0.58]}
+          scale={[0.52, 0.24, 0.09]}
+        >
+          <sphereGeometry args={[1, 18, 12]} />
+          <meshToonMaterial color={colors.accent} />
+        </mesh>
+      ))}
+      <mesh position={[-0.2, 0.82, -0.04]} rotation={[0, 0, -0.16]} scale={[0.34, 0.38, 0.08]}>
+        <coneGeometry args={[1, 1, 12]} />
+        <meshToonMaterial color={colors.dark} />
+      </mesh>
+      <mesh position={[0.05, -0.74, -0.02]} rotation={[0, 0, Math.PI + 0.18]} scale={[0.28, 0.34, 0.08]}>
+        <coneGeometry args={[1, 1, 12]} />
+        <meshToonMaterial color={colors.dark} />
+      </mesh>
+      <mesh position={[0.08, -0.08, 0.62]} rotation={[0.18, 0, -0.18]} scale={[0.38, 0.18, 0.07]}>
+        <sphereGeometry args={[1, 16, 10]} />
+        <meshToonMaterial color={colors.light} />
+      </mesh>
+      <group position={[0.62, 0.25, 0.58]}>
+        <mesh scale={[0.15, 0.17, 0.09]}>
+          <sphereGeometry args={[1, 14, 12]} />
+          <meshToonMaterial color="#F3F0E8" />
+        </mesh>
+        <mesh position={[0.035, 0, 0.085]} scale={[0.06, 0.075, 0.035]}>
+          <sphereGeometry args={[1, 10, 8]} />
+          <meshBasicMaterial color="#071015" />
+        </mesh>
+      </group>
+      <mesh position={[1.08, -0.08, 0.48]} scale={[0.12, 0.12, 0.05]}>
         <torusGeometry args={[1, 0.22, 7, 16]} />
         <meshToonMaterial color={colors.dark} />
       </mesh>

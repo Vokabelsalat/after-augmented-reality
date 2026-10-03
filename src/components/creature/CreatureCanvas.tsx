@@ -20,7 +20,7 @@ const fittedBounds: Record<AquaticForm, { width: number; height: number }> = {
   seahorse: { width: 3.5, height: 4.8 },
   seal: { width: 5.6, height: 3.7 },
   clam: { width: 4.2, height: 3.8 },
-  pufferfish: { width: 4.4, height: 4.2 },
+  pufferfish: { width: 5.1, height: 4.1 },
 };
 
 function FitCreatureCamera({ creatureForm, scale = 1 }: { creatureForm: AquaticForm; scale?: number }) {
