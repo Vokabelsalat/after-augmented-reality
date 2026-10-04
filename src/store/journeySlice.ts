@@ -73,6 +73,9 @@ const journeySlice = createSlice({
           state.sessionId = action.payload.sessionId;
           state.startedAt = action.payload.startedAt;
         }
+        if (!state.creatureForm) {
+          state.creatureForm = pickAquaticForm(state.sessionId ?? action.payload.sessionId);
+        }
         state.activeArtifactId = null;
         state.completedAt = null;
         state.experiencePhase = "scanning";
@@ -99,9 +102,7 @@ const journeySlice = createSlice({
         if (alreadyDiscovered) return;
 
         if (!state.creatureForm) {
-          state.creatureForm = pickAquaticForm(
-            `${state.sessionId ?? "anonymous"}:${artifactId}:${discoveredAt}`,
-          );
+          state.creatureForm = pickAquaticForm(state.sessionId ?? "anonymous");
         }
 
         state.discoveries.push({
@@ -190,9 +191,11 @@ const journeySlice = createSlice({
       state.narrativeState = { ...(action.payload.narrativeState ?? neutralNarrativeState) };
       const firstDiscovery = action.payload.discoveries[0];
       state.creatureForm = action.payload.creatureForm
-        ?? (firstDiscovery
-          ? pickAquaticForm(`${action.payload.sessionId ?? "anonymous"}:${firstDiscovery.artifactId}:${firstDiscovery.discoveredAt}`)
-          : null);
+        ?? (action.payload.sessionId
+          ? pickAquaticForm(action.payload.sessionId)
+          : firstDiscovery
+            ? pickAquaticForm("anonymous")
+            : null);
       state.activeArtifactId = null;
       state.experiencePhase = action.payload.sessionId ? "scanning" : "intro";
     },

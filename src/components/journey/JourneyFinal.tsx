@@ -59,6 +59,7 @@ export function JourneyFinal() {
         <PathVisualization
           artifactIds={discoveries.map((item) => item.artifactId)}
           creatureForm={journey.creatureForm}
+          creatureSeed={journey.sessionId ?? undefined}
           fitToView
           label={`Your finished exhibition ${activeVisualizationCopy.singular}`}
         />

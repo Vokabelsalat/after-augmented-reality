@@ -19,6 +19,7 @@ export function PathVisualization({
   fitToView = false,
   fitScale = 1,
   creatureForm,
+  creatureSeed,
   label,
 }: {
   artifactIds: string[];
@@ -29,6 +30,7 @@ export function PathVisualization({
   fitToView?: boolean;
   fitScale?: number;
   creatureForm?: AquaticForm | null;
+  creatureSeed?: string;
   label?: string;
 }) {
   if (visualizationDesign === "constellation") {
@@ -64,6 +66,7 @@ export function PathVisualization({
       fitScale={fitScale}
       creatureScale={contribution ? creatureSizeScale(contribution.publicId) : 1}
       creatureForm={contribution?.creatureForm ?? creatureForm ?? "fish"}
+      creatureSeed={contribution?.publicId ?? creatureSeed}
       label={label}
     />
   );

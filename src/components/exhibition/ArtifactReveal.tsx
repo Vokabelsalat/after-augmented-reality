@@ -15,7 +15,7 @@ import type { ExhibitionArtifact } from "@/types/exhibition";
 import { ParticleNarrative } from "@/components/particles/ParticleNarrative";
 import { PathVisualization } from "@/components/visualization/PathVisualization";
 import { activeVisualizationCopy, visualizationDesign } from "@/config/visualization";
-import { selectCreatureForm, selectDiscoveries } from "@/store/selectors";
+import { selectCreatureForm, selectCreatureSeed, selectDiscoveries } from "@/store/selectors";
 
 type RevealPresentation = "tracked-ar" | "simulated";
 
@@ -31,6 +31,7 @@ function ArtifactRevealSequence({
   const dispatch = useAppDispatch();
   const discoveries = useAppSelector(selectDiscoveries);
   const creatureForm = useAppSelector(selectCreatureForm);
+  const creatureSeed = useAppSelector(selectCreatureSeed);
   const handleContentReady = useCallback(() => {
     dispatch(artifactCollected(artifact.id));
   }, [artifact.id, dispatch]);
@@ -41,29 +42,43 @@ function ArtifactRevealSequence({
   );
 
   const contentVisible = phase === "content-reveal" || phase === "complete";
+  const creatureVisible = !isRevisit && visualizationDesign !== "constellation";
+  const isGrowing = phase === "formation";
+  const creatureArtifactIds = isGrowing || contentVisible
+    ? discoveries.map((item) => item.artifactId)
+    : discoveries
+        .filter((item) => item.artifactId !== artifact.id)
+        .map((item) => item.artifactId);
 
   return (
     <section className="pointer-events-none absolute inset-0 z-40 overflow-hidden" aria-live="polite">
-      {!isRevisit && phase !== "complete" && (
-        visualizationDesign === "constellation" ? (
-          <ParticleNarrative artifact={artifact} phase={phase} mode="ar-release" quality="high" />
-        ) : (
-          <div className="absolute inset-x-0 top-[12vh] h-[52vh]">
+      {!isRevisit && visualizationDesign === "constellation" && phase !== "complete" && (
+        <ParticleNarrative artifact={artifact} phase={phase} mode="ar-release" quality="high" />
+      )}
+      {creatureVisible && (
+        <div
+          className="creature-reveal-stage absolute inset-x-0 top-[7vh] h-[58vh]"
+          data-phase={phase}
+        >
+          <div className="creature-reveal-halo" aria-hidden="true" />
+          <div className="creature-reveal-model">
             <PathVisualization
-              artifactIds={discoveries.map((item) => item.artifactId)}
+              artifactIds={creatureArtifactIds}
               creatureForm={creatureForm}
+              creatureSeed={creatureSeed}
               fitToView
-              highlightedPart={artifact.creaturePart.id}
+              highlightedPart={isGrowing ? artifact.creaturePart.id : undefined}
               label={`${artifact.marineType} altering your ${activeVisualizationCopy.singular}`}
             />
           </div>
-        )
+          <div className="creature-reveal-rings" aria-hidden="true"><i /><i /><i /></div>
+        </div>
       )}
       {!contentVisible && (
-        <p className="absolute inset-x-0 bottom-[12vh] text-center text-[10px] tracking-[0.28em] text-white/65">
-          {phase === "attached" && (visualizationDesign === "constellation" ? "Signal located" : "Specimen detected")}
-          {phase === "release" && (visualizationDesign === "constellation" ? "Releasing language" : `${artifact.marineType} is crossing the glass`)}
-          {phase === "formation" && (visualizationDesign === "constellation" ? "Classification unstable" : `Rewriting your ${activeVisualizationCopy.singular}`)}
+        <p key={phase} className="creature-reveal-status absolute inset-x-6 bottom-[10vh] text-center text-sm text-white/80">
+          {phase === "attached" && (visualizationDesign === "constellation" ? "Signal located" : "Your creature recognizes something new")}
+          {phase === "release" && (visualizationDesign === "constellation" ? "Releasing language" : `${artifact.marineType} is joining it`)}
+          {phase === "formation" && (visualizationDesign === "constellation" ? "Classification unstable" : `${artifact.creaturePart.label} is taking shape`)}
         </p>
       )}
       {contentVisible && (

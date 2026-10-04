@@ -9,6 +9,7 @@ import {
   selectDiscoveredArtifacts,
   selectNarrativeState,
   selectCreatureForm,
+  selectCreatureSeed,
 } from "@/store/selectors";
 import { PathVisualization } from "@/components/visualization/PathVisualization";
 import { activeVisualizationCopy, visualizationDesign } from "@/config/visualization";
@@ -22,6 +23,7 @@ export function JourneyScreen() {
   const discoveredArtifacts = useAppSelector(selectDiscoveredArtifacts);
   const narrativeState = useAppSelector(selectNarrativeState);
   const creatureForm = useAppSelector(selectCreatureForm);
+  const creatureSeed = useAppSelector(selectCreatureSeed);
   const readyToRelease = discoveries.length >= 3;
 
   return (
@@ -44,7 +46,7 @@ export function JourneyScreen() {
       </header>
 
       <div className="mx-auto h-[38dvh] min-h-72 w-full max-w-xl">
-        <PathVisualization artifactIds={discoveries.map((item) => item.artifactId)} creatureForm={creatureForm} fitToView label={`Your evolving exhibition ${activeVisualizationCopy.singular}`} />
+        <PathVisualization artifactIds={discoveries.map((item) => item.artifactId)} creatureForm={creatureForm} creatureSeed={creatureSeed} fitToView label={`Your evolving exhibition ${activeVisualizationCopy.singular}`} />
       </div>
 
       <div className="mx-auto w-full max-w-xl flex-1">

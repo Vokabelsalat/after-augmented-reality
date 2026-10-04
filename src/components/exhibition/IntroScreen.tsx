@@ -42,14 +42,14 @@ export function IntroScreen() {
 
         <div className="safe-bottom relative z-10 grid items-end gap-4 border-t border-white/20 pt-4 md:grid-cols-[1fr_auto]">
           <p className="max-w-lg text-sm leading-6 text-white/58">
-            One QR code. No download or login. Camera access is requested after you enter the tank.
+            One QR code. No download or login. Camera access is requested when you enter the tank.
           </p>
           <button
             type="button"
             onClick={() => dispatch(startJourney())}
             className="flex min-h-16 w-full items-center justify-between bg-[var(--phosphor)] px-6 text-base text-[#031015] transition-transform active:scale-[0.99] md:w-80"
           >
-            <span>Find a porthole</span>
+            <span>Scan an artwork marker</span>
             <span aria-hidden="true">→</span>
           </button>
         </div>

@@ -72,7 +72,7 @@ function PairOfEyes({ x = 0.34, y = 0.25, z = 0.55, animated }: { x?: number; y?
 }
 
 function TurtleModel(props: AquaticModelProps) {
-  const colors = aquaticPalette(props.pieces);
+  const colors = aquaticPalette(props.pieces, props.baseSeed);
   return (
     <LivingGroup animated={props.animated} scale={props.scale}>
       <mesh scale={[1.18, 0.78, 0.38]}>
@@ -103,13 +103,13 @@ function TurtleModel(props: AquaticModelProps) {
         <coneGeometry args={[1, 1, 12]} />
         <meshToonMaterial color={colors.light} />
       </mesh>
-      <TraitMarks pieces={props.pieces} form="turtle" highlightedPart={props.highlightedPart} />
+      <TraitMarks pieces={props.pieces} baseSeed={props.baseSeed} form="turtle" highlightedPart={props.highlightedPart} />
     </LivingGroup>
   );
 }
 
 function RayModel(props: AquaticModelProps) {
-  const colors = aquaticPalette(props.pieces);
+  const colors = aquaticPalette(props.pieces, props.baseSeed);
   const disc = useMemo(() => {
     const shape = new THREE.Shape();
     shape.moveTo(-0.82, 0);
@@ -174,13 +174,13 @@ function RayModel(props: AquaticModelProps) {
         <torusGeometry args={[1, 0.16, 7, 18]} />
         <meshBasicMaterial color={colors.dark} />
       </mesh>
-      <TraitMarks pieces={props.pieces} form="ray" highlightedPart={props.highlightedPart} />
+      <TraitMarks pieces={props.pieces} baseSeed={props.baseSeed} form="ray" highlightedPart={props.highlightedPart} />
     </LivingGroup>
   );
 }
 
 function StarfishModel(props: AquaticModelProps) {
-  const colors = aquaticPalette(props.pieces);
+  const colors = aquaticPalette(props.pieces, props.baseSeed);
   return (
     <LivingGroup animated={props.animated} scale={props.scale} motion="bob">
       {Array.from({ length: 5 }, (_, index) => {
@@ -196,13 +196,13 @@ function StarfishModel(props: AquaticModelProps) {
         <sphereGeometry args={[0.72, 22, 16]} />
         <meshToonMaterial color={colors.light} />
       </mesh>
-      <TraitMarks pieces={props.pieces} form="starfish" highlightedPart={props.highlightedPart} />
+      <TraitMarks pieces={props.pieces} baseSeed={props.baseSeed} form="starfish" highlightedPart={props.highlightedPart} />
     </LivingGroup>
   );
 }
 
 function SeahorseModel(props: AquaticModelProps) {
-  const colors = aquaticPalette(props.pieces);
+  const colors = aquaticPalette(props.pieces, props.baseSeed);
   const body = useMemo(() => new THREE.CatmullRomCurve3([
     new THREE.Vector3(0.18, 1.2, 0),
     new THREE.Vector3(-0.18, 0.62, 0),
@@ -235,13 +235,13 @@ function SeahorseModel(props: AquaticModelProps) {
           <meshToonMaterial color={colors.dark} />
         </mesh>
       ))}
-      <TraitMarks pieces={props.pieces} form="seahorse" highlightedPart={props.highlightedPart} />
+      <TraitMarks pieces={props.pieces} baseSeed={props.baseSeed} form="seahorse" highlightedPart={props.highlightedPart} />
     </LivingGroup>
   );
 }
 
 function SealModel(props: AquaticModelProps) {
-  const colors = aquaticPalette(props.pieces);
+  const colors = aquaticPalette(props.pieces, props.baseSeed);
   return (
     <LivingGroup animated={props.animated} scale={props.scale}>
       <mesh scale={[1.38, 0.66, 0.46]}>
@@ -269,13 +269,13 @@ function SealModel(props: AquaticModelProps) {
       <group position={[1.12, 0, 0]}>
         {PairOfEyes({ x: 0.22, y: 0.36, z: 0.4, animated: props.animated })}
       </group>
-      <TraitMarks pieces={props.pieces} form="seal" highlightedPart={props.highlightedPart} />
+      <TraitMarks pieces={props.pieces} baseSeed={props.baseSeed} form="seal" highlightedPart={props.highlightedPart} />
     </LivingGroup>
   );
 }
 
 function ClamModel(props: AquaticModelProps) {
-  const colors = aquaticPalette(props.pieces);
+  const colors = aquaticPalette(props.pieces, props.baseSeed);
   return (
     <LivingGroup animated={props.animated} scale={props.scale} motion="pulse" grounded={props.grounded}>
       {[-1, 1].map((side) => (
@@ -298,13 +298,13 @@ function ClamModel(props: AquaticModelProps) {
         <sphereGeometry args={[1, 20, 16]} />
         <meshStandardMaterial color="#F4EAF3" emissive={colors.accent} emissiveIntensity={0.36} roughness={0.12} />
       </mesh>
-      <TraitMarks pieces={props.pieces} form="clam" highlightedPart={props.highlightedPart} />
+      <TraitMarks pieces={props.pieces} baseSeed={props.baseSeed} form="clam" highlightedPart={props.highlightedPart} />
     </LivingGroup>
   );
 }
 
 function PufferfishModel(props: AquaticModelProps) {
-  const colors = aquaticPalette(props.pieces);
+  const colors = aquaticPalette(props.pieces, props.baseSeed);
   return (
     <LivingGroup animated={props.animated} scale={props.scale} motion="pulse">
       <mesh scale={[1.16, 0.82, 0.62]}>
@@ -348,7 +348,7 @@ function PufferfishModel(props: AquaticModelProps) {
         <torusGeometry args={[1, 0.22, 7, 16]} />
         <meshToonMaterial color={colors.dark} />
       </mesh>
-      <TraitMarks pieces={props.pieces} form="pufferfish" highlightedPart={props.highlightedPart} />
+      <TraitMarks pieces={props.pieces} baseSeed={props.baseSeed} form="pufferfish" highlightedPart={props.highlightedPart} />
     </LivingGroup>
   );
 }

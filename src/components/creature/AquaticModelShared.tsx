@@ -1,11 +1,15 @@
+"use client";
+
+import { useFrame } from "@react-three/fiber";
+import { useRef, type ReactNode } from "react";
 import * as THREE from "three";
 import type { CreaturePiece } from "@/components/creature/CreatureModel";
 import type { AquaticForm } from "@/lib/creature/aquaticForms";
 import { creatureColorPalette } from "@/lib/creature/colorPalettes";
 import type { CreaturePartId } from "@/types/exhibition";
 
-export function aquaticPalette(pieces: CreaturePiece[]) {
-  const signature = pieces.map((piece) => piece.artifactId).join(":") || "new";
+export function aquaticPalette(pieces: CreaturePiece[], baseSeed?: string) {
+  const signature = baseSeed ?? pieces[0]?.artifactId ?? "new";
   const palette = creatureColorPalette(signature);
   const base = new THREE.Color(palette.body);
   return {
@@ -16,16 +20,36 @@ export function aquaticPalette(pieces: CreaturePiece[]) {
   };
 }
 
+export function GrowingTrait({ active, children }: { active: boolean; children: ReactNode }) {
+  const ref = useRef<THREE.Group>(null);
+  const startedAt = useRef<number | null>(null);
+
+  useFrame(({ clock }) => {
+    if (!ref.current || !active) return;
+    if (startedAt.current === null) startedAt.current = clock.elapsedTime;
+    const elapsed = clock.elapsedTime - startedAt.current;
+    const progress = Math.min(1, elapsed / 2.2);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    const settle = progress < 1 ? Math.sin(progress * Math.PI * 4) * (1 - progress) * 0.16 : 0;
+    ref.current.scale.setScalar(Math.max(0.001, eased + settle));
+    ref.current.rotation.z = (1 - eased) * -0.35;
+  });
+
+  return <group ref={ref} scale={active ? 0.001 : 1}>{children}</group>;
+}
+
 export function TraitMarks({
   pieces,
   form,
   highlightedPart,
+  baseSeed,
 }: {
   pieces: CreaturePiece[];
   form: Exclude<AquaticForm, "fish">;
   highlightedPart?: CreaturePartId;
+  baseSeed?: string;
 }) {
-  const signature = pieces.map((piece) => piece.artifactId).join(":") || "new";
+  const signature = baseSeed ?? pieces[0]?.artifactId ?? "new";
   const palette = creatureColorPalette(signature);
   const markColors = [palette.marking, palette.fin, palette.head, palette.belly];
   return pieces.map((piece, index) => {
@@ -53,18 +77,20 @@ export function TraitMarks({
 
     return (
       <group key={piece.artifactId} position={position} scale={markerScale}>
-        <mesh>
-          {index % 4 === 0 && <octahedronGeometry args={[1, 0]} />}
-          {index % 4 === 1 && <sphereGeometry args={[0.9, 12, 10]} />}
-          {index % 4 === 2 && <torusGeometry args={[0.62, 0.19, 8, 18]} />}
-          {index % 4 === 3 && <boxGeometry args={[1.25, 0.72, 0.38]} />}
-          <meshStandardMaterial
-            color={markColors[index % markColors.length]}
-            emissive={markColors[index % markColors.length]}
-            emissiveIntensity={highlighted ? 1.1 : 0.3}
-            roughness={0.44}
-          />
-        </mesh>
+        <GrowingTrait active={highlighted}>
+          <mesh>
+            {index % 4 === 0 && <octahedronGeometry args={[1, 0]} />}
+            {index % 4 === 1 && <sphereGeometry args={[0.9, 12, 10]} />}
+            {index % 4 === 2 && <torusGeometry args={[0.62, 0.19, 8, 18]} />}
+            {index % 4 === 3 && <boxGeometry args={[1.25, 0.72, 0.38]} />}
+            <meshStandardMaterial
+              color={markColors[index % markColors.length]}
+              emissive={markColors[index % markColors.length]}
+              emissiveIntensity={highlighted ? 1.1 : 0.3}
+              roughness={0.44}
+            />
+          </mesh>
+        </GrowingTrait>
       </group>
     );
   });

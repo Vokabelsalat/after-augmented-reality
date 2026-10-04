@@ -79,6 +79,7 @@ export function ExhibitionExperience() {
     <main className="relative min-h-dvh overflow-hidden bg-[var(--abyss)] text-white">
       <ARScanner
         ref={scannerRef}
+        autoStart
         onTargetFound={handleTargetFound}
         onTargetLost={() => undefined}
         onUseSimulator={() => setSimulatorVisible(true)}

@@ -793,6 +793,118 @@ a:focus-visible {
   animation: resolve-in 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+.creature-reveal-stage {
+  isolation: isolate;
+  transition: height 900ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 900ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.creature-reveal-model {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  animation: creature-arrive 1.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+  transition: filter 700ms ease, opacity 700ms ease;
+}
+
+.creature-reveal-stage[data-phase="formation"] .creature-reveal-model {
+  animation: creature-grow 2.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.creature-reveal-stage[data-phase="content-reveal"],
+.creature-reveal-stage[data-phase="complete"] {
+  height: 48vh;
+  transform: translateY(-1.5vh) scale(0.9);
+}
+
+.creature-reveal-halo {
+  position: absolute;
+  z-index: 1;
+  top: 50%;
+  left: 50%;
+  width: min(76vw, 30rem);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  opacity: 0.18;
+  background: radial-gradient(circle, rgba(185, 255, 220, 0.42), rgba(88, 214, 255, 0.12) 42%, transparent 70%);
+  filter: blur(1rem);
+  transform: translate(-50%, -50%);
+}
+
+.creature-reveal-stage[data-phase="formation"] .creature-reveal-halo {
+  animation: creature-halo 2.6s ease-out both;
+}
+
+.creature-reveal-rings {
+  position: absolute;
+  z-index: 3;
+  inset: 50% auto auto 50%;
+  width: min(68vw, 27rem);
+  aspect-ratio: 1;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+.creature-reveal-rings i {
+  position: absolute;
+  inset: 42%;
+  border: 1px solid rgba(185, 255, 220, 0.7);
+  border-radius: 50%;
+  opacity: 0;
+}
+
+.creature-reveal-stage[data-phase="formation"] .creature-reveal-rings i {
+  animation: creature-ring 2.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.creature-reveal-stage[data-phase="formation"] .creature-reveal-rings i:nth-child(2) { animation-delay: 380ms; }
+.creature-reveal-stage[data-phase="formation"] .creature-reveal-rings i:nth-child(3) { animation-delay: 760ms; }
+
+.creature-reveal-status {
+  animation: reveal-status-in 600ms ease-out both;
+  text-shadow: 0 1px 1rem rgba(3, 16, 21, 0.9);
+}
+
+.specimen-preview-update {
+  animation: specimen-preview-update 900ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes specimen-preview-update {
+  0% { opacity: 0.45; transform: scale(0.78); filter: brightness(1.7); }
+  55% { opacity: 1; transform: scale(1.12); }
+  100% { opacity: 1; transform: scale(1); filter: brightness(1); }
+}
+
+@keyframes creature-arrive {
+  from { opacity: 0; transform: translateY(1.8rem) scale(0.82); filter: blur(12px); }
+  to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+}
+
+@keyframes creature-grow {
+  0% { transform: scale(0.94); filter: brightness(0.85) saturate(0.8); }
+  32% { transform: scale(1.07); filter: brightness(1.45) saturate(1.35); }
+  58% { transform: scale(0.985); filter: brightness(1.12) saturate(1.15); }
+  78% { transform: scale(1.025); }
+  100% { transform: scale(1); filter: brightness(1) saturate(1); }
+}
+
+@keyframes creature-halo {
+  0% { opacity: 0.12; transform: translate(-50%, -50%) scale(0.55); }
+  38% { opacity: 0.72; }
+  100% { opacity: 0.18; transform: translate(-50%, -50%) scale(1.2); }
+}
+
+@keyframes creature-ring {
+  0% { inset: 44%; opacity: 0; }
+  18% { opacity: 0.65; }
+  100% { inset: 2%; opacity: 0; }
+}
+
+@keyframes reveal-status-in {
+  from { opacity: 0; transform: translateY(0.5rem); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

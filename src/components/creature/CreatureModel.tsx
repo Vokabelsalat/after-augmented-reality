@@ -4,6 +4,7 @@ import { useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
 import { artifactById } from "@/data/artifacts";
+import { GrowingTrait } from "@/components/creature/AquaticModelShared";
 import { creatureColorPalette } from "@/lib/creature/colorPalettes";
 import type { CreaturePartId, ThemeId } from "@/types/exhibition";
 
@@ -785,11 +786,13 @@ function FishMarkings({
 
 export function CreatureModel({
   pieces,
+  baseSeed,
   animated = true,
   highlightedPart,
   scale = 1,
 }: {
   pieces: CreaturePiece[];
+  baseSeed?: string;
   animated?: boolean;
   highlightedPart?: CreaturePartId;
   scale?: number;
@@ -802,10 +805,11 @@ export function CreatureModel({
   const eyeRefs = useRef<Array<THREE.Group | null>>([]);
   const pupilRefs = useRef<Array<THREE.Mesh | null>>([]);
   const partRefs = useRef(new Map<string, THREE.Group>());
-  const signature = pieces.map((piece) => piece.artifactId).join(":") || "new";
-  const firstArtifact = pieces[0] ? artifactById.get(pieces[0].artifactId) : undefined;
-  const configuredLook = firstArtifact ? fishLooks[firstArtifact.id] : undefined;
-  const profile = fishProfiles[configuredLook?.profile ?? firstArtifact?.theme ?? "worldmaking"];
+  const signature = baseSeed ?? pieces[0]?.artifactId ?? "new";
+  const lookIds = Object.keys(fishLooks);
+  const baseLookId = lookIds[Math.min(lookIds.length - 1, Math.floor(hashUnit(`${signature}:base-look`) * lookIds.length))];
+  const configuredLook = fishLooks[baseLookId];
+  const profile = fishProfiles[configuredLook.profile];
   const proportions = useMemo(() => ({
     length: profile.length * (0.96 + hashUnit(`${signature}:length`) * 0.08),
     height: profile.height * (0.96 + hashUnit(`${signature}:height`) * 0.08),
@@ -821,7 +825,7 @@ export function CreatureModel({
   const finColor = colorPalette.fin;
   const markingColor = colorPalette.marking;
   const pattern = configuredLook?.pattern ?? "belly";
-  const finVariation = hashUnit(`${firstArtifact?.id ?? signature}:fin-palette`) - 0.5;
+  const finVariation = hashUnit(`${signature}:fin-palette`) - 0.5;
   const finPalette = {
     tail: shiftedFinColor(finColor, bellyColor, 0.08, finVariation * 0.08, 0.04, 0.03),
     dorsal: shiftedFinColor(finColor, markingColor, 0.12, 0.035 + finVariation * 0.12, 0.08, 0.04),
@@ -830,16 +834,16 @@ export function CreatureModel({
     rays: shiftedFinColor(markingColor, bellyColor, 0.24, finVariation * 0.06, 0.04, 0.08),
   };
   const caudalStyle = caudalTailShapes[
-    Math.min(caudalTailShapes.length - 1, Math.floor(hashUnit(`${firstArtifact?.id ?? signature}:caudal-fin`) * caudalTailShapes.length))
+    Math.min(caudalTailShapes.length - 1, Math.floor(hashUnit(`${signature}:caudal-fin`) * caudalTailShapes.length))
   ];
   const dorsalStyle = dorsalFinStyles[
-    Math.min(dorsalFinStyles.length - 1, Math.floor(hashUnit(`${firstArtifact?.id ?? signature}:dorsal-fin`) * dorsalFinStyles.length))
+    Math.min(dorsalFinStyles.length - 1, Math.floor(hashUnit(`${signature}:dorsal-fin`) * dorsalFinStyles.length))
   ];
   const pectoralStyle = pectoralFinStyles[
-    Math.min(pectoralFinStyles.length - 1, Math.floor(hashUnit(`${firstArtifact?.id ?? signature}:pectoral-fin`) * pectoralFinStyles.length))
+    Math.min(pectoralFinStyles.length - 1, Math.floor(hashUnit(`${signature}:pectoral-fin`) * pectoralFinStyles.length))
   ];
   const pelvicStyle = pelvicFinStyles[
-    Math.min(pelvicFinStyles.length - 1, Math.floor(hashUnit(`${firstArtifact?.id ?? signature}:pelvic-fin`) * pelvicFinStyles.length))
+    Math.min(pelvicFinStyles.length - 1, Math.floor(hashUnit(`${signature}:pelvic-fin`) * pelvicFinStyles.length))
   ];
 
   useFrame(({ clock }) => {
@@ -1074,12 +1078,14 @@ export function CreatureModel({
 
       {pieces.map((piece) => (
         <group ref={(node) => { setPartRef(piece.artifactId, node); }} key={piece.artifactId}>
-          <FishPartMesh piece={piece} />
-          {mirroredPartIds.has(piece.partId) && (
-            <group scale={[1, 1, -1]}>
-              <FishPartMesh piece={piece} />
-            </group>
-          )}
+          <GrowingTrait active={piece.partId === highlightedPart}>
+            <FishPartMesh piece={piece} />
+            {mirroredPartIds.has(piece.partId) && (
+              <group scale={[1, 1, -1]}>
+                <FishPartMesh piece={piece} />
+              </group>
+            )}
+          </GrowingTrait>
         </group>
       ))}
     </group>

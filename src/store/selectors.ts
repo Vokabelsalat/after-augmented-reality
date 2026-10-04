@@ -14,6 +14,8 @@ export const selectNarrativeState = (state: RootState) =>
   state.journey.narrativeState;
 export const selectCreatureForm = (state: RootState) =>
   state.journey.creatureForm;
+export const selectCreatureSeed = (state: RootState) =>
+  state.journey.sessionId ?? "new-specimen";
 
 export const selectDiscoveredArtifacts = (state: RootState) =>
   state.journey.discoveries

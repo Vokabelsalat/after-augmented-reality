@@ -81,6 +81,7 @@ export function CategoryOrbit() {
 type ScannerState = "idle" | "starting" | "running" | "paused" | "error";
 
 type ARScannerProps = {
+  autoStart?: boolean;
   onTargetFound: (targetIndex: number) => TargetDetectionResult;
   onTargetLost: (targetIndex: number) => void;
   onUseSimulator: () => void;
@@ -93,6 +94,7 @@ export type ARScannerHandle = {
 
 function ARScannerComponent(
   {
+    autoStart = false,
     onTargetFound,
     onTargetLost,
     onUseSimulator,
@@ -102,6 +104,7 @@ function ARScannerComponent(
 ) {
   const containerRef = useRef<HTMLDivElement>(null);
   const adapterRef = useRef<MindARAdapterType | null>(null);
+  const autoStartAttemptedRef = useRef(false);
   const startAttemptRef = useRef(0);
   const onTargetFoundRef = useRef(onTargetFound);
   const onTargetLostRef = useRef(onTargetLost);
@@ -175,6 +178,21 @@ function ARScannerComponent(
   }, [scannerState, stopScanner]);
 
   useEffect(() => {
+    if (!autoStart || autoStartAttemptedRef.current) return;
+
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (cancelled || autoStartAttemptedRef.current) return;
+      autoStartAttemptedRef.current = true;
+      void startScanner();
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [autoStart, startScanner]);
+
+  useEffect(() => {
     const handleVisibility = () => {
       if (document.hidden && adapterRef.current) {
         void stopScanner();
@@ -210,7 +228,7 @@ function ARScannerComponent(
                 <div className="grid size-full place-items-center rounded-full border border-dashed border-[var(--phosphor)] font-mono text-2xl text-[var(--phosphor)]">◎</div>
               </div>
               <h2 className="font-display text-5xl tracking-[-0.04em]">
-                {scannerState === "error" ? "Camera unavailable" : "Find a porthole"}
+                {scannerState === "error" ? "Camera unavailable" : "Scan an artwork marker"}
               </h2>
               <p className="mx-auto mt-4 max-w-xs text-sm leading-6 text-white/80" role="status">
                 {scannerState === "error"
@@ -253,7 +271,7 @@ function ARScannerComponent(
       {
         scannerState === "running" && (
           <p className="absolute inset-x-0 bottom-[9rem] z-10 text-center text-[10px] tracking-[0.22em] text-white/60" role="status">
-            Hold the marker inside the porthole
+            Hold the artwork marker inside the frame
           </p>
         )
       }

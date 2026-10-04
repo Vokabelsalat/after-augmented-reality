@@ -13,7 +13,7 @@ npm install
 npm run dev
 ```
 
-Open [http://localhost:3066](http://localhost:3066). Tap **Start experience**. Camera access is never requested until the separate **Start camera** action.
+Open [http://localhost:3066](http://localhost:3066). Tap **Scan an artwork marker** to enter the scanner and request camera access.
 
 ### Visualization design
 
@@ -110,7 +110,7 @@ The repository deliberately does not include a fake `.mind` file. An invalid pla
 Camera APIs require a secure context. `localhost` is treated as secure on the development computer, but a phone visiting a plain `http://192.168.x.x:3000` address is not. Use an HTTPS-capable local proxy/tunnel or deploy a preview build over HTTPS, then:
 
 1. open the HTTPS URL in iPhone Safari or Android Chrome;
-2. tap **Start experience**, then **Start camera**;
+2. tap **Scan an artwork marker**;
 3. allow camera permission;
 4. hold a compiled poster in view and move slowly while it locks on.
 
@@ -137,7 +137,7 @@ collective wall field
 ```
 
 - `src/components/ar/MindARAdapter.ts` is the only application module that imports MindAR. It owns camera startup, anchors, its renderer loop, repeated-target gating, and disposal.
-- `src/components/ar/ARScanner.tsx` dynamically imports the adapter only after the user taps **Start camera**. No MindAR or camera code runs during SSR.
+- `src/components/ar/ARScanner.tsx` dynamically imports the adapter when the visitor enters the scanner. No MindAR or camera code runs during SSR.
 - `src/store/journeySlice.ts` contains only serializable application state. Three.js scenes, anchors, buffers, cameras, and DOM nodes remain local.
 - `src/lib/animation/revealMachine.ts` centralizes reveal phase timings. Real and simulated detections both use the R3F full-screen source, release, disappearance, and theme-formation sequence. Real detections then hand the same deterministic formation positions to a target-anchored MindAR point cloud. Neither path updates React or Redux each frame.
 - `src/components/particles/JourneyConstellation.tsx` builds one point cloud and one chronological line geometry, keeping draw calls low.

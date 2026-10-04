@@ -23,6 +23,7 @@ describe("journeySlice", () => {
       experiencePhase: "scanning",
       discoveries: [],
     });
+    expect(state.creatureForm).not.toBeNull();
   });
 
   it("discovers artifacts in order", () => {
@@ -42,13 +43,13 @@ describe("journeySlice", () => {
     expect(state.creatureForm).not.toBeNull();
   });
 
-  it("chooses the aquatic form at the first scan and keeps it for the journey", () => {
+  it("chooses the aquatic form when the journey starts and keeps it through scans", () => {
     let state = journeyReducer(
       undefined,
       startJourney({ sessionId: "session-creature", startedAt: 100 }),
     );
-    state = journeyReducer(state, artifactDetected("first-work", 200));
     const firstForm = state.creatureForm;
+    state = journeyReducer(state, artifactDetected("first-work", 200));
     state = journeyReducer(state, artifactDetected("second-work", 300));
 
     expect(firstForm).not.toBeNull();
