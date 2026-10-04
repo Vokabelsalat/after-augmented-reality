@@ -3,7 +3,7 @@ import { CreatureShapeEditor } from "@/components/creature-editor/CreatureShapeE
 
 export const metadata: Metadata = {
   title: "Creature Shape Editor — The Fishbowl Leaks",
-  description: "Inspect and adjust the base shapes used to construct the aquarium creatures.",
+  description: "Inspect and adjust the models and base shapes used to construct the aquarium creatures and plants.",
 };
 
 export default function CreateEditorPage() {

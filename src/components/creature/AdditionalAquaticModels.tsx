@@ -203,36 +203,73 @@ function StarfishModel(props: AquaticModelProps) {
 
 function SeahorseModel(props: AquaticModelProps) {
   const colors = aquaticPalette(props.pieces, props.baseSeed);
-  const body = useMemo(() => new THREE.CatmullRomCurve3([
-    new THREE.Vector3(0.18, 1.2, 0),
-    new THREE.Vector3(-0.18, 0.62, 0),
-    new THREE.Vector3(0.05, 0.02, 0),
-    new THREE.Vector3(-0.18, -0.62, 0),
-    new THREE.Vector3(0.12, -1.1, 0),
+  const neck = useMemo(() => new THREE.CatmullRomCurve3([
+    new THREE.Vector3(0.12, 1.18, 0),
+    new THREE.Vector3(-0.25, 1.02, 0),
+    new THREE.Vector3(-0.38, 0.72, 0),
+    new THREE.Vector3(-0.25, 0.42, 0),
   ]), []);
   const tail = useMemo(() => new THREE.CatmullRomCurve3([
-    new THREE.Vector3(0.12, -1.1, 0),
-    new THREE.Vector3(0.58, -1.45, 0),
-    new THREE.Vector3(0.72, -1.05, 0),
-    new THREE.Vector3(0.48, -0.9, 0),
+    new THREE.Vector3(-0.1, -0.65, 0),
+    new THREE.Vector3(-0.28, -1.02, 0),
+    new THREE.Vector3(-0.22, -1.38, 0),
+    new THREE.Vector3(0.08, -1.58, 0),
+    new THREE.Vector3(0.43, -1.49, 0),
+    new THREE.Vector3(0.52, -1.2, 0),
+    new THREE.Vector3(0.33, -1.03, 0),
+    new THREE.Vector3(0.13, -1.12, 0),
+    new THREE.Vector3(0.14, -1.3, 0),
+    new THREE.Vector3(0.28, -1.34, 0),
   ]), []);
+  const dorsalFin = useMemo(() => {
+    const shape = new THREE.Shape();
+    shape.moveTo(0, -0.5);
+    shape.bezierCurveTo(-0.42, -0.35, -0.5, 0.25, -0.05, 0.55);
+    shape.quadraticCurveTo(0.08, 0.08, 0, -0.5);
+    return shape;
+  }, []);
   return (
     <LivingGroup animated={props.animated} scale={props.scale} motion="bob">
-      <mesh><tubeGeometry args={[body, 34, 0.22, 10, false]} /><meshToonMaterial color={colors.body} /></mesh>
-      <mesh><tubeGeometry args={[tail, 24, 0.11, 9, false]} /><meshToonMaterial color={colors.accent} /></mesh>
-      <mesh position={[0.18, 1.27, 0]} scale={[0.46, 0.38, 0.3]}>
+      <mesh><tubeGeometry args={[neck, 28, 0.23, 10, false]} /><meshToonMaterial color={colors.body} /></mesh>
+      <mesh position={[-0.02, 0.02, 0]} rotation={[0, 0, -0.12]} scale={[0.58, 0.86, 0.36]}>
+        <sphereGeometry args={[0.82, 24, 18]} />
+        <meshToonMaterial color={colors.body} />
+      </mesh>
+      <mesh position={[0.22, 0.16, 0.03]} rotation={[0, 0, -0.18]} scale={[0.42, 0.65, 0.31]}>
+        <sphereGeometry args={[0.76, 22, 16]} />
+        <meshToonMaterial color={colors.light} />
+      </mesh>
+      <mesh><tubeGeometry args={[tail, 48, 0.105, 9, false]} /><meshToonMaterial color={colors.accent} /></mesh>
+      <mesh position={[0.1, 1.27, 0]} rotation={[0, 0, -0.08]} scale={[0.45, 0.38, 0.3]}>
         <sphereGeometry args={[0.72, 20, 16]} />
         <meshToonMaterial color={colors.light} />
       </mesh>
-      <mesh position={[0.6, 1.25, 0]} rotation={[0, 0, -Math.PI / 2]} scale={[0.09, 0.46, 0.09]}>
-        <cylinderGeometry args={[1, 0.72, 1, 9]} />
+      <mesh position={[0.57, 1.15, 0]} rotation={[0, 0, -Math.PI / 2 + 0.1]} scale={[0.13, 0.52, 0.13]}>
+        <coneGeometry args={[1, 1, 10]} />
         <meshToonMaterial color={colors.accent} />
       </mesh>
-      <MovingPupil position={[0.27, 1.36, 0.28]} scale={0.075} animated={props.animated} />
-      {Array.from({ length: 5 }, (_, index) => (
-        <mesh key={index} position={[-0.26, 0.72 - index * 0.28, -0.02]} rotation={[0, 0, -0.5]} scale={[0.12, 0.28, 0.06]}>
+      <mesh position={[1.05, 1.1, 0]} scale={[0.1, 0.12, 0.1]}>
+        <sphereGeometry args={[1, 12, 10]} />
+        <meshToonMaterial color={colors.dark} />
+      </mesh>
+      <MovingPupil position={[0.25, 1.38, 0.28]} scale={0.08} animated={props.animated} />
+      <mesh position={[-0.48, 0.03, -0.03]} rotation={[0, 0, -0.08]} scale={[1, 1, 0.7]}>
+        <shapeGeometry args={[dorsalFin, 8]} />
+        <meshToonMaterial color={colors.accent} side={THREE.DoubleSide} />
+      </mesh>
+      {Array.from({ length: 8 }, (_, index) => {
+        const angle = 0.55 + index * 0.31;
+        return (
+        <mesh key={index} position={[-0.34 - Math.sin(angle) * 0.14, 1.12 - index * 0.23, -0.01]} rotation={[0, 0, -0.68 + index * 0.07]} scale={[0.09, 0.22 - index * 0.009, 0.055]}>
           <coneGeometry args={[1, 1, 8]} />
           <meshToonMaterial color={colors.dark} />
+        </mesh>
+        );
+      })}
+      {Array.from({ length: 6 }, (_, index) => (
+        <mesh key={`rib-${index}`} position={[0.17, 0.52 - index * 0.18, 0.32]} rotation={[0, 0, 0.16]} scale={[0.3, 0.035, 0.035]}>
+          <capsuleGeometry args={[0.5, 0.5, 4, 8]} />
+          <meshToonMaterial color={colors.accent} />
         </mesh>
       ))}
       <TraitMarks pieces={props.pieces} baseSeed={props.baseSeed} form="seahorse" highlightedPart={props.highlightedPart} />

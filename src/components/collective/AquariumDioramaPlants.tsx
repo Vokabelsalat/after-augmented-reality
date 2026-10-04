@@ -1,13 +1,23 @@
 "use client";
 
 import { useFrame, useThree } from "@react-three/fiber";
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
+import { applyPlantModelOverrides } from "@/lib/creature/plantOverrides";
 
-type PlantLayer = "back" | "front";
-type PlantKind = "kelp" | "grass" | "anemone" | "waterweed";
+export type PlantLayer = "back" | "front";
+export type PlantKind = "kelp" | "grass" | "anemone" | "waterweed";
 
-type PlantSpec = {
+export const plantKinds: PlantKind[] = ["kelp", "grass", "anemone", "waterweed"];
+
+export const plantKindLabels: Record<PlantKind, string> = {
+  kelp: "Kelp",
+  grass: "Sea grass",
+  anemone: "Anemone",
+  waterweed: "Waterweed",
+};
+
+export type PlantSpec = {
   kind: PlantKind;
   side: -1 | 0 | 1;
   offset: number;
@@ -15,6 +25,13 @@ type PlantSpec = {
   color: string;
   phase: number;
   lean?: number;
+};
+
+export const editorPlantSpecs: Record<PlantKind, PlantSpec> = {
+  kelp: { kind: "kelp", side: 0, offset: 0, height: 2.15, color: "#3e8d73", phase: 0.9 },
+  grass: { kind: "grass", side: 0, offset: 0, height: 1.65, color: "#5b9b79", phase: 2.1 },
+  anemone: { kind: "anemone", side: 0, offset: 0, height: 1.25, color: "#b8738b", phase: 4.4 },
+  waterweed: { kind: "waterweed", side: 0, offset: 0, height: 7.4, color: "#4f9a68", phase: 3.2, lean: -0.09 },
 };
 
 const backPlants: PlantSpec[] = [
@@ -35,14 +52,14 @@ const frontPlants: PlantSpec[] = [
   { kind: "waterweed", side: 1, offset: -0.2, height: 8.3, color: "#43865f", phase: 5.05, lean: 0.1 },
 ];
 
-function SwayingPlant({ spec, layer, x, floorY }: { spec: PlantSpec; layer: PlantLayer; x: number; floorY: number }) {
+export function AquariumPlant({ spec, layer, x, floorY, animated = true }: { spec: PlantSpec; layer: PlantLayer; x: number; floorY: number; animated?: boolean }) {
   const ref = useRef<THREE.Group>(null);
   const stems = spec.kind === "anemone" ? 7 : spec.kind === "grass" ? 5 : spec.kind === "waterweed" ? 6 : 3;
   const z = layer === "front" ? 2.45 : -2.25;
   const opacity = layer === "front" ? (spec.kind === "waterweed" ? 0.74 : 0.82) : 0.42;
 
   useFrame(({ clock }) => {
-    if (!ref.current) return;
+    if (!ref.current || !animated) return;
     const time = clock.elapsedTime;
     ref.current.rotation.z = (spec.lean ?? 0) + Math.sin(time * (spec.kind === "waterweed" ? 0.16 : 0.42) + spec.phase) * (spec.kind === "kelp" ? 0.075 : 0.045);
     ref.current.children.forEach((child, index) => {
@@ -50,6 +67,19 @@ function SwayingPlant({ spec, layer, x, floorY }: { spec: PlantSpec; layer: Plan
       child.rotation.z = Math.sin(time * stemSpeed + spec.phase + index * 0.72) * (0.07 + index * 0.008);
     });
   });
+
+  useEffect(() => {
+    const root = ref.current;
+    if (!root) return;
+    const apply = () => applyPlantModelOverrides(root, spec.kind);
+    const handleUpdate = (event: Event) => {
+      const detail = (event as CustomEvent<{ kind?: PlantKind }>).detail;
+      if (!detail?.kind || detail.kind === spec.kind) apply();
+    };
+    apply();
+    window.addEventListener("plant-model-overrides-updated", handleUpdate);
+    return () => window.removeEventListener("plant-model-overrides-updated", handleUpdate);
+  }, [spec.kind]);
 
   return (
     <group ref={ref} position={[x, floorY, z]}>
@@ -67,7 +97,11 @@ function SwayingPlant({ spec, layer, x, floorY }: { spec: PlantSpec; layer: Plan
         ]);
         return (
           <group key={index} position={[spread, 0, index * 0.012]} rotation={[0, 0, spread * -0.16]}>
-            <mesh position={spec.kind === "waterweed" ? [0, 0, 0] : [0, stemHeight / 2, 0]} rotation={[0, 0, spread * 0.12]}>
+            <mesh
+              name={`${plantKindLabels[spec.kind]} stem ${index + 1}`}
+              position={spec.kind === "waterweed" ? [0, 0, 0] : [0, stemHeight / 2, 0]}
+              rotation={[0, 0, spec.kind === "waterweed" ? 0 : spread * 0.12]}
+            >
               {spec.kind === "waterweed" ? (
                 <tubeGeometry args={[waterweedCurve, 32, width, 7, false]} />
               ) : (
@@ -76,38 +110,44 @@ function SwayingPlant({ spec, layer, x, floorY }: { spec: PlantSpec; layer: Plan
               <meshToonMaterial color={spec.color} transparent opacity={opacity} />
             </mesh>
             {spec.kind === "kelp" && (
-              <mesh position={[spread > 0 ? 0.13 : -0.13, stemHeight * 0.72, 0]} rotation={[0, 0, spread > 0 ? -0.7 : 0.7]} scale={[0.28, 0.1, 0.05]}>
+              <mesh name={`Kelp blade ${index + 1}`} position={[spread > 0 ? 0.13 : -0.13, stemHeight * 0.72, 0]} rotation={[0, 0, spread > 0 ? -0.7 : 0.7]} scale={[0.28, 0.1, 0.05]}>
                 <sphereGeometry args={[1, 14, 10]} />
                 <meshToonMaterial color={spec.color} transparent opacity={opacity * 0.9} />
               </mesh>
             )}
             {spec.kind === "anemone" && (
-              <mesh position={[0, stemHeight, 0]} scale={0.07 + (index % 2) * 0.018}>
+              <mesh name={`Anemone tip ${index + 1}`} position={[0, stemHeight, 0]} scale={0.07 + (index % 2) * 0.018}>
                 <sphereGeometry args={[1, 12, 10]} />
                 <meshToonMaterial color="#ffb08f" transparent opacity={opacity} />
               </mesh>
             )}
-            {spec.kind === "waterweed" && Array.from({ length: 7 }, (_, leafIndex) => {
-              const leafProgress = 0.2 + leafIndex * 0.105;
+            {spec.kind === "waterweed" && Array.from({ length: 10 }, (_, leafIndex) => {
+              const leafProgress = 0.18 + leafIndex * 0.089;
               const leafPoint = waterweedCurve.getPoint(leafProgress);
               const leafSide = (leafIndex + index) % 2 === 0 ? -1 : 1;
+              const leafAngle = leafSide * (0.82 + (leafIndex % 3) * 0.12);
+              const leafScale = 1 - leafIndex * 0.045;
               return (
-                <group key={leafIndex} position={[leafPoint.x, leafPoint.y, 0]} rotation={[0, 0, leafSide * (0.82 + (leafIndex % 3) * 0.12)]}>
-                  <mesh position={[leafSide * 0.095, 0.07, 0]} scale={[0.045, 0.19, 0.035]}>
-                    <sphereGeometry args={[1, 10, 8]} />
-                    <meshToonMaterial color={spec.color} transparent opacity={opacity * 0.96} />
-                  </mesh>
-                  <mesh position={[-leafSide * 0.075, 0.11, -0.01]} rotation={[0, 0, -leafSide * 1.35]} scale={[0.04, 0.15, 0.03]}>
-                    <sphereGeometry args={[1, 10, 8]} />
-                    <meshToonMaterial color={spec.color} transparent opacity={opacity * 0.88} />
-                  </mesh>
+                <group key={leafIndex} position={[leafPoint.x, leafPoint.y, 0]}>
+                  <group rotation={[0, 0, leafAngle]}>
+                    <mesh name={`Waterweed leaf ${index + 1}.${leafIndex + 1}a`} position={[0, 0.15 * leafScale, 0]} scale={[0.045 * leafScale, 0.19 * leafScale, 0.035 * leafScale]}>
+                      <sphereGeometry args={[1, 10, 8]} />
+                      <meshToonMaterial color={spec.color} transparent opacity={opacity * 0.96} />
+                    </mesh>
+                  </group>
+                  <group rotation={[0, 0, -leafSide * 1.35]}>
+                    <mesh name={`Waterweed leaf ${index + 1}.${leafIndex + 1}b`} position={[0, 0.115 * leafScale, 0]} scale={[0.04 * leafScale, 0.15 * leafScale, 0.03 * leafScale]}>
+                      <sphereGeometry args={[1, 10, 8]} />
+                      <meshToonMaterial color={spec.color} transparent opacity={opacity * 0.88} />
+                    </mesh>
+                  </group>
                 </group>
               );
             })}
           </group>
         );
       })}
-      <mesh position={[0, 0.03, -0.04]} scale={[0.48, 0.12, 0.2]}>
+      <mesh name={`${plantKindLabels[spec.kind]} base`} position={[0, 0.03, -0.04]} scale={[0.48, 0.12, 0.2]}>
         <sphereGeometry args={[1, 18, 12]} />
         <meshToonMaterial color={layer === "front" ? "#263f38" : "#19332f"} transparent opacity={opacity} />
       </mesh>
@@ -129,7 +169,7 @@ export function AquariumDioramaPlants({ layer }: { layer: PlantLayer }) {
   return (
     <group>
       {specs.map((spec, index) => (
-        <SwayingPlant key={`${layer}-${index}`} spec={spec} layer={layer} x={positions[index]} floorY={floorY} />
+        <AquariumPlant key={`${layer}-${index}`} spec={spec} layer={layer} x={positions[index]} floorY={floorY} />
       ))}
     </group>
   );
