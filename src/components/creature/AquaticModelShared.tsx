@@ -53,7 +53,7 @@ export function TraitMarks({
   const palette = creatureColorPalette(signature);
   const markColors = [palette.marking, palette.fin, palette.head, palette.belly];
   return pieces.map((piece, index) => {
-    const angle = index * 2.39996;
+    const angle = index * 2.39996 + (form === "whale" ? 0.55 : 0);
     const layouts: Record<Exclude<AquaticForm, "fish">, { x: number; y: number; cy: number; z: number }> = {
       crab: { x: 0.76, y: 0.38, cy: 0.08, z: 0.38 },
       jellyfish: { x: 0.68, y: 0.38, cy: 0.38, z: 0.42 },

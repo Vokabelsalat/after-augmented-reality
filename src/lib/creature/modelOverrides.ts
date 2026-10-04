@@ -2,6 +2,7 @@ import * as THREE from "three";
 import type { AquaticForm } from "@/lib/creature/aquaticForms";
 
 export const CREATURE_MODEL_OVERRIDES_KEY = "after-augmented-reality:creature-model-overrides:v1";
+export const WHALE_MODEL_OVERRIDES_KEY = "after-augmented-reality:creature-model-overrides:whale-v2";
 
 export type SavedNodeTransform = {
   x: number;
@@ -31,7 +32,11 @@ export function meshKey(root: THREE.Object3D, target: THREE.Object3D) {
 export function loadCreatureModelOverrides(): CreatureModelOverrides {
   if (typeof window === "undefined") return {};
   try {
-    return JSON.parse(window.localStorage.getItem(CREATURE_MODEL_OVERRIDES_KEY) ?? "{}") as CreatureModelOverrides;
+    const overrides = JSON.parse(window.localStorage.getItem(CREATURE_MODEL_OVERRIDES_KEY) ?? "{}") as CreatureModelOverrides;
+    const whaleOverrides = JSON.parse(window.localStorage.getItem(WHALE_MODEL_OVERRIDES_KEY) ?? "null") as Record<string, SavedNodeTransform> | null;
+    if (whaleOverrides) overrides.whale = whaleOverrides;
+    else delete overrides.whale;
+    return overrides;
   } catch {
     return {};
   }
@@ -39,12 +44,22 @@ export function loadCreatureModelOverrides(): CreatureModelOverrides {
 
 export function saveCreatureModelOverrides(form: AquaticForm, changes: Record<string, SavedNodeTransform>) {
   const current = loadCreatureModelOverrides();
+  if (form === "whale") {
+    window.localStorage.setItem(WHALE_MODEL_OVERRIDES_KEY, JSON.stringify({ ...current.whale, ...changes }));
+    window.dispatchEvent(new CustomEvent("creature-model-overrides-updated", { detail: { form } }));
+    return;
+  }
   const next = { ...current, [form]: { ...current[form], ...changes } };
   window.localStorage.setItem(CREATURE_MODEL_OVERRIDES_KEY, JSON.stringify(next));
   window.dispatchEvent(new CustomEvent("creature-model-overrides-updated", { detail: { form } }));
 }
 
 export function clearCreatureModelOverrides(form: AquaticForm) {
+  if (form === "whale") {
+    window.localStorage.removeItem(WHALE_MODEL_OVERRIDES_KEY);
+    window.dispatchEvent(new CustomEvent("creature-model-overrides-updated", { detail: { form } }));
+    return;
+  }
   const current = loadCreatureModelOverrides();
   delete current[form];
   window.localStorage.setItem(CREATURE_MODEL_OVERRIDES_KEY, JSON.stringify(current));
