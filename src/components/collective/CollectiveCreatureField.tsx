@@ -68,11 +68,12 @@ function FloatingCreature({ contribution, progress }: { contribution: Exhibition
     const state = motion.current;
     const maxX = Math.max(1.6, viewport.width / 2 - 0.9);
     const maxY = Math.max(1.25, viewport.height / 2 - 0.72);
+    const aquariumFloorY = -viewport.height / 2;
     if (isBottomDweller && floorOffsetRef.current === null) {
       const bounds = new THREE.Box3().setFromObject(directionRef.current);
       floorOffsetRef.current = Number.isFinite(bounds.min.y) ? -bounds.min.y + 0.04 : 0.42;
     }
-    const floorY = -maxY + (floorOffsetRef.current ?? 0.42);
+    const floorY = aquariumFloorY + (floorOffsetRef.current ?? 0.42);
     const spawnMinX = compartmentBounds[spawnCompartment] * maxX;
     const spawnMaxX = compartmentBounds[spawnCompartment + 1] * maxX;
     const spawnCenterX = (spawnMinX + spawnMaxX) / 2;
@@ -158,7 +159,12 @@ function FloatingCreature({ contribution, progress }: { contribution: Exhibition
       position={[0, 0, placement.z]}
     >
       <group ref={directionRef} rotation={[0, startsFacingLeft ? Math.PI : 0, 0]}>
-        <AquaticCreatureModel form={contribution.creatureForm} pieces={contribution.parts} scale={placement.scale * formScale * individualScale} />
+        <AquaticCreatureModel
+          form={contribution.creatureForm}
+          pieces={contribution.parts}
+          scale={placement.scale * formScale * individualScale}
+          animated={!isBottomDweller}
+        />
       </group>
     </group>
   );
