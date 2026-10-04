@@ -41,6 +41,7 @@ function wallOpening(progress: number, wallIndex: number) {
 function FloatingCreature({ contribution, progress }: { contribution: ExhibitionContribution; progress: number }) {
   const swimRef = useRef<THREE.Group>(null);
   const directionRef = useRef<THREE.Group>(null);
+  const floorOffsetRef = useRef<number | null>(null);
   const isBottomDweller = contribution.creatureForm === "crab" || contribution.creatureForm === "clam";
   const placement = useMemo(() => ({
     xUnit: -0.84 + seededUnit(contribution.id * 3) * 1.68,
@@ -67,7 +68,11 @@ function FloatingCreature({ contribution, progress }: { contribution: Exhibition
     const state = motion.current;
     const maxX = Math.max(1.6, viewport.width / 2 - 0.9);
     const maxY = Math.max(1.25, viewport.height / 2 - 0.72);
-    const floorY = -maxY + 0.42;
+    if (isBottomDweller && floorOffsetRef.current === null) {
+      const bounds = new THREE.Box3().setFromObject(directionRef.current);
+      floorOffsetRef.current = Number.isFinite(bounds.min.y) ? -bounds.min.y + 0.04 : 0.42;
+    }
+    const floorY = -maxY + (floorOffsetRef.current ?? 0.42);
     const spawnMinX = compartmentBounds[spawnCompartment] * maxX;
     const spawnMaxX = compartmentBounds[spawnCompartment + 1] * maxX;
     const spawnCenterX = (spawnMinX + spawnMaxX) / 2;

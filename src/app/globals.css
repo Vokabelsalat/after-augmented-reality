@@ -338,14 +338,22 @@ a:focus-visible {
 }
 
 .collective-swim-field {
-  top: 14rem;
+  top: 0;
   left: 2.5rem;
   right: 2.5rem;
-  bottom: clamp(14rem, 29vh, 20rem);
+  bottom: var(--collective-recents-height);
+}
+
+.collective-wall {
+  --collective-recents-height: clamp(12rem, 23vh, 16rem);
+}
+
+.collective-recents {
+  height: var(--collective-recents-height);
 }
 
 .tank-compartments {
-  inset: 14rem 2.5rem clamp(14rem, 27vh, 19rem);
+  inset: 0 2.5rem var(--collective-recents-height);
   border-top: 1px solid rgba(232, 245, 239, 0.28);
   border-bottom: 1px solid rgba(232, 245, 239, 0.28);
   opacity: clamp(0.08, calc(1.12 - var(--tank-progress, 0) * 1.15), 1);
@@ -452,7 +460,7 @@ a:focus-visible {
 }
 
 .compartment-flows {
-  inset: 14rem 0 clamp(13rem, 25vh, 18rem);
+  inset: 0 0 var(--collective-recents-height);
   opacity: clamp(0, calc(var(--tank-progress, 0) * 0.78), 0.72);
   transition: opacity 300ms ease;
 }
@@ -621,8 +629,8 @@ a:focus-visible {
 }
 
 @media (max-width: 800px) {
-  .collective-swim-field {
-    bottom: 0;
+  .collective-wall {
+    --collective-recents-height: 11rem;
   }
 
   .collective-arrival .collective-story {
@@ -639,6 +647,22 @@ a:focus-visible {
   }
 
   .collective-recents {
+    padding-inline: 1.25rem;
+    padding-bottom: 1rem;
+  }
+
+  .collective-recents-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .collective-recents-latest {
+    grid-template-columns: 5.5rem 1fr;
+    gap: 1rem;
+    border-right: 0;
+    padding-right: 0;
+  }
+
+  .collective-recents-previous {
     display: none;
   }
 

@@ -327,11 +327,11 @@ export function CollectiveWall() {
 
       {view === "collective" && latestContribution && (
         <aside
-          className="collective-recents absolute inset-x-0 bottom-0 z-10 h-[clamp(12rem,23vh,16rem)] bg-gradient-to-t from-[#030405] via-[#030405]/95 to-[#030405]/80 px-8 pb-6 lg:px-12 lg:pb-7"
+          className="collective-recents absolute inset-x-0 bottom-0 z-30 bg-gradient-to-t from-[#030405] via-[#030405]/95 to-[#030405]/80 px-8 pb-6 lg:px-12 lg:pb-7"
           aria-label={`Most recently shared stories and ${activeVisualizationCopy.plural}`}
         >
-          <div className="grid h-full grid-cols-[minmax(24rem,1.5fr)_minmax(20rem,1fr)] border-t border-white/12 pt-4">
-            <article className="grid min-w-0 grid-cols-[clamp(7rem,9vw,9rem)_1fr] items-center gap-5 border-r border-white/12 pr-8">
+          <div className="collective-recents-grid grid h-full grid-cols-[minmax(24rem,1.5fr)_minmax(20rem,1fr)] border-t border-white/12 pt-4">
+            <article className="collective-recents-latest grid min-w-0 grid-cols-[clamp(7rem,9vw,9rem)_1fr] items-center gap-5 border-r border-white/12 pr-8">
               <div className="aspect-square w-full">
                 <PathVisualization
                   artifactIds={latestContribution.parts.map((part) => part.artifactId)}
@@ -354,7 +354,7 @@ export function CollectiveWall() {
               </div>
             </article>
 
-            <div className="grid min-w-0 grid-cols-2 grid-rows-2 gap-x-5 gap-y-2 pl-8">
+            <div className="collective-recents-previous grid min-w-0 grid-cols-2 grid-rows-2 gap-x-5 gap-y-2 pl-8">
               {previousContributions.map((contribution, index) => (
                 <article key={contribution.id} className="grid min-w-0 grid-cols-[minmax(0,4.5rem)_1fr] items-center gap-3">
                   <div className="aspect-square w-full opacity-75">
