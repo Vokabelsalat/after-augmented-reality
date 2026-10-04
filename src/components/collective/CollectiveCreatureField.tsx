@@ -41,6 +41,7 @@ function wallOpening(progress: number, wallIndex: number) {
 function FloatingCreature({ contribution, progress }: { contribution: ExhibitionContribution; progress: number }) {
   const swimRef = useRef<THREE.Group>(null);
   const directionRef = useRef<THREE.Group>(null);
+  const isBottomDweller = contribution.creatureForm === "crab" || contribution.creatureForm === "clam";
   const placement = useMemo(() => ({
     xUnit: -0.84 + seededUnit(contribution.id * 3) * 1.68,
     yUnit: -0.84 + seededUnit(contribution.id * 5) * 1.68,
@@ -55,7 +56,7 @@ function FloatingCreature({ contribution, progress }: { contribution: Exhibition
     x: 0,
     y: 0,
     vx: Math.cos(placement.heading) * placement.speed,
-    vy: Math.sin(placement.heading) * placement.speed,
+    vy: isBottomDweller ? 0 : Math.sin(placement.heading) * placement.speed,
   });
   const spawnCompartment = contribution.id % 5;
   const previousProgress = useRef(progress);
@@ -66,6 +67,7 @@ function FloatingCreature({ contribution, progress }: { contribution: Exhibition
     const state = motion.current;
     const maxX = Math.max(1.6, viewport.width / 2 - 0.9);
     const maxY = Math.max(1.25, viewport.height / 2 - 0.72);
+    const floorY = -maxY + 0.42;
     const spawnMinX = compartmentBounds[spawnCompartment] * maxX;
     const spawnMaxX = compartmentBounds[spawnCompartment + 1] * maxX;
     const spawnCenterX = (spawnMinX + spawnMaxX) / 2;
@@ -73,20 +75,22 @@ function FloatingCreature({ contribution, progress }: { contribution: Exhibition
 
     if (!state.initialized || progress < previousProgress.current - 0.025) {
       state.x = spawnCenterX + placement.xUnit * (spawnMaxX - spawnMinX) * 0.34;
-      state.y = placement.yUnit * maxY;
+      state.y = isBottomDweller ? floorY : placement.yUnit * maxY;
       state.initialized = true;
     }
     previousProgress.current = progress;
 
     if (state.x > maxX - turnZone && state.vx > 0) state.vx = -Math.abs(state.vx);
     if (state.x < -maxX + turnZone && state.vx < 0) state.vx = Math.abs(state.vx);
-    if (state.y > maxY - turnZone && state.vy > 0) state.vy = -Math.max(0.12, Math.abs(state.vy));
-    if (state.y < -maxY + turnZone && state.vy < 0) state.vy = Math.max(0.12, Math.abs(state.vy));
+    if (!isBottomDweller) {
+      if (state.y > maxY - turnZone && state.vy > 0) state.vy = -Math.max(0.12, Math.abs(state.vy));
+      if (state.y < -maxY + turnZone && state.vy < 0) state.vy = Math.max(0.12, Math.abs(state.vy));
+    }
 
-    const turn = Math.sin(elapsed * 0.34 + placement.phase) * 0.12 * delta;
+    const turn = isBottomDweller ? 0 : Math.sin(elapsed * 0.34 + placement.phase) * 0.12 * delta;
     const previousVx = state.vx;
     state.vx = previousVx * Math.cos(turn) - state.vy * Math.sin(turn);
-    state.vy = previousVx * Math.sin(turn) + state.vy * Math.cos(turn);
+    state.vy = isBottomDweller ? 0 : previousVx * Math.sin(turn) + state.vy * Math.cos(turn);
     const currentSpeed = Math.hypot(state.vx, state.vy) || placement.speed;
     state.vx = (state.vx / currentSpeed) * placement.speed;
     state.vy = (state.vy / currentSpeed) * placement.speed;
@@ -117,7 +121,7 @@ function FloatingCreature({ contribution, progress }: { contribution: Exhibition
     } else {
       state.x = proposedX;
     }
-    state.y += state.vy * delta;
+    state.y = isBottomDweller ? floorY : state.y + state.vy * delta;
     state.x = THREE.MathUtils.clamp(state.x, -maxX, maxX);
     state.y = THREE.MathUtils.clamp(state.y, -maxY, maxY);
 
@@ -129,7 +133,7 @@ function FloatingCreature({ contribution, progress }: { contribution: Exhibition
       3.4,
       delta,
     );
-    const slope = Math.atan2(state.vy, Math.max(0.08, Math.abs(state.vx)));
+    const slope = isBottomDweller ? 0 : Math.atan2(state.vy, Math.max(0.08, Math.abs(state.vx)));
     const directedSlope = slope * (state.vx >= 0 ? 1 : -1);
     swimRef.current.rotation.z = THREE.MathUtils.damp(
       swimRef.current.rotation.z,
