@@ -251,6 +251,11 @@ type NodeTransform = {
   rotationZ: number;
 };
 
+type HiddenFeature = {
+  key: string;
+  label: string;
+};
+
 const editorPieces: CreaturePiece[] = artifacts.map((artifact) => ({
   artifactId: artifact.id,
   partId: artifact.creaturePart.id,
@@ -278,6 +283,7 @@ function AquaticModelEditor({ onShowShapes }: { onShowShapes: () => void }) {
   const [transform, setTransform] = useState<NodeTransform | null>(null);
   const [pending, setPending] = useState<Record<string, SavedNodeTransform>>({});
   const [saveStatus, setSaveStatus] = useState("Saved changes are used by the app in this browser.");
+  const [hiddenFeatures, setHiddenFeatures] = useState<HiddenFeature[]>([]);
   const [modelRevision, setModelRevision] = useState(0);
   const modelRootRef = useRef<THREE.Group>(null);
   const initialTransforms = useRef(new Map<string, NodeTransform>());
@@ -314,6 +320,38 @@ function AquaticModelEditor({ onShowShapes }: { onShowShapes: () => void }) {
     if (initial) updateTransform(initial);
   };
 
+  const setFeatureVisibility = (key: string, visible: boolean) => {
+    if (!modelRootRef.current) return;
+    let meshIndex = 0;
+    modelRootRef.current.traverse((object) => {
+      if (!(object instanceof THREE.Mesh)) return;
+      if (`mesh-${meshIndex}` === key) object.visible = visible;
+      meshIndex += 1;
+    });
+  };
+
+  const hideSelectedFeature = () => {
+    if (!selectedObject || !selectedKey) return;
+    const label = selectedObject.name || `${selectedObject.type} · ${selectedKey}`;
+    setFeatureVisibility(selectedKey, false);
+    setHiddenFeatures((current) => current.some((feature) => feature.key === selectedKey)
+      ? current
+      : [...current, { key: selectedKey, label }]);
+    setSelectedObject(null);
+    setSelectedKey(null);
+    setTransform(null);
+  };
+
+  const showFeature = (key: string) => {
+    setFeatureVisibility(key, true);
+    setHiddenFeatures((current) => current.filter((feature) => feature.key !== key));
+  };
+
+  const showAllFeatures = () => {
+    hiddenFeatures.forEach((feature) => setFeatureVisibility(feature.key, true));
+    setHiddenFeatures([]);
+  };
+
   const geometry = selectedObject instanceof THREE.Mesh ? selectedObject.geometry : null;
   const construction = geometry
     ? JSON.stringify({ type: geometry.type, parameters: geometry.parameters ?? {} }, null, 2)
@@ -347,6 +385,7 @@ function AquaticModelEditor({ onShowShapes }: { onShowShapes: () => void }) {
                     setSelectedKey(null);
                     setTransform(null);
                     setPending({});
+                    setHiddenFeatures([]);
                     setSaveStatus("Saved changes are used by the app in this browser.");
                     initialTransforms.current.clear();
                   }}
@@ -384,15 +423,34 @@ function AquaticModelEditor({ onShowShapes }: { onShowShapes: () => void }) {
               <OrbitControls enablePan enableRotate enableZoom minZoom={55} maxZoom={180} />
             </Canvas>
           </div>
-          <p className="mt-4 border-t border-white/12 pt-4 text-sm leading-relaxed text-white/45">Drag the empty canvas to orbit, scroll to zoom, or click any visible part to edit that mesh’s local transform. Changes stay local to this editor session.</p>
+          <p className="mt-4 border-t border-white/12 pt-4 text-sm leading-relaxed text-white/45">Drag the empty canvas to orbit, scroll to zoom, or click any visible part to edit or temporarily hide that mesh. Hidden features and unsaved changes stay local to this editor session.</p>
         </section>
 
         <aside className="shape-editor-controls min-h-0 overflow-y-auto border-l border-white/15 px-5 py-5">
+          {hiddenFeatures.length > 0 && (
+            <section className="mb-5 border-b border-white/12 pb-5" aria-labelledby="hidden-features-title">
+              <div className="mb-3 flex items-center justify-between gap-4">
+                <h2 id="hidden-features-title" className="font-display text-xl">Hidden features</h2>
+                <button type="button" className="text-xs text-white/55 hover:text-white" onClick={showAllFeatures}>Show all</button>
+              </div>
+              <ul className="space-y-1">
+                {hiddenFeatures.map((feature) => (
+                  <li key={feature.key} className="flex items-center justify-between gap-3 border border-white/12 px-3 py-2">
+                    <span className="min-w-0 truncate text-sm text-white/62">{feature.label}</span>
+                    <button type="button" className="shrink-0 text-xs text-white/55 hover:text-white" onClick={() => showFeature(feature.key)}>Show</button>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
           {selectedObject && transform ? (
             <>
               <div className="flex items-start justify-between gap-4 border-b border-white/12 pb-4">
                 <div><h2 className="font-display text-xl">{selectedObject.name || selectedObject.type}</h2><p className="mt-1 font-mono text-[10px] text-white/38">{geometry?.type ?? selectedObject.type}</p></div>
-                <button type="button" className="border border-white/18 px-2.5 py-1.5 text-xs text-white/48 hover:border-white/35 hover:text-white" onClick={resetNode}>Reset part</button>
+                <div className="flex shrink-0 gap-2">
+                  <button type="button" className="border border-white/18 px-2.5 py-1.5 text-xs text-white/48 hover:border-white/35 hover:text-white" onClick={hideSelectedFeature}>Hide feature</button>
+                  <button type="button" className="border border-white/18 px-2.5 py-1.5 text-xs text-white/48 hover:border-white/35 hover:text-white" onClick={resetNode}>Reset part</button>
+                </div>
               </div>
               <div className="space-y-5 py-5">
                 <div className="grid grid-cols-2 gap-2">
@@ -417,6 +475,7 @@ function AquaticModelEditor({ onShowShapes }: { onShowShapes: () => void }) {
                       setSelectedKey(null);
                       setTransform(null);
                       setPending({});
+                      setHiddenFeatures([]);
                       initialTransforms.current.clear();
                       setModelRevision((current) => current + 1);
                       setSaveStatus("Saved overrides removed for this creature");
