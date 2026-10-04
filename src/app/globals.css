@@ -803,18 +803,23 @@ a:focus-visible {
   position: absolute;
   inset: 0;
   z-index: 2;
-  animation: creature-arrive 1.35s cubic-bezier(0.22, 1, 0.36, 1) both;
   transition: filter 700ms ease, opacity 700ms ease;
+}
+
+.creature-reveal-stage[data-phase="attached"] .creature-reveal-model {
+  animation: creature-arrive 1.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.creature-reveal-stage[data-phase="release"] .creature-reveal-model,
+.creature-reveal-stage[data-phase="content-reveal"] .creature-reveal-model,
+.creature-reveal-stage[data-phase="complete"] .creature-reveal-model {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  filter: blur(0) brightness(1) saturate(1);
 }
 
 .creature-reveal-stage[data-phase="formation"] .creature-reveal-model {
   animation: creature-grow 2.6s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-.creature-reveal-stage[data-phase="content-reveal"],
-.creature-reveal-stage[data-phase="complete"] {
-  height: 48vh;
-  transform: translateY(-1.5vh) scale(0.9);
 }
 
 .creature-reveal-halo {
