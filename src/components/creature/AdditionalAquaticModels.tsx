@@ -240,6 +240,52 @@ function SeahorseModel(props: AquaticModelProps) {
   );
 }
 
+function ArticulatedSealTail({
+  animated,
+  colors,
+}: {
+  animated?: boolean;
+  colors: ReturnType<typeof aquaticPalette>;
+}) {
+  const connectorRef = useRef<THREE.Group>(null);
+  const finsRef = useRef<THREE.Group>(null);
+
+  useFrame(({ clock }) => {
+    if (animated === false) return;
+    const swim = clock.elapsedTime * 1.5;
+    if (connectorRef.current) connectorRef.current.rotation.z = Math.sin(swim) * 0.16;
+    if (finsRef.current) finsRef.current.rotation.z = Math.sin(swim - 0.7) * 0.12;
+  });
+
+  return (
+    <group ref={connectorRef} position={[-1.05, 0, 0]}>
+      <mesh
+        name="Seal tail connector"
+        position={[-0.32, 0, 0]}
+        rotation={[0, 0, Math.PI / 2]}
+        scale={[0.14, 0.64, 0.16]}
+      >
+        <cylinderGeometry args={[0.5, 1, 1, 14]} />
+        <meshToonMaterial color={colors.body} />
+      </mesh>
+      <group ref={finsRef} position={[-0.64, 0, 0]}>
+        {[-1, 1].map((side) => (
+          <mesh
+            name={`Seal tail fin ${side < 0 ? "lower" : "upper"}`}
+            key={side}
+            position={[-0.24, side * 0.2, 0]}
+            rotation={[0, 0, side * 0.5]}
+            scale={[0.5, 0.18, 0.1]}
+          >
+            <sphereGeometry args={[1, 16, 10]} />
+            <meshToonMaterial color={colors.dark} />
+          </mesh>
+        ))}
+      </group>
+    </group>
+  );
+}
+
 function SealModel(props: AquaticModelProps) {
   const colors = aquaticPalette(props.pieces, props.baseSeed);
   return (
@@ -261,11 +307,7 @@ function SealModel(props: AquaticModelProps) {
           <mesh position={[0.25, side * 0.55, -0.02]} scale={[0.62, 0.2, 0.1]}><sphereGeometry args={[1, 18, 12]} /><meshToonMaterial color={colors.accent} /></mesh>
         </MovingPart>
       ))}
-      {[-1, 1].map((side) => (
-        <MovingPart key={`tail-${side}`} animated={props.animated} phase={side * 0.6} base={side * 0.5} amount={0.13} speed={1.8}>
-          <mesh position={[-1.35, side * 0.2, 0]} scale={[0.5, 0.18, 0.1]}><sphereGeometry args={[1, 16, 10]} /><meshToonMaterial color={colors.dark} /></mesh>
-        </MovingPart>
-      ))}
+      <ArticulatedSealTail animated={props.animated} colors={colors} />
       <group position={[1.12, 0, 0]}>
         {PairOfEyes({ x: 0.22, y: 0.36, z: 0.4, animated: props.animated })}
       </group>
@@ -404,6 +446,52 @@ function ClamModel(props: AquaticModelProps) {
   );
 }
 
+function ArticulatedPufferfishTail({
+  animated,
+  colors,
+}: {
+  animated?: boolean;
+  colors: ReturnType<typeof aquaticPalette>;
+}) {
+  const connectorRef = useRef<THREE.Group>(null);
+  const finsRef = useRef<THREE.Group>(null);
+
+  useFrame(({ clock }) => {
+    if (animated === false) return;
+    const swim = clock.elapsedTime * 1.75;
+    if (connectorRef.current) connectorRef.current.rotation.z = Math.sin(swim) * 0.18;
+    if (finsRef.current) finsRef.current.rotation.z = Math.sin(swim - 0.68) * 0.14;
+  });
+
+  return (
+    <group ref={connectorRef} position={[-0.98, 0, -0.02]}>
+      <mesh
+        name="Pufferfish tail connector"
+        position={[-0.3, 0, 0]}
+        rotation={[0, 0, Math.PI / 2]}
+        scale={[0.13, 0.6, 0.14]}
+      >
+        <cylinderGeometry args={[0.48, 1, 1, 14]} />
+        <meshToonMaterial color={colors.body} />
+      </mesh>
+      <group ref={finsRef} position={[-0.6, 0, 0]}>
+        {[-1, 1].map((side) => (
+          <mesh
+            name={`Pufferfish tail fin ${side < 0 ? "lower" : "upper"}`}
+            key={side}
+            position={[-0.22, side * 0.22, 0]}
+            rotation={[0, 0, side * 0.54]}
+            scale={[0.52, 0.24, 0.09]}
+          >
+            <sphereGeometry args={[1, 18, 12]} />
+            <meshToonMaterial color={colors.accent} />
+          </mesh>
+        ))}
+      </group>
+    </group>
+  );
+}
+
 function PufferfishModel(props: AquaticModelProps) {
   const colors = aquaticPalette(props.pieces, props.baseSeed);
   return (
@@ -421,11 +509,7 @@ function PufferfishModel(props: AquaticModelProps) {
           </mesh>
         );
       })}
-      {[-1, 1].map((side) => (
-        <MovingPart key={`tail-${side}`} animated={props.animated} phase={side} base={side * 0.58} amount={0.12} speed={1.75}>
-          <mesh position={[-1.28, side * 0.22, -0.02]} scale={[0.52, 0.24, 0.09]}><sphereGeometry args={[1, 18, 12]} /><meshToonMaterial color={colors.accent} /></mesh>
-        </MovingPart>
-      ))}
+      <ArticulatedPufferfishTail animated={props.animated} colors={colors} />
       <mesh position={[-0.2, 0.82, -0.04]} rotation={[0, 0, -0.16]} scale={[0.34, 0.38, 0.08]}>
         <coneGeometry args={[1, 1, 12]} />
         <meshToonMaterial color={colors.dark} />

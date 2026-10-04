@@ -155,6 +155,11 @@ function FloatingCreature({
   const canvas = useThree((state) => state.gl.domElement);
   const swimRef = useRef<THREE.Group>(null);
   const directionRef = useRef<THREE.Group>(null);
+  const movementDirection = useRef(new THREE.Vector3());
+  const targetOrientation = useRef(new THREE.Quaternion());
+  const pitchOrientation = useRef(new THREE.Quaternion());
+  const yawAxis = useRef(new THREE.Vector3(0, 1, 0));
+  const pitchAxis = useRef(new THREE.Vector3(0, 0, 1));
   const floorOffsetRef = useRef<number | null>(null);
   const isBottomDweller = contribution.creatureForm === "crab" || contribution.creatureForm === "clam";
   const isWhale = contribution.creatureForm === "whale";
@@ -172,7 +177,6 @@ function FloatingCreature({
       ? (seededUnit(contribution.id * 19) > 0.5 ? 0 : Math.PI)
       : seededUnit(contribution.id * 19) * Math.PI * 2,
   }), [contribution.id, formSpeed, isWhale]);
-  const facingDirection = useRef(Math.cos(placement.heading) >= 0 ? 1 : -1);
   const motion = useRef<CreatureMotion>({
     initialized: false,
     x: 0,
@@ -184,6 +188,19 @@ function FloatingCreature({
   });
   const spawnCompartment = Math.abs(contribution.id) % 5;
   const previousProgress = useRef(progress);
+
+  const aimTowardVelocity = (vx: number, vy: number, vz: number) => {
+    const horizontalSpeed = Math.hypot(vx, vz);
+    const yaw = Math.atan2(-vz, vx);
+    const pitch = THREE.MathUtils.clamp(
+      Math.atan2(vy, Math.max(0.001, horizontalSpeed)),
+      -0.68,
+      0.68,
+    );
+    targetOrientation.current.setFromAxisAngle(yawAxis.current, yaw);
+    pitchOrientation.current.setFromAxisAngle(pitchAxis.current, pitch);
+    targetOrientation.current.multiply(pitchOrientation.current);
+  };
 
   useEffect(() => {
     if (juvenile || !actorRegistry) return;
@@ -241,7 +258,11 @@ function FloatingCreature({
     state.vx = (state.vx / currentSpeed) * placement.speed;
     state.vy = (state.vy / currentSpeed) * placement.speed;
 
-    const proposedX = state.x + state.vx * delta;
+    movementDirection.current.set(state.vx, state.vy, state.vz).normalize();
+    aimTowardVelocity(state.vx, state.vy, state.vz);
+    const facingError = directionRef.current.quaternion.angleTo(targetOrientation.current);
+    const forwardMotion = THREE.MathUtils.smoothstep(Math.PI / 2 - facingError, 0, Math.PI / 2);
+    const proposedX = state.x + state.vx * delta * forwardMotion;
     const walls = compartmentBounds.slice(1, -1).map((boundary) => boundary * maxX);
     const currentCompartment = walls.findIndex((wallX) => state.x < wallX);
     const currentIndex = currentCompartment === -1 ? 4 : currentCompartment;
@@ -272,9 +293,9 @@ function FloatingCreature({
       if (state.x < -whaleTravelEdge) state.x = whaleTravelEdge;
       state.y += Math.sin(elapsed * 0.17 + placement.phase) * 0.018 * delta;
     } else {
-      state.y = isBottomDweller ? floorY : state.y + state.vy * delta;
+      state.y = isBottomDweller ? floorY : state.y + state.vy * delta * forwardMotion;
     }
-    state.z += state.vz * delta;
+    state.z += state.vz * delta * forwardMotion;
     if (!isWhale) {
       if (state.z >= frontDepth) {
         state.z = frontDepth;
@@ -307,17 +328,34 @@ function FloatingCreature({
         if (!isBottomDweller) targetY = pairing.midpoint[1] + Math.sin(angle * 0.7) * 0.16;
       }
 
-      const previousX = state.x;
-      const previousY = state.y;
-      const previousZ = state.z;
-      const follow = 1 - Math.exp(-(age < 4 ? 1.35 : 3.2) * delta);
+      movementDirection.current.set(
+        targetX - state.x,
+        isBottomDweller ? 0 : targetY - state.y,
+        targetZ - state.z,
+      );
+      if (movementDirection.current.lengthSq() > 0.000001) {
+        movementDirection.current.normalize();
+      } else {
+        movementDirection.current.set(state.vx, state.vy, state.vz).normalize();
+      }
+      aimTowardVelocity(
+        movementDirection.current.x,
+        movementDirection.current.y,
+        movementDirection.current.z,
+      );
+      const pairingFacingError = directionRef.current.quaternion.angleTo(targetOrientation.current);
+      const pairingForwardMotion = THREE.MathUtils.smoothstep(
+        Math.PI / 2 - pairingFacingError,
+        0,
+        Math.PI / 2,
+      );
+      const follow = (1 - Math.exp(-(age < 4 ? 1.35 : 3.2) * delta)) * pairingForwardMotion;
       state.x = THREE.MathUtils.lerp(state.x, targetX, follow);
       state.y = isBottomDweller ? floorY : THREE.MathUtils.lerp(state.y, targetY, follow);
       state.z = THREE.MathUtils.lerp(state.z, targetZ, follow);
-      const frameDuration = Math.max(delta, 0.001);
-      const targetVx = (state.x - previousX) / frameDuration;
-      const targetVy = (state.y - previousY) / frameDuration;
-      const targetVz = (state.z - previousZ) / frameDuration;
+      const targetVx = movementDirection.current.x * placement.speed;
+      const targetVy = movementDirection.current.y * placement.speed;
+      const targetVz = movementDirection.current.z * placement.speed;
       state.vx = THREE.MathUtils.damp(state.vx, targetVx, 7, delta);
       state.vy = isBottomDweller ? 0 : THREE.MathUtils.damp(state.vy, targetVy, 7, delta);
       state.vz = THREE.MathUtils.damp(state.vz, targetVz, 7, delta);
@@ -329,31 +367,11 @@ function FloatingCreature({
     const depthProgress = THREE.MathUtils.inverseLerp(backDepth, frontDepth, state.z);
     const depthScale = THREE.MathUtils.lerp(0.72, 1.24, THREE.MathUtils.smoothstep(depthProgress, 0, 1));
     swimRef.current.scale.setScalar(depthScale);
-    // Hold the last facing direction around the orbit's horizontal extrema.
-    // Without this small dead zone, tiny frame-to-frame velocity changes make
-    // the model flip rapidly between left and right.
-    if (state.vx > 0.08) facingDirection.current = 1;
-    if (state.vx < -0.08) facingDirection.current = -1;
-    const sideHeading = facingDirection.current > 0 ? 0 : Math.PI;
-    const fullDepthHeading = Math.atan2(-state.vz, state.vx);
-    const depthTurn = THREE.MathUtils.clamp(
-      THREE.MathUtils.euclideanModulo(fullDepthHeading - sideHeading + Math.PI, Math.PI * 2) - Math.PI,
-      -0.3,
-      0.3,
-    );
-    const depthHeading = sideHeading + depthTurn;
-    const headingDelta = THREE.MathUtils.euclideanModulo(
-      depthHeading - directionRef.current.rotation.y + Math.PI,
-      Math.PI * 2,
-    ) - Math.PI;
-    directionRef.current.rotation.y += headingDelta * (1 - Math.exp(-3.4 * delta));
-    const slope = isBottomDweller ? 0 : Math.atan2(state.vy, Math.max(0.08, Math.abs(state.vx)));
-    const directedSlope = slope * (state.vx >= 0 ? 1 : -1);
-    swimRef.current.rotation.z = THREE.MathUtils.damp(
-      swimRef.current.rotation.z,
-      THREE.MathUtils.clamp(directedSlope, -1.08, 1.08),
-      2.8,
-      delta,
+    movementDirection.current.set(state.vx, state.vy, state.vz).normalize();
+    aimTowardVelocity(state.vx, state.vy, state.vz);
+    directionRef.current.quaternion.slerp(
+      targetOrientation.current,
+      1 - Math.exp(-2.5 * delta),
     );
   });
 

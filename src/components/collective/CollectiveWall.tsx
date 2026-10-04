@@ -221,10 +221,10 @@ export function CollectiveWall() {
         <CollectiveHeatmap data={visibleHeatmap} />
       )}
 
-      <header className="absolute inset-x-0 top-0 z-30 flex items-center justify-between py-7 lg:py-9">
-        <div>
+      <header className="absolute inset-x-0 top-0 z-30 flex items-center justify-between">
+        <div className="p-8">
           <h1 className="font-display text-xl tracking-[-0.03em] lg:text-2xl">The Fishbowl Leaks</h1>
-          <p className="mt-1 text-sm text-white/45">Shared aquarium · daily cycle</p>
+          {/* <p className="mt-1 text-sm text-white/45">Shared aquarium · daily cycle</p> */}
         </div>
         <div className="absolute left-1/2 flex -translate-x-1/2 rounded-full border border-white/12 bg-black/20 p-1 text-[10px] tracking-[0.18em] backdrop-blur-md" role="group" aria-label="Collective view">
           <button
@@ -244,12 +244,12 @@ export function CollectiveWall() {
             Activity
           </button>
         </div>
-        <div className="flex items-center gap-6 text-xs tracking-[0.18em] text-white/42">
+        <div className="flex items-center gap-6 text-xs tracking-[0.18em] text-white/42 p-8">
           <span>{visibleContributions.length} {visibleContributions.length === 1 ? activeVisualizationCopy.singular : activeVisualizationCopy.plural}</span>
-          <span className="flex items-center gap-2">
+          {/* <span className="flex items-center gap-2">
             <span className={`size-1.5 rounded-full ${connected ? "bg-emerald-300" : "bg-amber-300"}`} aria-hidden="true" />
             {connected ? "listening" : "reconnecting"}
-          </span>
+          </span> */}
         </div>
       </header>
 
@@ -285,11 +285,11 @@ export function CollectiveWall() {
             setClockMinutes(Number(event.target.value));
           }}
         />
-        <div className="mt-1 flex justify-between text-xs text-white/35" aria-hidden="true">
+        {/* <div className="mt-1 flex justify-between text-xs text-white/35" aria-hidden="true">
           <span>00:00 · ordered</span>
           <span>12:00 · unstable</span>
           <span>23:59 · open</span>
-        </div>
+        </div> */}
       </section>
 
       {view === "collective" && visibleContributions.length === 0 && ready && (
