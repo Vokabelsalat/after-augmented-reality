@@ -483,18 +483,6 @@ function BlueWhaleTail({
     shape.closePath();
     return shape;
   }, []);
-  const flukes = useMemo(() => {
-    const shape = new THREE.Shape();
-    shape.moveTo(0.04, 0);
-    shape.bezierCurveTo(-0.18, 0.3, -0.44, 0.72, -0.86, 0.9);
-    shape.bezierCurveTo(-0.98, 0.66, -0.82, 0.25, -0.48, 0.04);
-    shape.quadraticCurveTo(-0.4, 0, -0.48, -0.04);
-    shape.bezierCurveTo(-0.82, -0.25, -0.98, -0.66, -0.86, -0.9);
-    shape.bezierCurveTo(-0.44, -0.72, -0.18, -0.3, 0.04, 0);
-    shape.closePath();
-    return shape;
-  }, []);
-
   useFrame(({ clock }) => {
     if (animated === false) return;
     const swim = clock.elapsedTime * 1.08;
@@ -509,10 +497,18 @@ function BlueWhaleTail({
         <meshToonMaterial color={colors.body} />
       </mesh>
       <group ref={flukesRef} position={[-0.87, 0, 0]} rotation={[0.52, 0, 0]}>
-        <mesh name="Blue whale flukes" rotation={[Math.PI / 2, 0, 0]}>
-          <extrudeGeometry args={[flukes, { depth: 0.08, bevelEnabled: true, bevelSegments: 6, bevelSize: 0.035, bevelThickness: 0.035, curveSegments: 32 }]} />
-          <meshToonMaterial color={colors.dark} side={THREE.DoubleSide} />
-        </mesh>
+        {[-1, 1].map((side) => (
+          <mesh
+            name={`Blue whale ${side > 0 ? "right" : "left"} fluke`}
+            key={side}
+            position={[-0.28, 0, side * 0.32]}
+            rotation={[0, side * 0.48, 0]}
+            scale={[0.56, 0.1, 0.32]}
+          >
+            <sphereGeometry args={[1, 28, 18]} />
+            <meshToonMaterial color={colors.dark} />
+          </mesh>
+        ))}
       </group>
     </group>
   );
@@ -545,17 +541,20 @@ function BlueWhaleModel(props: AquaticModelProps) {
   }, []);
   const dorsalFin = useMemo(() => {
     const shape = new THREE.Shape();
-    shape.moveTo(-0.78, 0);
-    shape.bezierCurveTo(-0.66, 0.22, -0.49, 0.3, -0.42, 0.01);
+    shape.moveTo(-0.52, 0);
+    shape.lineTo(0.28, 0);
+    shape.bezierCurveTo(0.22, 0.08, 0.08, 0.27, -0.08, 0.34);
+    shape.bezierCurveTo(-0.24, 0.38, -0.27, 0.13, -0.52, 0);
     shape.closePath();
     return shape;
   }, []);
   const flipper = useMemo(() => {
     const shape = new THREE.Shape();
-    shape.moveTo(0.1, 0.04);
-    shape.bezierCurveTo(-0.14, -0.12, -0.48, -0.43, -0.86, -0.62);
-    shape.bezierCurveTo(-0.98, -0.58, -0.88, -0.43, -0.7, -0.3);
-    shape.bezierCurveTo(-0.4, -0.08, -0.12, 0.05, 0.1, 0.04);
+    shape.moveTo(0.14, 0.08);
+    shape.bezierCurveTo(-0.1, 0.02, -0.58, -0.2, -0.86, -0.48);
+    shape.bezierCurveTo(-1, -0.68, -0.82, -0.82, -0.56, -0.75);
+    shape.bezierCurveTo(-0.26, -0.61, 0.02, -0.28, 0.13, -0.11);
+    shape.quadraticCurveTo(0.22, -0.01, 0.14, 0.08);
     shape.closePath();
     return shape;
   }, []);
@@ -654,18 +653,6 @@ function DolphinTail({
     shape.closePath();
     return shape;
   }, []);
-  const flukes = useMemo(() => {
-    const shape = new THREE.Shape();
-    shape.moveTo(0.04, 0);
-    shape.bezierCurveTo(-0.12, 0.24, -0.34, 0.55, -0.66, 0.68);
-    shape.bezierCurveTo(-0.78, 0.5, -0.66, 0.2, -0.38, 0.03);
-    shape.quadraticCurveTo(-0.32, 0, -0.38, -0.03);
-    shape.bezierCurveTo(-0.66, -0.2, -0.78, -0.5, -0.66, -0.68);
-    shape.bezierCurveTo(-0.34, -0.55, -0.12, -0.24, 0.04, 0);
-    shape.closePath();
-    return shape;
-  }, []);
-
   useFrame(({ clock }) => {
     if (animated === false) return;
     const swim = clock.elapsedTime * 1.55;
@@ -680,10 +667,18 @@ function DolphinTail({
         <meshToonMaterial color={colors.body} />
       </mesh>
       <group ref={flukesRef} position={[-0.73, 0, 0]} rotation={[0.54, 0, 0]}>
-        <mesh name="Dolphin flukes" rotation={[Math.PI / 2, 0, 0]}>
-          <extrudeGeometry args={[flukes, { depth: 0.07, bevelEnabled: true, bevelSegments: 6, bevelSize: 0.03, bevelThickness: 0.03, curveSegments: 30 }]} />
-          <meshToonMaterial color={colors.dark} side={THREE.DoubleSide} />
-        </mesh>
+        {[-1, 1].map((side) => (
+          <mesh
+            name={`Dolphin ${side > 0 ? "right" : "left"} fluke`}
+            key={side}
+            position={[-0.23, 0, side * 0.26]}
+            rotation={[0, side * 0.5, 0]}
+            scale={[0.46, 0.08, 0.27]}
+          >
+            <sphereGeometry args={[1, 26, 16]} />
+            <meshToonMaterial color={colors.dark} />
+          </mesh>
+        ))}
       </group>
     </group>
   );
@@ -713,38 +708,30 @@ function DolphinModel(props: AquaticModelProps) {
     shape.closePath();
     return shape;
   }, []);
-  const beak = useMemo(() => {
-    const shape = new THREE.Shape();
-    shape.moveTo(1.2, 0.09);
-    shape.bezierCurveTo(1.39, 0.065, 1.58, 0.025, 1.7, -0.01);
-    shape.quadraticCurveTo(1.77, -0.055, 1.69, -0.09);
-    shape.bezierCurveTo(1.51, -0.11, 1.32, -0.12, 1.12, -0.11);
-    shape.quadraticCurveTo(1.15, -0.01, 1.2, 0.09);
-    shape.closePath();
-    return shape;
-  }, []);
   const dorsalFin = useMemo(() => {
     const shape = new THREE.Shape();
-    shape.moveTo(-0.38, 0);
-    shape.bezierCurveTo(-0.3, 0.3, -0.08, 0.58, 0.09, 0.61);
-    shape.bezierCurveTo(0.02, 0.33, 0.12, 0.12, 0.26, 0.01);
+    shape.moveTo(-0.48, 0);
+    shape.lineTo(0.32, 0);
+    shape.bezierCurveTo(0.23, 0.1, 0.08, 0.43, -0.08, 0.52);
+    shape.bezierCurveTo(-0.24, 0.57, -0.29, 0.2, -0.48, 0);
     shape.closePath();
     return shape;
   }, []);
   const flipper = useMemo(() => {
     const shape = new THREE.Shape();
-    shape.moveTo(0.08, 0.03);
-    shape.bezierCurveTo(-0.08, -0.13, -0.3, -0.45, -0.55, -0.61);
-    shape.bezierCurveTo(-0.68, -0.58, -0.62, -0.4, -0.49, -0.25);
-    shape.bezierCurveTo(-0.3, -0.05, -0.08, 0.04, 0.08, 0.03);
+    shape.moveTo(0.12, 0.08);
+    shape.bezierCurveTo(-0.12, 0.02, -0.5, -0.18, -0.72, -0.4);
+    shape.bezierCurveTo(-0.86, -0.56, -0.7, -0.7, -0.48, -0.65);
+    shape.bezierCurveTo(-0.22, -0.5, 0.02, -0.26, 0.11, -0.1);
+    shape.quadraticCurveTo(0.18, -0.01, 0.12, 0.08);
     shape.closePath();
     return shape;
   }, []);
   const mouth = useMemo(() => new THREE.CatmullRomCurve3([
-    new THREE.Vector3(1.68, -0.065, 0.205),
-    new THREE.Vector3(1.5, -0.075, 0.205),
-    new THREE.Vector3(1.32, -0.08, 0.205),
-    new THREE.Vector3(1.14, -0.09, 0.205),
+    new THREE.Vector3(1.75, -0.045, 0.095),
+    new THREE.Vector3(1.55, -0.055, 0.12),
+    new THREE.Vector3(1.34, -0.07, 0.15),
+    new THREE.Vector3(1.16, -0.085, 0.19),
   ]), []);
 
   return (
@@ -758,8 +745,12 @@ function DolphinModel(props: AquaticModelProps) {
         <shapeGeometry args={[belly, 24]} />
         <meshToonMaterial color={colors.light} side={THREE.DoubleSide} />
       </mesh>
-      <mesh name="Dolphin beak" position={[0, 0, -0.17]}>
-        <extrudeGeometry args={[beak, { depth: 0.34, bevelEnabled: true, bevelSegments: 5, bevelSize: 0.035, bevelThickness: 0.035, curveSegments: 26 }]} />
+      <mesh name="Dolphin beak" position={[1.45, -0.035, 0]} rotation={[0, 0, -Math.PI / 2]} scale={[1, 1, 0.72]}>
+        <cylinderGeometry args={[0.02, 0.13, 0.66, 24, 5, false]} />
+        <meshToonMaterial color={colors.body} />
+      </mesh>
+      <mesh name="Dolphin beak tip" position={[1.78, -0.035, 0]} scale={[0.035, 0.024, 0.019]}>
+        <sphereGeometry args={[1, 16, 12]} />
         <meshToonMaterial color={colors.body} />
       </mesh>
       <mesh name="Dolphin dorsal fin" position={[0, 0.48, -0.075]}>

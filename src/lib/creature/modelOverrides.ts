@@ -2,8 +2,8 @@ import * as THREE from "three";
 import type { AquaticForm } from "@/lib/creature/aquaticForms";
 
 export const CREATURE_MODEL_OVERRIDES_KEY = "after-augmented-reality:creature-model-overrides:v1";
-export const WHALE_MODEL_OVERRIDES_KEY = "after-augmented-reality:creature-model-overrides:whale-v2";
-export const DOLPHIN_MODEL_OVERRIDES_KEY = "after-augmented-reality:creature-model-overrides:dolphin-v2";
+export const WHALE_MODEL_OVERRIDES_KEY = "after-augmented-reality:creature-model-overrides:whale-v3";
+export const DOLPHIN_MODEL_OVERRIDES_KEY = "after-augmented-reality:creature-model-overrides:dolphin-v4";
 
 export type SavedNodeTransform = {
   x: number;
