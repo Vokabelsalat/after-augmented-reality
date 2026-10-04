@@ -2,7 +2,7 @@
 
 import { AdaptiveDpr } from "@react-three/drei";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type MutableRefObject } from "react";
 import * as THREE from "three";
 import { AquaticCreatureModel } from "@/components/creature/AquaticCreatureModel";
 import { AquariumDioramaPlants } from "@/components/collective/AquariumDioramaPlants";
@@ -81,7 +81,46 @@ function wallOpening(progress: number, wallIndex: number) {
   );
 }
 
-function FloatingCreature({ contribution, progress }: { contribution: ExhibitionContribution; progress: number }) {
+type CreatureMotion = {
+  initialized: boolean;
+  x: number;
+  y: number;
+  z: number;
+  vx: number;
+  vy: number;
+  vz: number;
+};
+
+type PairingEvent = {
+  parents: [ExhibitionContribution, ExhibitionContribution];
+  startedAt: number;
+  midpoint: [number, number, number];
+  sequence: number;
+  babyCreated: boolean;
+};
+
+type BabyCreature = {
+  contribution: ExhibitionContribution;
+  spawnPosition: [number, number, number];
+};
+
+type FloatingCreatureProps = {
+  contribution: ExhibitionContribution;
+  progress: number;
+  actorRegistry?: MutableRefObject<Map<number, MutableRefObject<CreatureMotion>>>;
+  pairingRef?: MutableRefObject<PairingEvent | null>;
+  juvenile?: boolean;
+  spawnPosition?: [number, number, number];
+};
+
+function FloatingCreature({
+  contribution,
+  progress,
+  actorRegistry,
+  pairingRef,
+  juvenile = false,
+  spawnPosition,
+}: FloatingCreatureProps) {
   const swimRef = useRef<THREE.Group>(null);
   const directionRef = useRef<THREE.Group>(null);
   const floorOffsetRef = useRef<number | null>(null);
@@ -98,7 +137,7 @@ function FloatingCreature({ contribution, progress }: { contribution: Exhibition
     phase: seededUnit(contribution.id * 17) * Math.PI * 2,
     heading: seededUnit(contribution.id * 19) * Math.PI * 2,
   }), [contribution.id, formSpeed]);
-  const motion = useRef({
+  const motion = useRef<CreatureMotion>({
     initialized: false,
     x: 0,
     y: 0,
@@ -107,8 +146,16 @@ function FloatingCreature({ contribution, progress }: { contribution: Exhibition
     vy: isBottomDweller ? 0 : Math.sin(placement.heading) * placement.speed,
     vz: placement.depthDirection * placement.depthSpeed,
   });
-  const spawnCompartment = contribution.id % 5;
+  const spawnCompartment = Math.abs(contribution.id) % 5;
   const previousProgress = useRef(progress);
+
+  useEffect(() => {
+    if (juvenile || !actorRegistry) return;
+    actorRegistry.current.set(contribution.id, motion);
+    return () => {
+      actorRegistry.current.delete(contribution.id);
+    };
+  }, [actorRegistry, contribution.id, juvenile]);
 
   useFrame(({ clock, viewport }, delta) => {
     if (!swimRef.current || !directionRef.current) return;
@@ -130,9 +177,9 @@ function FloatingCreature({ contribution, progress }: { contribution: Exhibition
     const turnZone = 0.48;
 
     if (!state.initialized || progress < previousProgress.current - 0.025) {
-      state.x = spawnCenterX + placement.xUnit * (spawnMaxX - spawnMinX) * 0.34;
-      state.y = isBottomDweller ? floorY : placement.yUnit * maxY;
-      state.z = placement.z;
+      state.x = spawnPosition?.[0] ?? spawnCenterX + placement.xUnit * (spawnMaxX - spawnMinX) * 0.34;
+      state.y = isBottomDweller ? floorY : spawnPosition?.[1] ?? placement.yUnit * maxY;
+      state.z = spawnPosition?.[2] ?? placement.z;
       state.initialized = true;
     }
     previousProgress.current = progress;
@@ -190,6 +237,36 @@ function FloatingCreature({ contribution, progress }: { contribution: Exhibition
     state.x = THREE.MathUtils.clamp(state.x, -maxX, maxX);
     state.y = THREE.MathUtils.clamp(state.y, -maxY, maxY);
 
+    const pairing = pairingRef?.current;
+    const participantIndex = pairing?.parents.findIndex((parent) => parent.id === contribution.id) ?? -1;
+    if (pairing && participantIndex >= 0) {
+      const age = elapsed - pairing.startedAt;
+      const side = participantIndex === 0 ? -1 : 1;
+      let targetX = pairing.midpoint[0] + side * 0.34;
+      let targetY = pairing.midpoint[1];
+      let targetZ = pairing.midpoint[2];
+
+      if (age >= 4) {
+        const orbitAge = age - 4;
+        const radius = age < 7 ? 0.34 : 0.34 + (age - 7) * 0.24;
+        const angle = orbitAge * 1.75 + (participantIndex === 0 ? 0 : Math.PI);
+        targetX = pairing.midpoint[0] + Math.cos(angle) * radius;
+        targetZ = pairing.midpoint[2] + Math.sin(angle) * radius * 0.72;
+        if (!isBottomDweller) targetY = pairing.midpoint[1] + Math.sin(angle * 0.7) * 0.16;
+      }
+
+      const previousX = state.x;
+      const previousY = state.y;
+      const previousZ = state.z;
+      const follow = 1 - Math.exp(-(age < 4 ? 1.35 : 3.2) * delta);
+      state.x = THREE.MathUtils.lerp(state.x, targetX, follow);
+      state.y = isBottomDweller ? floorY : THREE.MathUtils.lerp(state.y, targetY, follow);
+      state.z = THREE.MathUtils.lerp(state.z, targetZ, follow);
+      state.vx = (state.x - previousX) / Math.max(delta, 0.001);
+      state.vy = isBottomDweller ? 0 : (state.y - previousY) / Math.max(delta, 0.001);
+      state.vz = (state.z - previousZ) / Math.max(delta, 0.001);
+    }
+
     swimRef.current.position.x = state.x;
     swimRef.current.position.y = state.y;
     swimRef.current.position.z = state.z;
@@ -221,7 +298,7 @@ function FloatingCreature({ contribution, progress }: { contribution: Exhibition
 
   const startsFacingLeft = Math.cos(placement.heading) < 0;
   const formScale = collectiveFormScale[contribution.creatureForm];
-  const individualScale = creatureSizeScale(contribution.publicId);
+  const individualScale = creatureSizeScale(contribution.publicId) * (juvenile ? 0.48 : 1);
 
   return (
     <group
@@ -241,7 +318,102 @@ function FloatingCreature({ contribution, progress }: { contribution: Exhibition
   );
 }
 
+function PairingDirector({
+  contributions,
+  actorRegistry,
+  pairingRef,
+  onBaby,
+}: {
+  contributions: ExhibitionContribution[];
+  actorRegistry: MutableRefObject<Map<number, MutableRefObject<CreatureMotion>>>;
+  pairingRef: MutableRefObject<PairingEvent | null>;
+  onBaby: (event: PairingEvent) => void;
+}) {
+  const lastPairAt = useRef(0);
+  const sequence = useRef(0);
+  const eligiblePairs = useMemo(() => {
+    const byForm = new Map<AquaticForm, ExhibitionContribution[]>();
+    contributions.forEach((contribution) => {
+      const group = byForm.get(contribution.creatureForm) ?? [];
+      group.push(contribution);
+      byForm.set(contribution.creatureForm, group);
+    });
+    return [...byForm.values()].filter((group) => group.length >= 2);
+  }, [contributions]);
+
+  useFrame(({ clock }) => {
+    const elapsed = clock.elapsedTime;
+    const activePairing = pairingRef.current;
+
+    if (activePairing) {
+      const age = elapsed - activePairing.startedAt;
+      if (age >= 6.6 && !activePairing.babyCreated) {
+        activePairing.babyCreated = true;
+        onBaby(activePairing);
+      }
+      if (age >= 8.5) {
+        pairingRef.current = null;
+        lastPairAt.current = elapsed;
+      }
+      return;
+    }
+
+    if (elapsed - lastPairAt.current < 12 || eligiblePairs.length === 0) return;
+    const group = eligiblePairs[sequence.current % eligiblePairs.length];
+    const firstIndex = sequence.current % group.length;
+    const first = group[firstIndex];
+    const second = group[(firstIndex + 1) % group.length];
+    const firstMotion = actorRegistry.current.get(first.id)?.current;
+    const secondMotion = actorRegistry.current.get(second.id)?.current;
+    if (!firstMotion?.initialized || !secondMotion?.initialized) return;
+
+    pairingRef.current = {
+      parents: [first, second],
+      startedAt: elapsed,
+      midpoint: [
+        (firstMotion.x + secondMotion.x) / 2,
+        (firstMotion.y + secondMotion.y) / 2,
+        (firstMotion.z + secondMotion.z) / 2,
+      ],
+      sequence: sequence.current,
+      babyCreated: false,
+    };
+    sequence.current += 1;
+  });
+
+  return null;
+}
+
+function createBaby(event: PairingEvent): BabyCreature {
+  const [first, second] = event.parents;
+  const inheritedParts = first.parts.map((part, index) => {
+    if (index % 2 === 0) return part;
+    return second.parts.find((candidate) => candidate.partId === part.partId) ?? second.parts[index % second.parts.length] ?? part;
+  });
+  const id = 1_000_000 + event.sequence;
+
+  return {
+    contribution: {
+      id,
+      publicId: `offspring-${first.publicId}-${second.publicId}-${event.sequence}`,
+      creatureForm: first.creatureForm,
+      parts: inheritedParts,
+      narrative: [],
+      createdAt: new Date().toISOString(),
+    },
+    spawnPosition: event.midpoint,
+  };
+}
+
 export function CollectiveCreatureField({ contributions, progress = 1 }: { contributions: ExhibitionContribution[]; progress?: number }) {
+  const [babies, setBabies] = useState<BabyCreature[]>([]);
+  const actorRegistry = useRef(new Map<number, MutableRefObject<CreatureMotion>>());
+  const pairingRef = useRef<PairingEvent | null>(null);
+  const adults = useMemo(() => contributions.slice(-32), [contributions]);
+  const handleBaby = useCallback((event: PairingEvent) => {
+    setBabies((current) => [...current, createBaby(event)].slice(-8));
+  }, []);
+
   return (
     <Canvas
       orthographic
@@ -254,8 +426,29 @@ export function CollectiveCreatureField({ contributions, progress = 1 }: { contr
       <pointLight position={[-5, 1, 5]} intensity={2.2} color="#58D6FF" />
       <pointLight position={[5, -2, 5]} intensity={1.8} color="#FF7557" />
       <AquariumDioramaPlants layer="back" />
-      {contributions.slice(-32).map((contribution) => (
-        <FloatingCreature key={contribution.id} contribution={contribution} progress={progress} />
+      <PairingDirector
+        contributions={adults}
+        actorRegistry={actorRegistry}
+        pairingRef={pairingRef}
+        onBaby={handleBaby}
+      />
+      {adults.map((contribution) => (
+        <FloatingCreature
+          key={contribution.id}
+          contribution={contribution}
+          progress={progress}
+          actorRegistry={actorRegistry}
+          pairingRef={pairingRef}
+        />
+      ))}
+      {babies.map((baby) => (
+        <FloatingCreature
+          key={baby.contribution.id}
+          contribution={baby.contribution}
+          progress={progress}
+          juvenile
+          spawnPosition={baby.spawnPosition}
+        />
       ))}
       <DepthHazeLayers />
       <AquariumDioramaPlants layer="front" />
