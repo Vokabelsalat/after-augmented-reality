@@ -15,19 +15,21 @@ function LivingGroup({
   scale,
   motion = "glide",
   position = [0, 0, 0],
+  grounded = false,
 }: {
   children: ReactNode;
   animated?: boolean;
   scale: number;
   motion?: "glide" | "bob" | "coil" | "pulse";
   position?: [number, number, number];
+  grounded?: boolean;
 }) {
   const ref = useRef<THREE.Group>(null);
 
   useFrame(({ clock }) => {
     if (animated === false || !ref.current) return;
     const time = clock.elapsedTime;
-    ref.current.position.y = position[1] + Math.sin(time * (motion === "bob" ? 1.45 : 0.85)) * (motion === "bob" ? 0.09 : 0.045);
+    ref.current.position.y = grounded ? position[1] : position[1] + Math.sin(time * (motion === "bob" ? 1.45 : 0.85)) * (motion === "bob" ? 0.09 : 0.045);
     ref.current.rotation.z = Math.sin(time * (motion === "coil" ? 1.35 : 0.62)) * (motion === "coil" ? 0.075 : 0.035);
     if (motion === "pulse") {
       const breath = 1 + Math.sin(time * 1.6) * 0.035;
@@ -38,17 +40,33 @@ function LivingGroup({
   return <group ref={ref} scale={scale} position={position}>{children}</group>;
 }
 
-function PairOfEyes({ x = 0.34, y = 0.25, z = 0.55 }: { x?: number; y?: number; z?: number }) {
+function MovingPart({ children, animated, phase, base = 0, amount = 0.1, speed = 1.2 }: { children: ReactNode; animated?: boolean; phase: number; base?: number; amount?: number; speed?: number }) {
+  const ref = useRef<THREE.Group>(null);
+  useFrame(({ clock }) => {
+    if (animated === false || !ref.current) return;
+    ref.current.rotation.z = base + Math.sin(clock.elapsedTime * speed + phase) * amount;
+  });
+  return <group ref={ref} rotation={[0, 0, base]}>{children}</group>;
+}
+
+function MovingPupil({ position, scale, animated, phase = 0 }: { position: [number, number, number]; scale: number | [number, number, number]; animated?: boolean; phase?: number }) {
+  const ref = useRef<THREE.Mesh>(null);
+  useFrame(({ clock }) => {
+    if (animated === false || !ref.current) return;
+    ref.current.position.x = position[0] + Math.sin(clock.elapsedTime * 0.65 + phase) * 0.035;
+    ref.current.position.y = position[1] + Math.cos(clock.elapsedTime * 0.52 + phase) * 0.025;
+  });
+  return <mesh ref={ref} position={position} scale={scale}><sphereGeometry args={[1, 10, 8]} /><meshBasicMaterial color="#071015" /></mesh>;
+}
+
+function PairOfEyes({ x = 0.34, y = 0.25, z = 0.55, animated }: { x?: number; y?: number; z?: number; animated?: boolean }) {
   return [-1, 1].map((side) => (
     <group key={side} position={[side * x, y, z]}>
       <mesh scale={[0.12, 0.15, 0.08]}>
         <sphereGeometry args={[1, 14, 12]} />
         <meshToonMaterial color="#F3F0E8" />
       </mesh>
-      <mesh position={[0, 0, 0.075]} scale={[0.045, 0.07, 0.03]}>
-        <sphereGeometry args={[1, 10, 8]} />
-        <meshBasicMaterial color="#071015" />
-      </mesh>
+      <MovingPupil position={[0, 0, 0.075]} scale={[0.045, 0.07, 0.03]} animated={animated} phase={side * 0.2} />
     </group>
   ));
 }
@@ -75,12 +93,11 @@ function TurtleModel(props: AquaticModelProps) {
         <sphereGeometry args={[0.75, 22, 16]} />
         <meshToonMaterial color={colors.light} />
       </mesh>
-      <group position={[1.25, 0.12, 0.29]} scale={0.7}>{PairOfEyes({ x: 0.16, y: 0, z: 0.16 })}</group>
+      <group position={[1.25, 0.12, 0.29]} scale={0.7}>{PairOfEyes({ x: 0.16, y: 0, z: 0.16, animated: props.animated })}</group>
       {[-1, 1].flatMap((side) => [-1, 1].map((front) => (
-        <mesh key={`${side}-${front}`} position={[front * 0.62, side * 0.68, -0.02]} rotation={[0, 0, side * (front > 0 ? -0.58 : 0.58)]} scale={[0.48, 0.2, 0.09]}>
-          <sphereGeometry args={[1, 18, 12]} />
-          <meshToonMaterial color={colors.accent} />
-        </mesh>
+        <MovingPart key={`${side}-${front}`} animated={props.animated} phase={side * 0.8 + front} base={side * (front > 0 ? -0.58 : 0.58)} amount={0.12} speed={1.45}>
+          <mesh position={[front * 0.62, side * 0.68, -0.02]} scale={[0.48, 0.2, 0.09]}><sphereGeometry args={[1, 18, 12]} /><meshToonMaterial color={colors.accent} /></mesh>
+        </MovingPart>
       )))}
       <mesh position={[-1.15, 0, 0]} rotation={[0, 0, Math.PI / 2]} scale={[0.2, 0.34, 0.12]}>
         <coneGeometry args={[1, 1, 12]} />
@@ -139,10 +156,7 @@ function RayModel(props: AquaticModelProps) {
             <sphereGeometry args={[1, 14, 10]} />
             <meshToonMaterial color="#F3F0E8" />
           </mesh>
-          <mesh position={[0.025, 0, 0.055]} scale={[0.042, 0.034, 0.025]}>
-            <sphereGeometry args={[1, 10, 8]} />
-            <meshBasicMaterial color="#071015" />
-          </mesh>
+          <MovingPupil position={[0.025, 0, 0.055]} scale={[0.042, 0.034, 0.025]} animated={props.animated} phase={side * 0.25} />
         </group>
       ))}
       {[-1, 1].flatMap((side) => [0, 1, 2].map((index) => (
@@ -214,10 +228,7 @@ function SeahorseModel(props: AquaticModelProps) {
         <cylinderGeometry args={[1, 0.72, 1, 9]} />
         <meshToonMaterial color={colors.accent} />
       </mesh>
-      <mesh position={[0.27, 1.36, 0.28]} scale={0.075}>
-        <sphereGeometry args={[1, 12, 10]} />
-        <meshBasicMaterial color="#071015" />
-      </mesh>
+      <MovingPupil position={[0.27, 1.36, 0.28]} scale={0.075} animated={props.animated} />
       {Array.from({ length: 5 }, (_, index) => (
         <mesh key={index} position={[-0.26, 0.72 - index * 0.28, -0.02]} rotation={[0, 0, -0.5]} scale={[0.12, 0.28, 0.06]}>
           <coneGeometry args={[1, 1, 8]} />
@@ -246,19 +257,17 @@ function SealModel(props: AquaticModelProps) {
         <meshToonMaterial color={colors.dark} />
       </mesh>
       {[-1, 1].map((side) => (
-        <mesh key={side} position={[0.25, side * 0.55, -0.02]} rotation={[0, 0, side * -0.46]} scale={[0.62, 0.2, 0.1]}>
-          <sphereGeometry args={[1, 18, 12]} />
-          <meshToonMaterial color={colors.accent} />
-        </mesh>
+        <MovingPart key={side} animated={props.animated} phase={side} base={side * -0.46} amount={0.11} speed={1.5}>
+          <mesh position={[0.25, side * 0.55, -0.02]} scale={[0.62, 0.2, 0.1]}><sphereGeometry args={[1, 18, 12]} /><meshToonMaterial color={colors.accent} /></mesh>
+        </MovingPart>
       ))}
       {[-1, 1].map((side) => (
-        <mesh key={`tail-${side}`} position={[-1.35, side * 0.2, 0]} rotation={[0, 0, side * 0.5]} scale={[0.5, 0.18, 0.1]}>
-          <sphereGeometry args={[1, 16, 10]} />
-          <meshToonMaterial color={colors.dark} />
-        </mesh>
+        <MovingPart key={`tail-${side}`} animated={props.animated} phase={side * 0.6} base={side * 0.5} amount={0.13} speed={1.8}>
+          <mesh position={[-1.35, side * 0.2, 0]} scale={[0.5, 0.18, 0.1]}><sphereGeometry args={[1, 16, 10]} /><meshToonMaterial color={colors.dark} /></mesh>
+        </MovingPart>
       ))}
       <group position={[1.12, 0, 0]}>
-        {PairOfEyes({ x: 0.22, y: 0.36, z: 0.4 })}
+        {PairOfEyes({ x: 0.22, y: 0.36, z: 0.4, animated: props.animated })}
       </group>
       <TraitMarks pieces={props.pieces} form="seal" highlightedPart={props.highlightedPart} />
     </LivingGroup>
@@ -268,9 +277,10 @@ function SealModel(props: AquaticModelProps) {
 function ClamModel(props: AquaticModelProps) {
   const colors = aquaticPalette(props.pieces);
   return (
-    <LivingGroup animated={props.animated} scale={props.scale} motion="pulse">
+    <LivingGroup animated={props.animated} scale={props.scale} motion="pulse" grounded={props.grounded}>
       {[-1, 1].map((side) => (
-        <group key={side} position={[0, side * 0.28, 0]} rotation={[side * -0.2, 0, 0]}>
+        <MovingPart key={side} animated={props.animated} phase={side} base={side * -0.2} amount={0.08} speed={0.9}>
+        <group position={[0, side * 0.28, 0]}>
           <mesh scale={[1.22, 0.58, 0.28]}>
             <sphereGeometry args={[0.88, 28, 18]} />
             <meshToonMaterial color={side > 0 ? colors.body : colors.dark} />
@@ -282,6 +292,7 @@ function ClamModel(props: AquaticModelProps) {
             </mesh>
           ))}
         </group>
+        </MovingPart>
       ))}
       <mesh position={[0, 0, 0.36]} scale={0.24}>
         <sphereGeometry args={[1, 20, 16]} />
@@ -310,15 +321,9 @@ function PufferfishModel(props: AquaticModelProps) {
         );
       })}
       {[-1, 1].map((side) => (
-        <mesh
-          key={`tail-${side}`}
-          position={[-1.28, side * 0.22, -0.02]}
-          rotation={[0, 0, side * 0.58]}
-          scale={[0.52, 0.24, 0.09]}
-        >
-          <sphereGeometry args={[1, 18, 12]} />
-          <meshToonMaterial color={colors.accent} />
-        </mesh>
+        <MovingPart key={`tail-${side}`} animated={props.animated} phase={side} base={side * 0.58} amount={0.12} speed={1.75}>
+          <mesh position={[-1.28, side * 0.22, -0.02]} scale={[0.52, 0.24, 0.09]}><sphereGeometry args={[1, 18, 12]} /><meshToonMaterial color={colors.accent} /></mesh>
+        </MovingPart>
       ))}
       <mesh position={[-0.2, 0.82, -0.04]} rotation={[0, 0, -0.16]} scale={[0.34, 0.38, 0.08]}>
         <coneGeometry args={[1, 1, 12]} />
@@ -337,10 +342,7 @@ function PufferfishModel(props: AquaticModelProps) {
           <sphereGeometry args={[1, 14, 12]} />
           <meshToonMaterial color="#F3F0E8" />
         </mesh>
-        <mesh position={[0.035, 0, 0.085]} scale={[0.06, 0.075, 0.035]}>
-          <sphereGeometry args={[1, 10, 8]} />
-          <meshBasicMaterial color="#071015" />
-        </mesh>
+        <MovingPupil position={[0.035, 0, 0.085]} scale={[0.06, 0.075, 0.035]} animated={props.animated} />
       </group>
       <mesh position={[1.08, -0.08, 0.48]} scale={[0.12, 0.12, 0.05]}>
         <torusGeometry args={[1, 0.22, 7, 16]} />

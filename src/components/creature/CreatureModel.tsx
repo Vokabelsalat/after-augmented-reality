@@ -81,7 +81,7 @@ function createCaudalShape(draw: (shape: THREE.Shape) => void) {
   return shape;
 }
 
-const caudalTailShapes = [
+export const caudalTailShapes = [
   caudalTailShape,
   createCaudalShape((shape) => {
     shape.moveTo(0, 0.11);
@@ -117,7 +117,7 @@ const caudalTailShapes = [
   }),
 ];
 
-type DorsalFinStyle = {
+export type DorsalFinStyle = {
   shape: THREE.Shape;
   width: number;
   height: number;
@@ -133,7 +133,7 @@ function createDorsalShape(
   return shape;
 }
 
-const dorsalFinStyles: DorsalFinStyle[] = [
+export const dorsalFinStyles: DorsalFinStyle[] = [
   {
     shape: createDorsalShape((shape) => {
       shape.moveTo(-0.7, 0);
@@ -237,7 +237,7 @@ const dorsalFinStyles: DorsalFinStyle[] = [
   },
 ];
 
-type PectoralFinStyle = {
+export type PectoralFinStyle = {
   shape: THREE.Shape;
   width: number;
   height: number;
@@ -250,7 +250,7 @@ function createPectoralShape(draw: (shape: THREE.Shape) => void) {
   return shape;
 }
 
-const pectoralFinStyles: PectoralFinStyle[] = [
+export const pectoralFinStyles: PectoralFinStyle[] = [
   {
     shape: createPectoralShape((shape) => {
       shape.moveTo(0.12, 0.1);
@@ -337,7 +337,7 @@ const pectoralFinStyles: PectoralFinStyle[] = [
   },
 ];
 
-const pelvicFinStyles: PectoralFinStyle[] = [
+export const pelvicFinStyles: PectoralFinStyle[] = [
   {
     shape: createPectoralShape((shape) => {
       shape.moveTo(0.1, 0.06);
@@ -799,6 +799,7 @@ export function CreatureModel({
   const finRef = useRef<THREE.Group>(null);
   const pelvicRef = useRef<THREE.Group>(null);
   const eyeRefs = useRef<Array<THREE.Group | null>>([]);
+  const pupilRefs = useRef<Array<THREE.Mesh | null>>([]);
   const partRefs = useRef(new Map<string, THREE.Group>());
   const signature = pieces.map((piece) => piece.artifactId).join(":") || "new";
   const firstArtifact = pieces[0] ? artifactById.get(pieces[0].artifactId) : undefined;
@@ -862,6 +863,11 @@ export function CreatureModel({
       if (!eye) return;
       const closure = winkProgress < 1 ? Math.sin(winkProgress * Math.PI) : 0;
       eye.scale.y = Math.max(0.08, 1 - closure * 0.92);
+    });
+    pupilRefs.current.forEach((pupil, index) => {
+      if (!pupil) return;
+      pupil.position.x = 0.025 + Math.sin(elapsed * 0.67 + index * 0.35 + proportions.winkOffset) * 0.028;
+      pupil.position.y = Math.cos(elapsed * 0.49 + index * 0.28 + proportions.winkOffset) * 0.022;
     });
 
     pieces.forEach((piece) => {
@@ -1041,7 +1047,7 @@ export function CreatureModel({
             <sphereGeometry args={[0.14, 18, 18]} />
             <meshToonMaterial color="#F3F0E8" />
           </mesh>
-          <mesh position={[0.025, 0, 0.1]}>
+          <mesh ref={(node) => { pupilRefs.current[index] = node; }} position={[0.025, 0, 0.1]}>
             <sphereGeometry args={[0.062, 14, 14]} />
             <meshBasicMaterial color="#07080A" />
           </mesh>

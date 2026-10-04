@@ -48,6 +48,52 @@ a:focus-visible {
   font-family: "Iowan Old Style", Baskerville, "Times New Roman", serif;
 }
 
+.shape-editor {
+  min-width: 70rem;
+}
+
+.shape-editor-workspace {
+  height: calc(100dvh - 6.7rem);
+}
+
+.shape-editor-canvas {
+  height: min(65vh, 42rem);
+}
+
+.shape-editor-range {
+  height: 1.25rem;
+  appearance: none;
+  background: transparent;
+}
+
+.shape-editor-range::-webkit-slider-runnable-track {
+  height: 1px;
+  background: rgba(232, 245, 239, 0.28);
+}
+
+.shape-editor-range::-webkit-slider-thumb {
+  width: 0.75rem;
+  height: 0.75rem;
+  margin-top: -0.34rem;
+  appearance: none;
+  border: 1px solid rgba(3, 16, 21, 0.8);
+  border-radius: 50%;
+  background: var(--phosphor);
+}
+
+.shape-editor-range::-moz-range-track {
+  height: 1px;
+  background: rgba(232, 245, 239, 0.28);
+}
+
+.shape-editor-range::-moz-range-thumb {
+  width: 0.75rem;
+  height: 0.75rem;
+  border: 1px solid rgba(3, 16, 21, 0.8);
+  border-radius: 50%;
+  background: var(--phosphor);
+}
+
 .tank-panel {
   background: rgba(3, 16, 21, 0.96);
   border-top: 1px solid rgba(232, 245, 239, 0.24);

@@ -163,7 +163,8 @@ function FloatingCreature({ contribution, progress }: { contribution: Exhibition
           form={contribution.creatureForm}
           pieces={contribution.parts}
           scale={placement.scale * formScale * individualScale}
-          animated={!isBottomDweller}
+          animated
+          grounded={isBottomDweller}
         />
       </group>
     </group>

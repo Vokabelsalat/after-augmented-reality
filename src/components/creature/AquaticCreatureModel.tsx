@@ -1,32 +1,44 @@
 "use client";
 
 import { useFrame } from "@react-three/fiber";
-import { useMemo, useRef } from "react";
+import { useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { CreatureModel, type CreaturePiece } from "@/components/creature/CreatureModel";
 import { AdditionalAquaticModel } from "@/components/creature/AdditionalAquaticModels";
 import { aquaticPalette, TraitMarks } from "@/components/creature/AquaticModelShared";
 import type { AquaticForm } from "@/lib/creature/aquaticForms";
+import { applyCreatureModelOverrides } from "@/lib/creature/modelOverrides";
 import type { CreaturePartId } from "@/types/exhibition";
 
 function CrabModel({
   pieces,
   animated,
+  grounded,
   highlightedPart,
   scale,
 }: AquaticModelProps) {
   const groupRef = useRef<THREE.Group>(null);
   const leftClaw = useRef<THREE.Group>(null);
   const rightClaw = useRef<THREE.Group>(null);
+  const legs = useRef<Array<THREE.Group | null>>([]);
+  const pupils = useRef<Array<THREE.Mesh | null>>([]);
   const colors = aquaticPalette(pieces);
 
   useFrame(({ clock }) => {
     if (animated === false || !groupRef.current) return;
     const wave = clock.elapsedTime;
-    groupRef.current.position.y = Math.sin(wave * 1.3) * 0.045;
+    groupRef.current.position.y = grounded ? 0 : Math.sin(wave * 1.3) * 0.045;
     groupRef.current.rotation.z = Math.sin(wave * 0.8) * 0.025;
     if (leftClaw.current) leftClaw.current.rotation.z = 0.35 + Math.sin(wave * 1.7) * 0.14;
     if (rightClaw.current) rightClaw.current.rotation.z = -0.35 - Math.sin(wave * 1.7 + 0.8) * 0.14;
+    legs.current.forEach((leg, index) => {
+      if (leg) leg.rotation.x = Math.sin(wave * 2.2 + index * 0.9) * 0.12;
+    });
+    pupils.current.forEach((pupil, index) => {
+      if (!pupil) return;
+      pupil.position.x = Math.sin(wave * 0.72 + index * 0.4) * 0.035;
+      pupil.position.y = 0.21 + Math.cos(wave * 0.55 + index * 0.3) * 0.025;
+    });
   });
 
   return (
@@ -39,7 +51,7 @@ function CrabModel({
         <sphereGeometry args={[0.78, 20, 14]} />
         <meshToonMaterial color={colors.light} />
       </mesh>
-      {[-1, 1].map((side) => (
+      {[-1, 1].map((side, index) => (
         <group key={`eye-${side}`} position={[side * 0.44, 0.57, 0.22]}>
           <mesh scale={[0.08, 0.26, 0.08]}>
             <cylinderGeometry args={[1, 1, 1, 10]} />
@@ -49,14 +61,14 @@ function CrabModel({
             <sphereGeometry args={[1, 14, 12]} />
             <meshToonMaterial color="#F3F0E8" />
           </mesh>
-          <mesh position={[0, 0.21, 0.11]} scale={0.052}>
+          <mesh ref={(node) => { pupils.current[index] = node; }} position={[0, 0.21, 0.11]} scale={0.052}>
             <sphereGeometry args={[1, 12, 10]} />
             <meshBasicMaterial color="#071015" />
           </mesh>
         </group>
       ))}
-      {[-1, 1].flatMap((side) => [0, 1, 2].map((leg) => (
-        <group key={`leg-${side}-${leg}`} position={[side * (0.72 + leg * 0.09), 0.08 - leg * 0.22, 0]} rotation={[0, 0, side * (0.72 + leg * 0.17)]}>
+      {[-1, 1].flatMap((side, sideIndex) => [0, 1, 2].map((leg) => (
+        <group ref={(node) => { legs.current[sideIndex * 3 + leg] = node; }} key={`leg-${side}-${leg}`} position={[side * (0.72 + leg * 0.09), 0.08 - leg * 0.22, 0]} rotation={[0, 0, side * (0.72 + leg * 0.17)]}>
           <mesh position={[0, -0.34, 0]} scale={[0.075, 0.46, 0.075]}>
             <cylinderGeometry args={[1, 0.78, 1, 8]} />
             <meshToonMaterial color={colors.dark} />
@@ -110,6 +122,7 @@ function JellyfishModel({
   scale,
 }: AquaticModelProps) {
   const groupRef = useRef<THREE.Group>(null);
+  const tentacles = useRef<Array<THREE.Mesh | null>>([]);
   const colors = aquaticPalette(pieces);
   const curves = useMemo(() => Array.from({ length: 7 }, (_, index) => makeTentacleCurve(index)), []);
 
@@ -119,6 +132,9 @@ function JellyfishModel({
     groupRef.current.position.y = Math.sin(clock.elapsedTime * 0.86) * 0.09;
     groupRef.current.scale.set(scale * (1 + pulse * 0.025), scale * (1 - pulse * 0.035), scale);
     groupRef.current.rotation.z = Math.sin(clock.elapsedTime * 0.56) * 0.055;
+    tentacles.current.forEach((tentacle, index) => {
+      if (tentacle) tentacle.rotation.z = Math.sin(clock.elapsedTime * 0.95 + index * 0.7) * 0.075;
+    });
   });
 
   return (
@@ -132,7 +148,7 @@ function JellyfishModel({
         <meshToonMaterial color={colors.light} transparent opacity={0.62} depthWrite={false} />
       </mesh>
       {curves.map((curve, index) => (
-        <mesh key={index}>
+        <mesh ref={(node) => { tentacles.current[index] = node; }} key={index}>
           <tubeGeometry args={[curve, 22, index % 2 ? 0.035 : 0.052, 7, false]} />
           <meshToonMaterial color={index % 3 === 0 ? colors.accent : colors.body} transparent opacity={0.68} />
         </mesh>
@@ -160,6 +176,8 @@ function OctopusModel({
   scale,
 }: AquaticModelProps) {
   const groupRef = useRef<THREE.Group>(null);
+  const armRefs = useRef<Array<THREE.Mesh | null>>([]);
+  const pupilRefs = useRef<Array<THREE.Mesh | null>>([]);
   const colors = aquaticPalette(pieces);
   const arms = useMemo(() => Array.from({ length: 8 }, (_, index) => makeOctopusArm(index)), []);
 
@@ -168,12 +186,20 @@ function OctopusModel({
     groupRef.current.position.y = Math.sin(clock.elapsedTime * 1.05) * 0.065;
     groupRef.current.rotation.z = Math.sin(clock.elapsedTime * 0.72) * 0.04;
     groupRef.current.rotation.y = Math.sin(clock.elapsedTime * 0.42) * 0.12;
+    armRefs.current.forEach((arm, index) => {
+      if (arm) arm.rotation.z = Math.sin(index * 2.1) * 0.08 + Math.sin(clock.elapsedTime * 1.1 + index * 0.8) * 0.09;
+    });
+    pupilRefs.current.forEach((pupil, index) => {
+      if (!pupil) return;
+      pupil.position.x = Math.sin(clock.elapsedTime * 0.68 + index * 0.35) * 0.035;
+      pupil.position.y = -0.01 + Math.cos(clock.elapsedTime * 0.51 + index * 0.25) * 0.025;
+    });
   });
 
   return (
     <group ref={groupRef} scale={scale} position={[0, 0.38, 0]}>
       {arms.map((curve, index) => (
-        <mesh key={index} rotation={[0, 0, Math.sin(index * 2.1) * 0.08]}>
+        <mesh ref={(node) => { armRefs.current[index] = node; }} key={index} rotation={[0, 0, Math.sin(index * 2.1) * 0.08]}>
           <tubeGeometry args={[curve, 24, 0.085 - index * 0.003, 8, false]} />
           <meshToonMaterial color={index % 3 === 0 ? colors.accent : colors.dark} />
         </mesh>
@@ -186,13 +212,13 @@ function OctopusModel({
         <sphereGeometry args={[0.82, 28, 20]} />
         <meshToonMaterial color={colors.light} />
       </mesh>
-      {[-1, 1].map((side) => (
+      {[-1, 1].map((side, index) => (
         <group key={side} position={[side * 0.28, 0.2, 0.5]}>
           <mesh scale={[0.15, 0.2, 0.1]}>
             <sphereGeometry args={[1, 14, 12]} />
             <meshToonMaterial color="#F3F0E8" />
           </mesh>
-          <mesh position={[0, -0.01, 0.09]} scale={[0.055, 0.1, 0.04]}>
+          <mesh ref={(node) => { pupilRefs.current[index] = node; }} position={[0, -0.01, 0.09]} scale={[0.055, 0.1, 0.04]}>
             <sphereGeometry args={[1, 12, 10]} />
             <meshBasicMaterial color="#071015" />
           </mesh>
@@ -208,6 +234,7 @@ export type AquaticModelProps = {
   animated?: boolean;
   highlightedPart?: CreaturePartId;
   scale: number;
+  grounded?: boolean;
 };
 
 export function AquaticCreatureModel({
@@ -216,18 +243,25 @@ export function AquaticCreatureModel({
   animated = true,
   highlightedPart,
   scale = 1,
+  grounded = false,
 }: AquaticModelProps & { form: AquaticForm }) {
+  const editorRootRef = useRef<THREE.Group>(null);
+
+  useLayoutEffect(() => {
+    if (editorRootRef.current) applyCreatureModelOverrides(editorRootRef.current, form);
+  }, [form, pieces]);
+
+  let model;
   if (form === "crab") {
-    return <CrabModel pieces={pieces} animated={animated} highlightedPart={highlightedPart} scale={scale} />;
+    model = <CrabModel pieces={pieces} animated={animated} grounded={grounded} highlightedPart={highlightedPart} scale={scale} />;
+  } else if (form === "jellyfish") {
+    model = <JellyfishModel pieces={pieces} animated={animated} highlightedPart={highlightedPart} scale={scale} />;
+  } else if (form === "octopus") {
+    model = <OctopusModel pieces={pieces} animated={animated} highlightedPart={highlightedPart} scale={scale} />;
+  } else if (form !== "fish") {
+    model = <AdditionalAquaticModel form={form} pieces={pieces} animated={animated} grounded={grounded} highlightedPart={highlightedPart} scale={scale} />;
+  } else {
+    model = <CreatureModel pieces={pieces} animated={animated} highlightedPart={highlightedPart} scale={scale} />;
   }
-  if (form === "jellyfish") {
-    return <JellyfishModel pieces={pieces} animated={animated} highlightedPart={highlightedPart} scale={scale} />;
-  }
-  if (form === "octopus") {
-    return <OctopusModel pieces={pieces} animated={animated} highlightedPart={highlightedPart} scale={scale} />;
-  }
-  if (form !== "fish") {
-    return <AdditionalAquaticModel form={form} pieces={pieces} animated={animated} highlightedPart={highlightedPart} scale={scale} />;
-  }
-  return <CreatureModel pieces={pieces} animated={animated} highlightedPart={highlightedPart} scale={scale} />;
+  return <group ref={editorRootRef}>{model}</group>;
 }
