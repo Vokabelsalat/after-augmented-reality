@@ -100,12 +100,26 @@ function CollectiveNetworkField({ contributions, progress }: { contributions: Ex
   );
 }
 
-export function CollectiveVisualizationField({ contributions, progress = 1 }: { contributions: ExhibitionContribution[]; progress?: number }) {
+export function CollectiveVisualizationField({
+  contributions,
+  progress = 1,
+  onSelectContribution,
+}: {
+  contributions: ExhibitionContribution[];
+  progress?: number;
+  onSelectContribution?: (contribution: ExhibitionContribution) => void;
+}) {
   if (visualizationDesign === "constellation") {
     return <CollectiveNetworkField contributions={contributions} progress={progress} />;
   }
   if (visualizationDesign === "creature") {
     return <CollectiveAbstractField contributions={contributions} progress={progress} />;
   }
-  return <CollectiveCreatureField contributions={contributions} progress={progress} />;
+  return (
+    <CollectiveCreatureField
+      contributions={contributions}
+      progress={progress}
+      onSelectContribution={onSelectContribution}
+    />
+  );
 }

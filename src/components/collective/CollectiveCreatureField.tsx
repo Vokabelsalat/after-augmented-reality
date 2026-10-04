@@ -1,7 +1,7 @@
 "use client";
 
 import { AdaptiveDpr } from "@react-three/drei";
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { Canvas, useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
 import { useCallback, useEffect, useMemo, useRef, useState, type MutableRefObject } from "react";
 import * as THREE from "three";
 import { AquaticCreatureModel } from "@/components/creature/AquaticCreatureModel";
@@ -120,6 +120,7 @@ type FloatingCreatureProps = {
   pairingRef?: MutableRefObject<PairingEvent | null>;
   juvenile?: boolean;
   spawnPosition?: [number, number, number];
+  onSelect?: (contribution: ExhibitionContribution) => void;
 };
 
 function FloatingCreature({
@@ -129,7 +130,9 @@ function FloatingCreature({
   pairingRef,
   juvenile = false,
   spawnPosition,
+  onSelect,
 }: FloatingCreatureProps) {
+  const canvas = useThree((state) => state.gl.domElement);
   const swimRef = useRef<THREE.Group>(null);
   const directionRef = useRef<THREE.Group>(null);
   const floorOffsetRef = useRef<number | null>(null);
@@ -321,11 +324,26 @@ function FloatingCreature({
   const startsFacingLeft = Math.cos(placement.heading) < 0;
   const formScale = collectiveFormScale[contribution.creatureForm];
   const individualScale = creatureSizeScale(contribution.publicId) * (juvenile ? 0.48 : 1);
+  const handleClick = (event: ThreeEvent<MouseEvent>) => {
+    if (!onSelect || juvenile) return;
+    event.stopPropagation();
+    onSelect(contribution);
+  };
 
   return (
     <group
       ref={swimRef}
       position={[0, 0, placement.z]}
+      onClick={handleClick}
+      onPointerEnter={(event) => {
+        if (!onSelect || juvenile) return;
+        event.stopPropagation();
+        canvas.style.cursor = "pointer";
+      }}
+      onPointerLeave={() => {
+        if (!onSelect || juvenile) return;
+        canvas.style.cursor = "default";
+      }}
     >
       <group ref={directionRef} rotation={[0, startsFacingLeft ? Math.PI : 0, 0]}>
         <AquaticCreatureModel
@@ -516,7 +534,15 @@ function createBaby(event: PairingEvent): BabyCreature {
   };
 }
 
-export function CollectiveCreatureField({ contributions, progress = 1 }: { contributions: ExhibitionContribution[]; progress?: number }) {
+export function CollectiveCreatureField({
+  contributions,
+  progress = 1,
+  onSelectContribution,
+}: {
+  contributions: ExhibitionContribution[];
+  progress?: number;
+  onSelectContribution?: (contribution: ExhibitionContribution) => void;
+}) {
   const [babies, setBabies] = useState<BabyCreature[]>([]);
   const actorRegistry = useRef(new Map<number, MutableRefObject<CreatureMotion>>());
   const pairingRef = useRef<PairingEvent | null>(null);
@@ -551,6 +577,7 @@ export function CollectiveCreatureField({ contributions, progress = 1 }: { contr
           progress={progress}
           actorRegistry={actorRegistry}
           pairingRef={pairingRef}
+          onSelect={onSelectContribution}
         />
       ))}
       {babies.map((baby) => (

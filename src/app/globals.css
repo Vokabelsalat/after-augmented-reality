@@ -529,6 +529,15 @@ a:focus-visible {
   --collective-recents-height: clamp(12rem, 23vh, 16rem);
 }
 
+.specimen-dialog-backdrop {
+  background: rgba(1, 7, 10, 0.76);
+  backdrop-filter: blur(10px);
+}
+
+.specimen-dialog {
+  box-shadow: 0 2rem 7rem rgba(0, 0, 0, 0.65);
+}
+
 .collective-recents {
   height: var(--collective-recents-height);
 }

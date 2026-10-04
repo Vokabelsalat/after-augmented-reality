@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { CollectiveVisualizationField } from "@/components/collective/CollectiveVisualizationField";
 import { CollectiveHeatmap } from "@/components/collective/CollectiveHeatmap";
+import { SpecimenDialog } from "@/components/collective/SpecimenDialog";
 import { PathVisualization } from "@/components/visualization/PathVisualization";
 import { BiomeBackdrop } from "@/components/visualization/BiomeBackdrop";
 import { activeVisualizationCopy } from "@/config/visualization";
@@ -44,6 +45,7 @@ export function CollectiveWall() {
   const [heatmap, setHeatmap] = useState<CollectiveHeatDatum[]>([]);
   const [view, setView] = useState<"collective" | "heatmap">("collective");
   const [active, setActive] = useState<ExhibitionContribution | null>(null);
+  const [selectedContribution, setSelectedContribution] = useState<ExhibitionContribution | null>(null);
   const [connected, setConnected] = useState(true);
   const [ready, setReady] = useState(false);
   const [clockMinutes, setClockMinutes] = useState(() => minuteOfDay(new Date()));
@@ -209,7 +211,11 @@ export function CollectiveWall() {
       </div>
       {view === "collective" ? (
         <div className="collective-swim-field absolute" aria-live="polite">
-          <CollectiveVisualizationField contributions={habitatCreatures} progress={dayProgress} />
+          <CollectiveVisualizationField
+            contributions={habitatCreatures}
+            progress={dayProgress}
+            onSelectContribution={setSelectedContribution}
+          />
         </div>
       ) : (
         <CollectiveHeatmap data={visibleHeatmap} />
@@ -373,6 +379,13 @@ export function CollectiveWall() {
             </div>
           </div>
         </aside>
+      )}
+
+      {selectedContribution && (
+        <SpecimenDialog
+          contribution={selectedContribution}
+          onClose={() => setSelectedContribution(null)}
+        />
       )}
     </main>
   );

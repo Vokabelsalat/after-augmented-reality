@@ -303,6 +303,44 @@ function ShrimpModel(props: AquaticModelProps) {
   );
 }
 
+function ArticulatedMammalTail({
+  animated,
+  colors,
+  whale,
+}: {
+  animated?: boolean;
+  colors: ReturnType<typeof aquaticPalette>;
+  whale: boolean;
+}) {
+  const stemRef = useRef<THREE.Group>(null);
+  const flukesRef = useRef<THREE.Group>(null);
+
+  useFrame(({ clock }) => {
+    if (animated === false) return;
+    const swim = clock.elapsedTime * (whale ? 1.15 : 1.65);
+    if (stemRef.current) stemRef.current.rotation.z = Math.sin(swim) * (whale ? 0.16 : 0.2);
+    if (flukesRef.current) flukesRef.current.rotation.z = Math.sin(swim - 0.72) * (whale ? 0.14 : 0.18);
+  });
+
+  const stemLength = whale ? 1.02 : 0.88;
+  return (
+    <group ref={stemRef}>
+      <mesh position={[-stemLength * 0.48, 0, 0]} rotation={[0, 0, Math.PI / 2]} scale={[whale ? 0.105 : 0.085, stemLength, whale ? 0.14 : 0.11]}>
+        <cylinderGeometry args={[0.42, 1, 1, 14]} />
+        <meshToonMaterial color={colors.body} />
+      </mesh>
+      <group ref={flukesRef} position={[-stemLength, 0, 0]}>
+        {[-1, 1].map((side) => (
+          <mesh key={side} position={[-0.22, side * (whale ? 0.28 : 0.23), 0]} rotation={[0, 0, side * 0.52]} scale={[whale ? 0.72 : 0.57, whale ? 0.22 : 0.18, 0.085]}>
+            <sphereGeometry args={[1, 18, 12]} />
+            <meshToonMaterial color={colors.dark} />
+          </mesh>
+        ))}
+      </group>
+    </group>
+  );
+}
+
 function MarineMammalModel({ kind, ...props }: AquaticModelProps & { kind: "narwhal" | "dolphin" | "whale" }) {
   const colors = aquaticPalette(props.pieces, props.baseSeed);
   const whale = kind === "whale";
@@ -325,19 +363,8 @@ function MarineMammalModel({ kind, ...props }: AquaticModelProps & { kind: "narw
           <mesh position={[-bodyLength * 1.04, side * 0.28, 0]} scale={[0.55, 0.2, 0.1]}><sphereGeometry args={[1, 18, 12]} /><meshToonMaterial color={colors.dark} /></mesh>
         </MovingPart>
       )) : (
-        <group position={[-bodyLength * 0.86, 0, 0]}>
-          <MovingPart animated={props.animated} phase={kind === "whale" ? 0.35 : 0.8} amount={whale ? 0.15 : 0.18} speed={whale ? 0.82 : 1.08}>
-            <mesh position={[-0.42, 0, 0]} rotation={[0, 0, Math.PI / 2]} scale={[whale ? 0.18 : 0.14, 0.76, whale ? 0.2 : 0.16]}>
-              <cylinderGeometry args={[0.48, 1, 1, 14]} />
-              <meshToonMaterial color={colors.body} />
-            </mesh>
-            {[-1, 1].map((side) => (
-              <mesh key={`fluke-${side}`} position={[-0.9, side * (whale ? 0.27 : 0.23), 0]} rotation={[0, 0, side * 0.48]} scale={[whale ? 0.7 : 0.56, whale ? 0.23 : 0.19, 0.1]}>
-                <sphereGeometry args={[1, 18, 12]} />
-                <meshToonMaterial color={colors.dark} />
-              </mesh>
-            ))}
-          </MovingPart>
+        <group position={[-bodyLength * 0.93, 0, 0]}>
+          <ArticulatedMammalTail animated={props.animated} colors={colors} whale={whale} />
         </group>
       )}
       <MovingPupil position={[bodyLength * 0.67, 0.17, whale ? 0.54 : 0.43]} scale={whale ? 0.07 : 0.075} animated={props.animated} />
