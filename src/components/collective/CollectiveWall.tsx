@@ -223,7 +223,7 @@ export function CollectiveWall() {
 
       <header className="absolute inset-x-0 top-0 z-30 flex items-center justify-between py-7 lg:py-9">
         <div>
-          <h1 className="font-display text-xl tracking-[-0.03em] lg:text-2xl">The Fishbow Leaks</h1>
+          <h1 className="font-display text-xl tracking-[-0.03em] lg:text-2xl">The Fishbowl Leaks</h1>
           <p className="mt-1 text-sm text-white/45">Shared aquarium · daily cycle</p>
         </div>
         <div className="absolute left-1/2 flex -translate-x-1/2 rounded-full border border-white/12 bg-black/20 p-1 text-[10px] tracking-[0.18em] backdrop-blur-md" role="group" aria-label="Collective view">
@@ -315,18 +315,18 @@ export function CollectiveWall() {
             />
           </div>
           <div className="collective-story relative z-10 ml-auto mr-[6vw] w-[min(34vw,36rem)]">
-              <p className="mb-3 text-base text-[var(--phosphor)]">A new specimen has entered the tank</p>
-              <p className="mb-6 text-sm text-white/45">
-                Made from {visibleActive.parts.length} exhibition {visibleActive.parts.length === 1 ? "encounter" : "encounters"}
-              </p>
-              <p className="mb-7 font-mono text-sm text-white/55">
-                Specimen {String(visibleActive.id).padStart(3, "0")} has been successfully <s>classified</s> <s>contained</s> <s>understood</s>
-              </p>
-              <div className="font-display text-[clamp(1.35rem,1.9vw,2.15rem)] leading-[1.16] tracking-[-0.025em]">
-                {visibleActive.narrative.map((line, index) => (
-                  <p key={`${index}-${line}`} className="my-1.5">{line}</p>
-                ))}
-              </div>
+            <p className="mb-3 text-base text-[var(--phosphor)]">A new specimen has entered the tank</p>
+            <p className="mb-6 text-sm text-white/45">
+              Made from {visibleActive.parts.length} exhibition {visibleActive.parts.length === 1 ? "encounter" : "encounters"}
+            </p>
+            <p className="mb-7 font-mono text-sm text-white/55">
+              Specimen {String(visibleActive.id).padStart(3, "0")} has been successfully <s>classified</s> <s>contained</s> <s>understood</s>
+            </p>
+            <div className="font-display text-[clamp(1.35rem,1.9vw,2.15rem)] leading-[1.16] tracking-[-0.025em]">
+              {visibleActive.narrative.map((line, index) => (
+                <p key={`${index}-${line}`} className="my-1.5">{line}</p>
+              ))}
+            </div>
           </div>
         </section>
       )}

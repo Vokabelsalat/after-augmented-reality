@@ -29,7 +29,7 @@ export function ExhibitionNavigation() {
   return (
     <header className="safe-top pointer-events-none absolute inset-x-0 top-0 z-30 flex items-start justify-between px-4">
       <div>
-        <p className="text-lg leading-none tracking-[-0.04em]">The Fishbow Leaks</p>
+        <p className="text-lg leading-none tracking-[-0.04em]">The Fishbowl Leaks</p>
         <p className="mt-1 text-sm text-white/65" aria-live="polite">
           {count} {count === 1 ? "encounter" : "encounters"} recorded
         </p>
@@ -43,7 +43,7 @@ export function ExhibitionNavigation() {
         <span key={previewKey} className="specimen-preview-update size-12 overflow-hidden rounded-full bg-white/[0.035]" aria-hidden="true">
           <PathVisualization artifactIds={previewDiscoveries.map((item) => item.artifactId)} creatureForm={creatureForm} creatureSeed={creatureSeed} compact />
         </span>
-          <span>My specimen</span>
+        <span>My specimen</span>
       </button>
     </header>
   );
