@@ -17,6 +17,7 @@ function seededUnit(seed: number) {
 const compartmentBounds = [-1, -0.64, -0.08, 0.2, 0.68, 1] as const;
 const wallThresholds = [0.14, 0.32, 0.5, 0.68] as const;
 const wallHolePositions = [34, 66, 43, 72] as const;
+const pairingDistance = 0.65;
 const collectiveFormScale: Record<AquaticForm, number> = {
   fish: 1,
   crab: 1.04,
@@ -359,13 +360,39 @@ function PairingDirector({
     }
 
     if (elapsed - lastPairAt.current < 12 || eligiblePairs.length === 0) return;
-    const group = eligiblePairs[sequence.current % eligiblePairs.length];
-    const firstIndex = sequence.current % group.length;
-    const first = group[firstIndex];
-    const second = group[(firstIndex + 1) % group.length];
-    const firstMotion = actorRegistry.current.get(first.id)?.current;
-    const secondMotion = actorRegistry.current.get(second.id)?.current;
-    if (!firstMotion?.initialized || !secondMotion?.initialized) return;
+    let chanceEncounter: {
+      first: ExhibitionContribution;
+      second: ExhibitionContribution;
+      firstMotion: CreatureMotion;
+      secondMotion: CreatureMotion;
+    } | null = null;
+
+    for (const group of eligiblePairs) {
+      for (let firstIndex = 0; firstIndex < group.length - 1; firstIndex += 1) {
+        for (let secondIndex = firstIndex + 1; secondIndex < group.length; secondIndex += 1) {
+          const first = group[firstIndex];
+          const second = group[secondIndex];
+          const firstMotion = actorRegistry.current.get(first.id)?.current;
+          const secondMotion = actorRegistry.current.get(second.id)?.current;
+          if (!firstMotion?.initialized || !secondMotion?.initialized) continue;
+
+          const distance = Math.hypot(
+            firstMotion.x - secondMotion.x,
+            firstMotion.y - secondMotion.y,
+            firstMotion.z - secondMotion.z,
+          );
+          if (distance <= pairingDistance) {
+            chanceEncounter = { first, second, firstMotion, secondMotion };
+            break;
+          }
+        }
+        if (chanceEncounter) break;
+      }
+      if (chanceEncounter) break;
+    }
+
+    if (!chanceEncounter) return;
+    const { first, second, firstMotion, secondMotion } = chanceEncounter;
 
     pairingRef.current = {
       parents: [first, second],
@@ -382,6 +409,68 @@ function PairingDirector({
   });
 
   return null;
+}
+
+function PairingHeart({ pairingRef }: { pairingRef: MutableRefObject<PairingEvent | null> }) {
+  const heartRef = useRef<THREE.Mesh>(null);
+  const materialRef = useRef<THREE.MeshBasicMaterial>(null);
+  const activeSequence = useRef<number | null>(null);
+  const appearedAt = useRef(0);
+  const origin = useRef<[number, number, number]>([0, 0, 0]);
+  const shape = useMemo(() => {
+    const heart = new THREE.Shape();
+    heart.moveTo(0, -0.3);
+    heart.bezierCurveTo(-0.08, -0.2, -0.45, 0.02, -0.45, 0.3);
+    heart.bezierCurveTo(-0.45, 0.62, -0.08, 0.72, 0, 0.46);
+    heart.bezierCurveTo(0.08, 0.72, 0.45, 0.62, 0.45, 0.3);
+    heart.bezierCurveTo(0.45, 0.02, 0.08, -0.2, 0, -0.3);
+    return heart;
+  }, []);
+
+  useFrame(({ clock }) => {
+    const heart = heartRef.current;
+    const material = materialRef.current;
+    if (!heart || !material) return;
+
+    const pairing = pairingRef.current;
+    if (pairing && pairing.sequence !== activeSequence.current) {
+      activeSequence.current = pairing.sequence;
+      appearedAt.current = clock.elapsedTime;
+      origin.current = pairing.midpoint;
+      heart.visible = true;
+    }
+
+    const age = clock.elapsedTime - appearedAt.current;
+    if (activeSequence.current === null || age >= 2.4) {
+      heart.visible = false;
+      return;
+    }
+
+    const rise = THREE.MathUtils.smoothstep(age, 0, 2.4);
+    const pop = Math.min(1, age / 0.22);
+    const dissolve = 1 - THREE.MathUtils.smoothstep(age, 0.8, 2.4);
+    heart.position.set(
+      origin.current[0] + Math.sin(age * 4.2) * 0.08 * rise,
+      origin.current[1] + rise * 1.35,
+      3,
+    );
+    heart.scale.setScalar((0.42 + Math.sin(age * 7) * 0.035) * pop);
+    material.opacity = dissolve;
+  });
+
+  return (
+    <mesh ref={heartRef} visible={false} renderOrder={4}>
+      <shapeGeometry args={[shape, 20]} />
+      <meshBasicMaterial
+        ref={materialRef}
+        color="#ef3340"
+        transparent
+        depthTest={false}
+        depthWrite={false}
+        toneMapped={false}
+      />
+    </mesh>
+  );
 }
 
 function createBaby(event: PairingEvent): BabyCreature {
@@ -432,6 +521,7 @@ export function CollectiveCreatureField({ contributions, progress = 1 }: { contr
         pairingRef={pairingRef}
         onBaby={handleBaby}
       />
+      <PairingHeart pairingRef={pairingRef} />
       {adults.map((contribution) => (
         <FloatingCreature
           key={contribution.id}

@@ -27,12 +27,12 @@ const backPlants: PlantSpec[] = [
 ];
 
 const frontPlants: PlantSpec[] = [
-  { kind: "waterweed", side: -1, offset: -0.16, height: 6.2, color: "#4f9a68", phase: 3.2, lean: -0.09 },
+  { kind: "waterweed", side: -1, offset: -0.16, height: 7.4, color: "#4f9a68", phase: 3.2, lean: -0.09 },
   { kind: "grass", side: -1, offset: 0.05, height: 1.45, color: "#5b9b79", phase: 2.1 },
   { kind: "anemone", side: -1, offset: 0.82, height: 1.02, color: "#b8738b", phase: 4.4 },
   { kind: "kelp", side: 1, offset: 0.04, height: 1.65, color: "#3e8d73", phase: 0.9 },
   { kind: "grass", side: 1, offset: 0.62, height: 1.1, color: "#6d986d", phase: 5.7 },
-  { kind: "waterweed", side: 1, offset: -0.2, height: 7.15, color: "#43865f", phase: 5.05, lean: 0.1 },
+  { kind: "waterweed", side: 1, offset: -0.2, height: 8.3, color: "#43865f", phase: 5.05, lean: 0.1 },
 ];
 
 function SwayingPlant({ spec, layer, x, floorY }: { spec: PlantSpec; layer: PlantLayer; x: number; floorY: number }) {
@@ -44,9 +44,10 @@ function SwayingPlant({ spec, layer, x, floorY }: { spec: PlantSpec; layer: Plan
   useFrame(({ clock }) => {
     if (!ref.current) return;
     const time = clock.elapsedTime;
-    ref.current.rotation.z = (spec.lean ?? 0) + Math.sin(time * (spec.kind === "waterweed" ? 0.3 : 0.42) + spec.phase) * (spec.kind === "kelp" ? 0.075 : 0.045);
+    ref.current.rotation.z = (spec.lean ?? 0) + Math.sin(time * (spec.kind === "waterweed" ? 0.16 : 0.42) + spec.phase) * (spec.kind === "kelp" ? 0.075 : 0.045);
     ref.current.children.forEach((child, index) => {
-      child.rotation.z = Math.sin(time * (0.56 + index * 0.035) + spec.phase + index * 0.72) * (0.07 + index * 0.008);
+      const stemSpeed = spec.kind === "waterweed" ? 0.22 + index * 0.015 : 0.56 + index * 0.035;
+      child.rotation.z = Math.sin(time * stemSpeed + spec.phase + index * 0.72) * (0.07 + index * 0.008);
     });
   });
 
@@ -54,12 +55,24 @@ function SwayingPlant({ spec, layer, x, floorY }: { spec: PlantSpec; layer: Plan
     <group ref={ref} position={[x, floorY, z]}>
       {Array.from({ length: stems }, (_, index) => {
         const spread = (index - (stems - 1) / 2) * (spec.kind === "anemone" ? 0.14 : spec.kind === "waterweed" ? 0.13 : 0.18);
-        const stemHeight = spec.height * (0.72 + ((index * 37) % 28) / 100);
+        const stemHeight = spec.height * (spec.kind === "waterweed" ? 0.8 + ((index * 37) % 28) / 100 : 0.72 + ((index * 37) % 28) / 100);
         const width = spec.kind === "kelp" ? 0.075 : spec.kind === "anemone" ? 0.045 : spec.kind === "waterweed" ? 0.028 : 0.035;
+        const curveDirection = index % 2 === 0 ? -1 : 1;
+        const waterweedCurve = new THREE.CatmullRomCurve3([
+          new THREE.Vector3(0, 0, 0),
+          new THREE.Vector3(curveDirection * 0.18, stemHeight * 0.28, 0),
+          new THREE.Vector3(curveDirection * -0.12, stemHeight * 0.58, 0),
+          new THREE.Vector3(curveDirection * 0.24, stemHeight * 0.82, 0),
+          new THREE.Vector3(curveDirection * 0.08, stemHeight, 0),
+        ]);
         return (
           <group key={index} position={[spread, 0, index * 0.012]} rotation={[0, 0, spread * -0.16]}>
-            <mesh position={[0, stemHeight / 2, 0]} rotation={[0, 0, spread * 0.12]}>
-              <capsuleGeometry args={[width, Math.max(0.08, stemHeight - width * 2), 5, 8]} />
+            <mesh position={spec.kind === "waterweed" ? [0, 0, 0] : [0, stemHeight / 2, 0]} rotation={[0, 0, spread * 0.12]}>
+              {spec.kind === "waterweed" ? (
+                <tubeGeometry args={[waterweedCurve, 32, width, 7, false]} />
+              ) : (
+                <capsuleGeometry args={[width, Math.max(0.08, stemHeight - width * 2), 5, 8]} />
+              )}
               <meshToonMaterial color={spec.color} transparent opacity={opacity} />
             </mesh>
             {spec.kind === "kelp" && (
@@ -75,10 +88,11 @@ function SwayingPlant({ spec, layer, x, floorY }: { spec: PlantSpec; layer: Plan
               </mesh>
             )}
             {spec.kind === "waterweed" && Array.from({ length: 7 }, (_, leafIndex) => {
-              const leafY = stemHeight * (0.2 + leafIndex * 0.105);
+              const leafProgress = 0.2 + leafIndex * 0.105;
+              const leafPoint = waterweedCurve.getPoint(leafProgress);
               const leafSide = (leafIndex + index) % 2 === 0 ? -1 : 1;
               return (
-                <group key={leafIndex} position={[0, leafY, 0]} rotation={[0, 0, leafSide * (0.82 + (leafIndex % 3) * 0.12)]}>
+                <group key={leafIndex} position={[leafPoint.x, leafPoint.y, 0]} rotation={[0, 0, leafSide * (0.82 + (leafIndex % 3) * 0.12)]}>
                   <mesh position={[leafSide * 0.095, 0.07, 0]} scale={[0.045, 0.19, 0.035]}>
                     <sphereGeometry args={[1, 10, 8]} />
                     <meshToonMaterial color={spec.color} transparent opacity={opacity * 0.96} />
