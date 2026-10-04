@@ -27,9 +27,11 @@ describe("generateJourneyNarrative", () => {
 
     expect(lines).toHaveLength(2);
     expect(lines.every((line) => {
-      const lineCount = line.split("\n").length;
-      return lineCount >= 1 && lineCount <= 3;
+      const stanzaLines = line.split("\n");
+      return stanzaLines.length >= 1 && stanzaLines.length <= 3
+        && stanzaLines.every((sentence) => /^[A-Z].*\.$/.test(sentence));
     })).toBe(true);
+    expect(lines.join("\n")).not.toContain("—");
   });
 
   it("preserves the scanned route without an introduction or conclusion", () => {

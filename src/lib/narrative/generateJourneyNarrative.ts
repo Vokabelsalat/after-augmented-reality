@@ -1,7 +1,7 @@
 import type { ExhibitionArtifact, ThemeId } from "@/types/exhibition";
 import type { Discovery } from "@/store/journeySlice";
 
-const movements = ["enter", "cross", "follow", "circle", "drift through", "sound"] as const;
+const movements = ["enters", "crosses", "follows", "circles", "drifts through", "explores"] as const;
 const qualities = ["open", "dim", "folded", "tidal", "quiet", "unfixed"] as const;
 const motions = ["drifting", "turning", "listening", "surfacing", "circling", "opening"] as const;
 const responses = ["holds", "alters", "follows", "loosens", "remembers", "repeats"] as const;
@@ -50,9 +50,9 @@ function stanza(artifact: ExhibitionArtifact, random: () => number) {
   const lineCount = 1 + Math.floor(random() * 3);
 
   return [
-    `${pick(movements, random)} the ${pick(qualities, random)} ${route} —`,
-    sentence(`${traits[0]}, ${pick(motions, random)}`),
-    sentence(`${traits[1]} ${pick(responses, random)} the water`),
+    `The creature ${pick(movements, random)} the ${pick(qualities, random)} ${route}.`,
+    sentence(`it watches ${traits[0]} ${pick(motions, random)}`),
+    sentence(`the water ${pick(responses, random)} ${traits[1]}`),
   ].slice(0, lineCount).join("\n");
 }
 

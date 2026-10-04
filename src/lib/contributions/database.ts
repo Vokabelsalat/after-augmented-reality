@@ -8,6 +8,7 @@ import { artifactById } from "@/data/artifacts";
 import { artifacts } from "@/data/artifacts";
 import { aggregateContributionDwellTimes } from "@/lib/contributions/heatmap";
 import { isAquaticForm, type AquaticForm } from "@/lib/creature/aquaticForms";
+import { generateJourneyNarrative } from "@/lib/narrative/generateJourneyNarrative";
 
 type ContributionRow = {
   id: number;
@@ -116,20 +117,29 @@ function deserialize(row: ContributionRow): ExhibitionContribution {
   const storedParts = JSON.parse(row.glyphs_json) as Array<
     Partial<SharedCreaturePart> & Pick<SharedCreaturePart, "artifactId" | "sequence" | "theme" | "color">
   >;
+  const parts = storedParts.flatMap((part) => {
+    const artifact = artifactById.get(part.artifactId);
+    if (!artifact) return [];
+    return [{
+      ...part,
+      partId: part.partId ?? artifact.creaturePart.id,
+      label: part.label ?? artifact.creaturePart.label,
+    } as SharedCreaturePart];
+  });
+  const createdAt = Date.parse(row.created_at);
   return {
     id: row.id,
     publicId: row.public_id,
     creatureForm: isAquaticForm(row.creature_form) ? row.creature_form : "fish",
-    parts: storedParts.flatMap((part) => {
-      const artifact = artifactById.get(part.artifactId);
-      if (!artifact) return [];
-      return [{
-        ...part,
-        partId: part.partId ?? artifact.creaturePart.id,
-        label: part.label ?? artifact.creaturePart.label,
-      } as SharedCreaturePart];
-    }),
-    narrative: JSON.parse(row.narrative_json) as string[],
+    parts,
+    narrative: generateJourneyNarrative(
+      parts.map((part) => ({
+        artifactId: part.artifactId,
+        sequence: part.sequence,
+        discoveredAt: createdAt + part.sequence,
+      })),
+      artifacts,
+    ),
     createdAt: row.created_at,
   };
 }
