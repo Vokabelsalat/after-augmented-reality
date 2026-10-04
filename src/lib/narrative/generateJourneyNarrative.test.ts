@@ -12,26 +12,16 @@ function discoveries(ids: string[]): Discovery[] {
 }
 
 describe("generateJourneyNarrative", () => {
-  it("is deterministic", () => {
-    const path = discoveries(["between-page-and-screen", "finding-frida", "emperor"]);
-    expect(generateJourneyNarrative(path, artifacts)).toEqual(
-      generateJourneyNarrative(path, artifacts),
-    );
-  });
-
-  it("creates one concise one-to-three-line stanza per encounter", () => {
+  it("concatenates each artifact phrase in encounter order", () => {
     const lines = generateJourneyNarrative(
       discoveries(["grand-hotel-bald-cockatoo", "emperor"]),
       artifacts,
     );
 
-    expect(lines).toHaveLength(2);
-    expect(lines.every((line) => {
-      const stanzaLines = line.split("\n");
-      return stanzaLines.length >= 1 && stanzaLines.length <= 3
-        && stanzaLines.every((sentence) => /^[A-Z].*\.$/.test(sentence));
-    })).toBe(true);
-    expect(lines.join("\n")).not.toContain("—");
+    expect(lines).toEqual([
+      "A hotel nested inside the tank and printed a fortune for the tide.",
+      "A word descended beyond reach. A hand-drawn light followed it down.",
+    ]);
   });
 
   it("preserves the scanned route without an introduction or conclusion", () => {
@@ -45,34 +35,12 @@ describe("generateJourneyNarrative", () => {
     );
 
     expect(letterFirst).toHaveLength(2);
-    expect(letterFirst[0]).toMatch(/QR shells/i);
-    expect(archiveFirst[0]).toMatch(/photograph scales/i);
-  });
-
-  it("varies its language between visits while remaining stable within a visit", () => {
-    const versions = new Set(
-      Array.from({ length: 24 }, (_, offset) => {
-        const path = discoveries(["finding-frida", "historically-yours", "emperor"])
-          .map((discovery) => ({ ...discovery, discoveredAt: discovery.discoveredAt + offset * 1_000 }));
-        return generateJourneyNarrative(path, artifacts).join("\n\n");
-      }),
+    expect(letterFirst[0]).toBe(
+      "P sent a letter through the glass. S answered from the water.",
     );
-
-    expect(versions.size).toBeGreaterThan(12);
-  });
-
-  it("varies stanza length between one and three lines", () => {
-    const lineCounts = new Set(
-      Array.from({ length: 80 }, (_, offset) => generateJourneyNarrative([
-        {
-          artifactId: "grand-hotel-bald-cockatoo",
-          sequence: 1,
-          discoveredAt: 1_000 + offset,
-        },
-      ], artifacts)[0].split("\n").length),
+    expect(archiveFirst[0]).toBe(
+      "A photograph sank into the substrate. By morning, it had grown roots.",
     );
-
-    expect(lineCounts).toEqual(new Set([1, 2, 3]));
   });
 
   it("keeps every stop in a longer path", () => {

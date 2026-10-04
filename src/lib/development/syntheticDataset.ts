@@ -32,7 +32,7 @@ const pathSteps = [1, 2, 3, 5, 7] as const;
 
 /**
  * Produces a repeatable exhibition day with varied routes, pauses, choices,
- * creature forms and generated poems. The records are deliberately shaped
+ * creature forms and assembled artifact narratives. The records are deliberately shaped
  * exactly like live contributions so every collective view uses the same path.
  */
 export function createSyntheticDataset(

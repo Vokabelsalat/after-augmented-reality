@@ -22,15 +22,21 @@ describe("createSyntheticDataset", () => {
     );
   });
 
-  it("covers every creature form and creates varied paths and poems", () => {
+  it("covers every creature form and creates varied path-based narratives", () => {
     const dataset = createSyntheticDataset(cycleStart);
     const knownArtifacts = new Set(artifacts.map((artifact) => artifact.id));
+    const uniquePaths = new Set(
+      dataset.map((visitor) => visitor.parts.map((part) => part.artifactId).join("|")),
+    );
+    const uniqueNarratives = new Set(
+      dataset.map((visitor) => visitor.narrative.join("\n")),
+    );
 
     expect(new Set(dataset.map((visitor) => visitor.creatureForm))).toEqual(
       new Set(aquaticForms),
     );
     expect(new Set(dataset.map((visitor) => visitor.parts.length)).size).toBeGreaterThan(3);
-    expect(new Set(dataset.map((visitor) => visitor.narrative.join("\n"))).size).toBeGreaterThan(18);
+    expect(uniqueNarratives.size).toBe(uniquePaths.size);
     expect(dataset.every((visitor) => visitor.parts.every((part) => knownArtifacts.has(part.artifactId)))).toBe(true);
     expect(dataset.every((visitor) => visitor.parts.every((part) => (part.dwellMs ?? 0) >= 35_000))).toBe(true);
     expect(dataset.every((visitor) => visitor.narrative.length === visitor.parts.length)).toBe(true);
