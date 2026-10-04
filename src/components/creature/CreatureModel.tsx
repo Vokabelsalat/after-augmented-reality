@@ -4,6 +4,7 @@ import { useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
 import { artifactById } from "@/data/artifacts";
+import { creatureColorPalette } from "@/lib/creature/colorPalettes";
 import type { CreaturePartId, ThemeId } from "@/types/exhibition";
 
 export type CreaturePiece = {
@@ -813,11 +814,12 @@ export function CreatureModel({
     winkEvery: 4.2 + hashUnit(`${signature}:wink-speed`) * 3.8,
     winkOffset: hashUnit(`${signature}:wink-offset`) * 7,
   }), [profile, signature]);
-  const baseColor = configuredLook?.body ?? pieces[0]?.color ?? "#58D6FF";
-  const headColor = configuredLook?.head ?? baseColor;
-  const bellyColor = configuredLook?.belly ?? new THREE.Color(baseColor).lerp(new THREE.Color("#F3F0E8"), 0.38).getStyle();
-  const finColor = configuredLook?.fin ?? bellyColor;
-  const markingColor = configuredLook?.marking ?? headColor;
+  const colorPalette = creatureColorPalette(signature);
+  const baseColor = colorPalette.body;
+  const headColor = colorPalette.head;
+  const bellyColor = colorPalette.belly;
+  const finColor = colorPalette.fin;
+  const markingColor = colorPalette.marking;
   const pattern = configuredLook?.pattern ?? "belly";
   const finVariation = hashUnit(`${firstArtifact?.id ?? signature}:fin-palette`) - 0.5;
   const finPalette = {

@@ -1,16 +1,18 @@
 import * as THREE from "three";
 import type { CreaturePiece } from "@/components/creature/CreatureModel";
 import type { AquaticForm } from "@/lib/creature/aquaticForms";
+import { creatureColorPalette } from "@/lib/creature/colorPalettes";
 import type { CreaturePartId } from "@/types/exhibition";
 
 export function aquaticPalette(pieces: CreaturePiece[]) {
-  const base = new THREE.Color(pieces[0]?.color ?? "#3E9299");
-  const accent = new THREE.Color(pieces.at(-1)?.color ?? "#E2A53A");
+  const signature = pieces.map((piece) => piece.artifactId).join(":") || "new";
+  const palette = creatureColorPalette(signature);
+  const base = new THREE.Color(palette.body);
   return {
     body: base.getStyle(),
-    light: base.clone().lerp(new THREE.Color("#E7F4E9"), 0.38).getStyle(),
-    dark: base.clone().lerp(new THREE.Color("#07141C"), 0.42).getStyle(),
-    accent: accent.getStyle(),
+    light: palette.belly,
+    dark: palette.marking,
+    accent: palette.fin,
   };
 }
 
@@ -23,6 +25,9 @@ export function TraitMarks({
   form: Exclude<AquaticForm, "fish">;
   highlightedPart?: CreaturePartId;
 }) {
+  const signature = pieces.map((piece) => piece.artifactId).join(":") || "new";
+  const palette = creatureColorPalette(signature);
+  const markColors = [palette.marking, palette.fin, palette.head, palette.belly];
   return pieces.map((piece, index) => {
     const angle = index * 2.39996;
     const layouts: Record<Exclude<AquaticForm, "fish">, { x: number; y: number; cy: number; z: number }> = {
@@ -54,8 +59,8 @@ export function TraitMarks({
           {index % 4 === 2 && <torusGeometry args={[0.62, 0.19, 8, 18]} />}
           {index % 4 === 3 && <boxGeometry args={[1.25, 0.72, 0.38]} />}
           <meshStandardMaterial
-            color={piece.color}
-            emissive={piece.color}
+            color={markColors[index % markColors.length]}
+            emissive={markColors[index % markColors.length]}
             emissiveIntensity={highlighted ? 1.1 : 0.3}
             roughness={0.44}
           />
