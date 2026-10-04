@@ -3,6 +3,7 @@ import type { AquaticForm } from "@/lib/creature/aquaticForms";
 
 export const CREATURE_MODEL_OVERRIDES_KEY = "after-augmented-reality:creature-model-overrides:v1";
 export const WHALE_MODEL_OVERRIDES_KEY = "after-augmented-reality:creature-model-overrides:whale-v2";
+export const DOLPHIN_MODEL_OVERRIDES_KEY = "after-augmented-reality:creature-model-overrides:dolphin-v2";
 
 export type SavedNodeTransform = {
   x: number;
@@ -34,8 +35,11 @@ export function loadCreatureModelOverrides(): CreatureModelOverrides {
   try {
     const overrides = JSON.parse(window.localStorage.getItem(CREATURE_MODEL_OVERRIDES_KEY) ?? "{}") as CreatureModelOverrides;
     const whaleOverrides = JSON.parse(window.localStorage.getItem(WHALE_MODEL_OVERRIDES_KEY) ?? "null") as Record<string, SavedNodeTransform> | null;
+    const dolphinOverrides = JSON.parse(window.localStorage.getItem(DOLPHIN_MODEL_OVERRIDES_KEY) ?? "null") as Record<string, SavedNodeTransform> | null;
     if (whaleOverrides) overrides.whale = whaleOverrides;
     else delete overrides.whale;
+    if (dolphinOverrides) overrides.dolphin = dolphinOverrides;
+    else delete overrides.dolphin;
     return overrides;
   } catch {
     return {};
@@ -49,6 +53,11 @@ export function saveCreatureModelOverrides(form: AquaticForm, changes: Record<st
     window.dispatchEvent(new CustomEvent("creature-model-overrides-updated", { detail: { form } }));
     return;
   }
+  if (form === "dolphin") {
+    window.localStorage.setItem(DOLPHIN_MODEL_OVERRIDES_KEY, JSON.stringify({ ...current.dolphin, ...changes }));
+    window.dispatchEvent(new CustomEvent("creature-model-overrides-updated", { detail: { form } }));
+    return;
+  }
   const next = { ...current, [form]: { ...current[form], ...changes } };
   window.localStorage.setItem(CREATURE_MODEL_OVERRIDES_KEY, JSON.stringify(next));
   window.dispatchEvent(new CustomEvent("creature-model-overrides-updated", { detail: { form } }));
@@ -57,6 +66,11 @@ export function saveCreatureModelOverrides(form: AquaticForm, changes: Record<st
 export function clearCreatureModelOverrides(form: AquaticForm) {
   if (form === "whale") {
     window.localStorage.removeItem(WHALE_MODEL_OVERRIDES_KEY);
+    window.dispatchEvent(new CustomEvent("creature-model-overrides-updated", { detail: { form } }));
+    return;
+  }
+  if (form === "dolphin") {
+    window.localStorage.removeItem(DOLPHIN_MODEL_OVERRIDES_KEY);
     window.dispatchEvent(new CustomEvent("creature-model-overrides-updated", { detail: { form } }));
     return;
   }

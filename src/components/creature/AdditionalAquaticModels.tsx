@@ -505,12 +505,12 @@ function BlueWhaleTail({
   return (
     <group ref={stemRef} position={[-1.62, 0.08, 0]}>
       <mesh name="Blue whale tail stock" position={[0, 0, -0.16]}>
-        <extrudeGeometry args={[stem, { depth: 0.32, bevelEnabled: true, bevelSegments: 3, bevelSize: 0.035, bevelThickness: 0.035, curveSegments: 18 }]} />
+        <extrudeGeometry args={[stem, { depth: 0.32, bevelEnabled: true, bevelSegments: 5, bevelSize: 0.045, bevelThickness: 0.04, curveSegments: 24 }]} />
         <meshToonMaterial color={colors.body} />
       </mesh>
       <group ref={flukesRef} position={[-0.87, 0, 0]} rotation={[0.52, 0, 0]}>
         <mesh name="Blue whale flukes" rotation={[Math.PI / 2, 0, 0]}>
-          <shapeGeometry args={[flukes, 28]} />
+          <extrudeGeometry args={[flukes, { depth: 0.08, bevelEnabled: true, bevelSegments: 6, bevelSize: 0.035, bevelThickness: 0.035, curveSegments: 32 }]} />
           <meshToonMaterial color={colors.dark} side={THREE.DoubleSide} />
         </mesh>
       </group>
@@ -580,26 +580,26 @@ function BlueWhaleModel(props: AquaticModelProps) {
     <LivingGroup animated={props.animated} scale={props.scale} motion="glide">
       <BlueWhaleTail animated={props.animated} colors={colors} />
       <mesh name="Blue whale body" position={[0, 0, -0.22]}>
-        <extrudeGeometry args={[body, { depth: 0.44, bevelEnabled: true, bevelSegments: 4, bevelSize: 0.055, bevelThickness: 0.055, curveSegments: 32 }]} />
+        <extrudeGeometry args={[body, { depth: 0.44, bevelEnabled: true, bevelSegments: 6, bevelSize: 0.07, bevelThickness: 0.065, curveSegments: 36 }]} />
         <meshToonMaterial color={colors.body} />
       </mesh>
       <mesh name="Blue whale belly" position={[0, 0, 0.24]}>
         <shapeGeometry args={[belly, 28]} />
         <meshToonMaterial color={colors.light} side={THREE.DoubleSide} />
       </mesh>
-      <mesh name="Blue whale dorsal fin" position={[0, 0.57, -0.02]}>
-        <shapeGeometry args={[dorsalFin, 16]} />
+      <mesh name="Blue whale dorsal fin" position={[0, 0.57, -0.09]}>
+        <extrudeGeometry args={[dorsalFin, { depth: 0.18, bevelEnabled: true, bevelSegments: 5, bevelSize: 0.04, bevelThickness: 0.04, curveSegments: 22 }]} />
         <meshToonMaterial color={colors.dark} side={THREE.DoubleSide} />
       </mesh>
       <MovingPart animated={props.animated} phase={0.6} base={-0.06} amount={0.08} speed={1.05}>
-        <mesh name="Blue whale far flipper" position={[0.3, -0.13, -0.25]} scale={[0.88, 0.88, 0.88]}>
-          <shapeGeometry args={[flipper, 20]} />
+        <mesh name="Blue whale far flipper" position={[0.3, -0.13, -0.3]} scale={[0.88, 0.88, 0.88]}>
+          <extrudeGeometry args={[flipper, { depth: 0.1, bevelEnabled: true, bevelSegments: 5, bevelSize: 0.035, bevelThickness: 0.035, curveSegments: 26 }]} />
           <meshToonMaterial color={colors.dark} side={THREE.DoubleSide} />
         </mesh>
       </MovingPart>
       <MovingPart animated={props.animated} phase={0} base={0.03} amount={0.075} speed={1.05}>
-        <mesh name="Blue whale near flipper" position={[0.43, -0.17, 0.27]}>
-          <shapeGeometry args={[flipper, 20]} />
+        <mesh name="Blue whale near flipper" position={[0.43, -0.17, 0.22]}>
+          <extrudeGeometry args={[flipper, { depth: 0.1, bevelEnabled: true, bevelSegments: 5, bevelSize: 0.035, bevelThickness: 0.035, curveSegments: 26 }]} />
           <meshToonMaterial color={colors.accent} side={THREE.DoubleSide} />
         </mesh>
       </MovingPart>
@@ -636,34 +636,190 @@ function BlueWhaleModel(props: AquaticModelProps) {
   );
 }
 
-function MarineMammalModel({ kind, ...props }: AquaticModelProps & { kind: "narwhal" | "dolphin" }) {
+function DolphinTail({
+  animated,
+  colors,
+}: {
+  animated?: boolean;
+  colors: ReturnType<typeof aquaticPalette>;
+}) {
+  const stemRef = useRef<THREE.Group>(null);
+  const flukesRef = useRef<THREE.Group>(null);
+  const stem = useMemo(() => {
+    const shape = new THREE.Shape();
+    shape.moveTo(0.06, 0.12);
+    shape.bezierCurveTo(-0.28, 0.1, -0.58, 0.04, -0.76, 0.015);
+    shape.bezierCurveTo(-0.8, 0, -0.8, -0.025, -0.75, -0.045);
+    shape.bezierCurveTo(-0.5, -0.08, -0.2, -0.11, 0.06, -0.14);
+    shape.closePath();
+    return shape;
+  }, []);
+  const flukes = useMemo(() => {
+    const shape = new THREE.Shape();
+    shape.moveTo(0.04, 0);
+    shape.bezierCurveTo(-0.12, 0.24, -0.34, 0.55, -0.66, 0.68);
+    shape.bezierCurveTo(-0.78, 0.5, -0.66, 0.2, -0.38, 0.03);
+    shape.quadraticCurveTo(-0.32, 0, -0.38, -0.03);
+    shape.bezierCurveTo(-0.66, -0.2, -0.78, -0.5, -0.66, -0.68);
+    shape.bezierCurveTo(-0.34, -0.55, -0.12, -0.24, 0.04, 0);
+    shape.closePath();
+    return shape;
+  }, []);
+
+  useFrame(({ clock }) => {
+    if (animated === false) return;
+    const swim = clock.elapsedTime * 1.55;
+    if (stemRef.current) stemRef.current.rotation.z = Math.sin(swim) * 0.17;
+    if (flukesRef.current) flukesRef.current.rotation.z = Math.sin(swim - 0.65) * 0.13;
+  });
+
+  return (
+    <group ref={stemRef} position={[-1.2, 0.05, 0]}>
+      <mesh name="Dolphin tail stock" position={[0, 0, -0.13]}>
+        <extrudeGeometry args={[stem, { depth: 0.26, bevelEnabled: true, bevelSegments: 5, bevelSize: 0.038, bevelThickness: 0.035, curveSegments: 24 }]} />
+        <meshToonMaterial color={colors.body} />
+      </mesh>
+      <group ref={flukesRef} position={[-0.73, 0, 0]} rotation={[0.54, 0, 0]}>
+        <mesh name="Dolphin flukes" rotation={[Math.PI / 2, 0, 0]}>
+          <extrudeGeometry args={[flukes, { depth: 0.07, bevelEnabled: true, bevelSegments: 6, bevelSize: 0.03, bevelThickness: 0.03, curveSegments: 30 }]} />
+          <meshToonMaterial color={colors.dark} side={THREE.DoubleSide} />
+        </mesh>
+      </group>
+    </group>
+  );
+}
+
+function DolphinModel(props: AquaticModelProps) {
   const colors = aquaticPalette(props.pieces, props.baseSeed);
-  const dolphin = kind === "dolphin";
-  const bodyLength = dolphin ? 1.38 : 1.46;
-  const bodyHeight = dolphin ? 0.52 : 0.58;
+  const body = useMemo(() => {
+    const shape = new THREE.Shape();
+    shape.moveTo(1.32, 0.12);
+    shape.bezierCurveTo(1.17, 0.37, 0.84, 0.51, 0.4, 0.53);
+    shape.bezierCurveTo(-0.15, 0.57, -0.77, 0.39, -1.18, 0.16);
+    shape.bezierCurveTo(-1.29, 0.09, -1.31, 0.01, -1.2, -0.05);
+    shape.bezierCurveTo(-0.78, -0.24, -0.22, -0.36, 0.35, -0.34);
+    shape.bezierCurveTo(0.86, -0.32, 1.2, -0.15, 1.32, 0.02);
+    shape.bezierCurveTo(1.35, 0.06, 1.35, 0.09, 1.32, 0.12);
+    shape.closePath();
+    return shape;
+  }, []);
+  const belly = useMemo(() => {
+    const shape = new THREE.Shape();
+    shape.moveTo(1.27, -0.02);
+    shape.bezierCurveTo(0.9, -0.11, 0.52, -0.14, 0.08, -0.14);
+    shape.bezierCurveTo(-0.35, -0.16, -0.72, -0.23, -0.97, -0.25);
+    shape.bezierCurveTo(-0.55, -0.34, 0.08, -0.39, 0.55, -0.3);
+    shape.bezierCurveTo(0.94, -0.23, 1.19, -0.12, 1.27, -0.02);
+    shape.closePath();
+    return shape;
+  }, []);
+  const beak = useMemo(() => {
+    const shape = new THREE.Shape();
+    shape.moveTo(1.2, 0.09);
+    shape.bezierCurveTo(1.39, 0.065, 1.58, 0.025, 1.7, -0.01);
+    shape.quadraticCurveTo(1.77, -0.055, 1.69, -0.09);
+    shape.bezierCurveTo(1.51, -0.11, 1.32, -0.12, 1.12, -0.11);
+    shape.quadraticCurveTo(1.15, -0.01, 1.2, 0.09);
+    shape.closePath();
+    return shape;
+  }, []);
+  const dorsalFin = useMemo(() => {
+    const shape = new THREE.Shape();
+    shape.moveTo(-0.38, 0);
+    shape.bezierCurveTo(-0.3, 0.3, -0.08, 0.58, 0.09, 0.61);
+    shape.bezierCurveTo(0.02, 0.33, 0.12, 0.12, 0.26, 0.01);
+    shape.closePath();
+    return shape;
+  }, []);
+  const flipper = useMemo(() => {
+    const shape = new THREE.Shape();
+    shape.moveTo(0.08, 0.03);
+    shape.bezierCurveTo(-0.08, -0.13, -0.3, -0.45, -0.55, -0.61);
+    shape.bezierCurveTo(-0.68, -0.58, -0.62, -0.4, -0.49, -0.25);
+    shape.bezierCurveTo(-0.3, -0.05, -0.08, 0.04, 0.08, 0.03);
+    shape.closePath();
+    return shape;
+  }, []);
+  const mouth = useMemo(() => new THREE.CatmullRomCurve3([
+    new THREE.Vector3(1.68, -0.065, 0.205),
+    new THREE.Vector3(1.5, -0.075, 0.205),
+    new THREE.Vector3(1.32, -0.08, 0.205),
+    new THREE.Vector3(1.14, -0.09, 0.205),
+  ]), []);
+
+  return (
+    <LivingGroup animated={props.animated} scale={props.scale} motion="glide">
+      <DolphinTail animated={props.animated} colors={colors} />
+      <mesh name="Dolphin body" position={[0, 0, -0.19]}>
+        <extrudeGeometry args={[body, { depth: 0.38, bevelEnabled: true, bevelSegments: 6, bevelSize: 0.06, bevelThickness: 0.055, curveSegments: 36 }]} />
+        <meshToonMaterial color={colors.body} />
+      </mesh>
+      <mesh name="Dolphin belly" position={[0, 0, 0.205]}>
+        <shapeGeometry args={[belly, 24]} />
+        <meshToonMaterial color={colors.light} side={THREE.DoubleSide} />
+      </mesh>
+      <mesh name="Dolphin beak" position={[0, 0, -0.17]}>
+        <extrudeGeometry args={[beak, { depth: 0.34, bevelEnabled: true, bevelSegments: 5, bevelSize: 0.035, bevelThickness: 0.035, curveSegments: 26 }]} />
+        <meshToonMaterial color={colors.body} />
+      </mesh>
+      <mesh name="Dolphin dorsal fin" position={[0, 0.48, -0.075]}>
+        <extrudeGeometry args={[dorsalFin, { depth: 0.15, bevelEnabled: true, bevelSegments: 5, bevelSize: 0.035, bevelThickness: 0.035, curveSegments: 24 }]} />
+        <meshToonMaterial color={colors.dark} side={THREE.DoubleSide} />
+      </mesh>
+      <MovingPart animated={props.animated} phase={0.65} base={-0.04} amount={0.11} speed={1.35}>
+        <mesh name="Dolphin far flipper" position={[0.48, -0.12, -0.26]} scale={[0.84, 0.84, 0.84]}>
+          <extrudeGeometry args={[flipper, { depth: 0.09, bevelEnabled: true, bevelSegments: 5, bevelSize: 0.032, bevelThickness: 0.032, curveSegments: 24 }]} />
+          <meshToonMaterial color={colors.dark} side={THREE.DoubleSide} />
+        </mesh>
+      </MovingPart>
+      <MovingPart animated={props.animated} phase={0} base={0.03} amount={0.11} speed={1.35}>
+        <mesh name="Dolphin near flipper" position={[0.58, -0.15, 0.175]}>
+          <extrudeGeometry args={[flipper, { depth: 0.09, bevelEnabled: true, bevelSegments: 5, bevelSize: 0.032, bevelThickness: 0.032, curveSegments: 24 }]} />
+          <meshToonMaterial color={colors.accent} side={THREE.DoubleSide} />
+        </mesh>
+      </MovingPart>
+      <mesh name="Dolphin mouth">
+        <tubeGeometry args={[mouth, 20, 0.011, 6, false]} />
+        <meshBasicMaterial color={colors.dark} />
+      </mesh>
+      {[-1, 1].map((side) => (
+        <group name={`Dolphin ${side > 0 ? "near" : "far"} eye`} key={`eye-${side}`} position={[1.17, 0.13, side * 0.215]}>
+          <mesh scale={[0.058, 0.055, 0.028]}>
+            <sphereGeometry args={[1, 14, 10]} />
+            <meshToonMaterial color="#F3F0E8" />
+          </mesh>
+          <mesh position={[0.01, -0.003, side * 0.027]} scale={[0.024, 0.027, 0.014]}>
+            <sphereGeometry args={[1, 12, 10]} />
+            <meshBasicMaterial color="#071015" />
+          </mesh>
+        </group>
+      ))}
+      <TraitMarks pieces={props.pieces} baseSeed={props.baseSeed} form="dolphin" highlightedPart={props.highlightedPart} />
+    </LivingGroup>
+  );
+}
+
+function NarwhalModel(props: AquaticModelProps) {
+  const colors = aquaticPalette(props.pieces, props.baseSeed);
+  const bodyLength = 1.46;
+  const bodyHeight = 0.58;
   return (
     <LivingGroup animated={props.animated} scale={props.scale} motion="glide">
       <mesh scale={[bodyLength, bodyHeight, 0.48]}><sphereGeometry args={[1, 32, 22]} /><meshToonMaterial color={colors.body} /></mesh>
       <mesh position={[0.42, -bodyHeight * 0.42, 0.28]} scale={[bodyLength * 0.7, bodyHeight * 0.42, 0.3]}><sphereGeometry args={[1, 24, 16]} /><meshToonMaterial color={colors.light} /></mesh>
-      <mesh position={[bodyLength * 0.92, dolphin ? -0.05 : 0.03, 0]} scale={[dolphin ? 0.58 : 0.42, dolphin ? 0.16 : 0.26, dolphin ? 0.2 : 0.28]}><sphereGeometry args={[1, 20, 14]} /><meshToonMaterial color={colors.light} /></mesh>
+      <mesh position={[bodyLength * 0.92, 0.03, 0]} scale={[0.42, 0.26, 0.28]}><sphereGeometry args={[1, 20, 14]} /><meshToonMaterial color={colors.light} /></mesh>
       <mesh position={[0.05, bodyHeight * 0.92, -0.03]} rotation={[0, 0, -0.22]} scale={[0.34, 0.46, 0.09]}><coneGeometry args={[1, 1, 12]} /><meshToonMaterial color={colors.dark} /></mesh>
       {[-1, 1].map((side) => (
         <MovingPart key={`flipper-${side}`} animated={props.animated} phase={side} base={side * -0.52} amount={0.12} speed={1.2}>
           <mesh position={[0.36, side * bodyHeight * 0.8, -0.06]} scale={[0.58, 0.14, 0.08]}><sphereGeometry args={[1, 18, 12]} /><meshToonMaterial color={colors.accent} /></mesh>
         </MovingPart>
       ))}
-      {dolphin ? [-1, 1].map((side) => (
-        <MovingPart key={`fluke-${side}`} animated={props.animated} phase={side * 0.7} base={side * 0.62} amount={0.1} speed={1.05}>
-          <mesh position={[-bodyLength * 1.04, side * 0.28, 0]} scale={[0.55, 0.2, 0.1]}><sphereGeometry args={[1, 18, 12]} /><meshToonMaterial color={colors.dark} /></mesh>
-        </MovingPart>
-      )) : (
-        <group position={[-bodyLength * 0.93, 0, 0]}>
-          <ArticulatedMammalTail animated={props.animated} colors={colors} />
-        </group>
-      )}
+      <group position={[-bodyLength * 0.93, 0, 0]}>
+        <ArticulatedMammalTail animated={props.animated} colors={colors} />
+      </group>
       <MovingPupil position={[bodyLength * 0.67, 0.17, 0.43]} scale={0.075} animated={props.animated} />
-      {kind === "narwhal" && <mesh position={[bodyLength * 1.28, 0.13, 0]} rotation={[0, 0, -Math.PI / 2]} scale={[0.11, 1.05, 0.11]}><coneGeometry args={[1, 1, 12]} /><meshToonMaterial color="#F3F0E8" /></mesh>}
-      <TraitMarks pieces={props.pieces} baseSeed={props.baseSeed} form={kind} highlightedPart={props.highlightedPart} />
+      <mesh position={[bodyLength * 1.28, 0.13, 0]} rotation={[0, 0, -Math.PI / 2]} scale={[0.11, 1.05, 0.11]}><coneGeometry args={[1, 1, 12]} /><meshToonMaterial color="#F3F0E8" /></mesh>
+      <TraitMarks pieces={props.pieces} baseSeed={props.baseSeed} form="narwhal" highlightedPart={props.highlightedPart} />
     </LivingGroup>
   );
 }
@@ -797,7 +953,8 @@ export function AdditionalAquaticModel({ form, ...props }: AquaticModelProps & {
   if (form === "seal") return <SealModel {...props} />;
   if (form === "shrimp") return <ShrimpModel {...props} />;
   if (form === "whale") return <BlueWhaleModel {...props} />;
-  if (form === "narwhal" || form === "dolphin") return <MarineMammalModel kind={form} {...props} />;
+  if (form === "dolphin") return <DolphinModel {...props} />;
+  if (form === "narwhal") return <NarwhalModel {...props} />;
   if (form === "clam") return <ClamModel {...props} />;
   return <PufferfishModel {...props} />;
 }
