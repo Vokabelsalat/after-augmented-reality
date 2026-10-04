@@ -1,7 +1,7 @@
 "use client";
 
 import { AdaptiveDpr } from "@react-three/drei";
-import { Canvas, useFrame } from "@react-three/fiber";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
 import { AquaticCreatureModel } from "@/components/creature/AquaticCreatureModel";
@@ -31,6 +31,34 @@ const collectiveFormScale: Record<AquaticForm, number> = {
   pufferfish: 1,
 };
 
+const depthHazeLayers = [
+  { z: 1.18, color: "#123a3d", opacity: 0.045 },
+  { z: 0.48, color: "#0d3038", opacity: 0.06 },
+  { z: -0.22, color: "#092731", opacity: 0.075 },
+  { z: -0.92, color: "#061f2b", opacity: 0.1 },
+] as const;
+
+function DepthHazeLayers() {
+  const viewport = useThree((state) => state.viewport);
+
+  return (
+    <group>
+      {depthHazeLayers.map((layer) => (
+        <mesh key={layer.z} position={[0, 0, layer.z]}>
+          <planeGeometry args={[viewport.width + 2, viewport.height + 2]} />
+          <meshBasicMaterial
+            color={layer.color}
+            transparent
+            opacity={layer.opacity}
+            depthWrite={false}
+            toneMapped={false}
+          />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
 function wallOpening(progress: number, wallIndex: number) {
   return THREE.MathUtils.clamp(
     (progress - wallThresholds[wallIndex]) / 0.16,
@@ -48,6 +76,8 @@ function FloatingCreature({ contribution, progress }: { contribution: Exhibition
     xUnit: -0.84 + seededUnit(contribution.id * 3) * 1.68,
     yUnit: -0.84 + seededUnit(contribution.id * 5) * 1.68,
     z: -1 + seededUnit(contribution.id * 7) * 2,
+    depthSpeed: 0.12 + seededUnit(contribution.id * 11) * 0.13,
+    depthDirection: seededUnit(contribution.id * 23) > 0.5 ? 1 : -1,
     scale: 0.4,
     speed: 0.32 + seededUnit(contribution.id * 13) * 0.34,
     phase: seededUnit(contribution.id * 17) * Math.PI * 2,
@@ -57,8 +87,10 @@ function FloatingCreature({ contribution, progress }: { contribution: Exhibition
     initialized: false,
     x: 0,
     y: 0,
+    z: placement.z,
     vx: Math.cos(placement.heading) * placement.speed,
     vy: isBottomDweller ? 0 : Math.sin(placement.heading) * placement.speed,
+    vz: placement.depthDirection * placement.depthSpeed,
   });
   const spawnCompartment = contribution.id % 5;
   const previousProgress = useRef(progress);
@@ -70,6 +102,8 @@ function FloatingCreature({ contribution, progress }: { contribution: Exhibition
     const maxX = Math.max(1.6, viewport.width / 2 - 0.9);
     const maxY = Math.max(1.25, viewport.height / 2 - 0.72);
     const aquariumFloorY = -viewport.height / 2;
+    const backDepth = -1.45;
+    const frontDepth = 1.65;
     if (isBottomDweller && floorOffsetRef.current === null) {
       const bounds = new THREE.Box3().setFromObject(directionRef.current);
       floorOffsetRef.current = Number.isFinite(bounds.min.y) ? -bounds.min.y + 0.04 : 0.42;
@@ -83,6 +117,7 @@ function FloatingCreature({ contribution, progress }: { contribution: Exhibition
     if (!state.initialized || progress < previousProgress.current - 0.025) {
       state.x = spawnCenterX + placement.xUnit * (spawnMaxX - spawnMinX) * 0.34;
       state.y = isBottomDweller ? floorY : placement.yUnit * maxY;
+      state.z = placement.z;
       state.initialized = true;
     }
     previousProgress.current = progress;
@@ -129,11 +164,23 @@ function FloatingCreature({ contribution, progress }: { contribution: Exhibition
       state.x = proposedX;
     }
     state.y = isBottomDweller ? floorY : state.y + state.vy * delta;
+    state.z += state.vz * delta;
+    if (state.z >= frontDepth) {
+      state.z = frontDepth;
+      state.vz = -Math.abs(state.vz);
+    } else if (state.z <= backDepth) {
+      state.z = backDepth;
+      state.vz = Math.abs(state.vz);
+    }
     state.x = THREE.MathUtils.clamp(state.x, -maxX, maxX);
     state.y = THREE.MathUtils.clamp(state.y, -maxY, maxY);
 
     swimRef.current.position.x = state.x;
     swimRef.current.position.y = state.y;
+    swimRef.current.position.z = state.z;
+    const depthProgress = THREE.MathUtils.inverseLerp(backDepth, frontDepth, state.z);
+    const depthScale = THREE.MathUtils.lerp(0.72, 1.24, THREE.MathUtils.smoothstep(depthProgress, 0, 1));
+    swimRef.current.scale.setScalar(depthScale);
     directionRef.current.rotation.y = THREE.MathUtils.damp(
       directionRef.current.rotation.y,
       state.vx >= 0 ? 0 : Math.PI,
@@ -188,6 +235,7 @@ export function CollectiveCreatureField({ contributions, progress = 1 }: { contr
       {contributions.slice(-32).map((contribution) => (
         <FloatingCreature key={contribution.id} contribution={contribution} progress={progress} />
       ))}
+      <DepthHazeLayers />
       <AquariumDioramaPlants layer="front" />
       <AdaptiveDpr pixelated />
     </Canvas>
