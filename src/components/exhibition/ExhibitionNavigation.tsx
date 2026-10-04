@@ -29,7 +29,7 @@ export function ExhibitionNavigation() {
   return (
     <header className="safe-top pointer-events-none absolute inset-x-0 top-0 z-30 flex items-start justify-between px-4">
       <div>
-        <p className="text-lg leading-none tracking-[-0.04em]">The Tank Is Leaking</p>
+        <p className="text-lg leading-none tracking-[-0.04em]">The Fishbow Leaks</p>
         <p className="mt-1 text-sm text-white/65" aria-live="polite">
           {count} {count === 1 ? "encounter" : "encounters"} recorded
         </p>

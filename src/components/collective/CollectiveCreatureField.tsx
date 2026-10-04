@@ -28,6 +28,10 @@ const collectiveFormScale: Record<AquaticForm, number> = {
   starfish: 0.96,
   seahorse: 1.2,
   seal: 1.05,
+  shrimp: 0.82,
+  narwhal: 1.32,
+  dolphin: 1.2,
+  whale: 2.35,
   clam: 1.08,
   pufferfish: 1,
 };
@@ -42,6 +46,10 @@ const collectiveFormSpeed: Record<AquaticForm, number> = {
   starfish: 0.48,
   seahorse: 0.72,
   seal: 1.12,
+  shrimp: 0.9,
+  narwhal: 0.82,
+  dolphin: 1.28,
+  whale: 0.46,
   clam: 0.42,
   pufferfish: 1.08,
 };
@@ -138,6 +146,7 @@ function FloatingCreature({
     phase: seededUnit(contribution.id * 17) * Math.PI * 2,
     heading: seededUnit(contribution.id * 19) * Math.PI * 2,
   }), [contribution.id, formSpeed]);
+  const facingDirection = useRef(Math.cos(placement.heading) >= 0 ? 1 : -1);
   const motion = useRef<CreatureMotion>({
     initialized: false,
     x: 0,
@@ -152,9 +161,10 @@ function FloatingCreature({
 
   useEffect(() => {
     if (juvenile || !actorRegistry) return;
-    actorRegistry.current.set(contribution.id, motion);
+    const registry = actorRegistry.current;
+    registry.set(contribution.id, motion);
     return () => {
-      actorRegistry.current.delete(contribution.id);
+      registry.delete(contribution.id);
     };
   }, [actorRegistry, contribution.id, juvenile]);
 
@@ -250,7 +260,9 @@ function FloatingCreature({
       if (age >= 4) {
         const orbitAge = age - 4;
         const radius = age < 7 ? 0.34 : 0.34 + (age - 7) * 0.24;
-        const angle = orbitAge * 1.75 + (participantIndex === 0 ? 0 : Math.PI);
+        // Begin the orbit on the same side as the approach target so neither
+        // creature snaps across its partner when the dance starts.
+        const angle = orbitAge * 1.75 + (participantIndex === 0 ? Math.PI : 0);
         targetX = pairing.midpoint[0] + Math.cos(angle) * radius;
         targetZ = pairing.midpoint[2] + Math.sin(angle) * radius * 0.72;
         if (!isBottomDweller) targetY = pairing.midpoint[1] + Math.sin(angle * 0.7) * 0.16;
@@ -263,9 +275,13 @@ function FloatingCreature({
       state.x = THREE.MathUtils.lerp(state.x, targetX, follow);
       state.y = isBottomDweller ? floorY : THREE.MathUtils.lerp(state.y, targetY, follow);
       state.z = THREE.MathUtils.lerp(state.z, targetZ, follow);
-      state.vx = (state.x - previousX) / Math.max(delta, 0.001);
-      state.vy = isBottomDweller ? 0 : (state.y - previousY) / Math.max(delta, 0.001);
-      state.vz = (state.z - previousZ) / Math.max(delta, 0.001);
+      const frameDuration = Math.max(delta, 0.001);
+      const targetVx = (state.x - previousX) / frameDuration;
+      const targetVy = (state.y - previousY) / frameDuration;
+      const targetVz = (state.z - previousZ) / frameDuration;
+      state.vx = THREE.MathUtils.damp(state.vx, targetVx, 7, delta);
+      state.vy = isBottomDweller ? 0 : THREE.MathUtils.damp(state.vy, targetVy, 7, delta);
+      state.vz = THREE.MathUtils.damp(state.vz, targetVz, 7, delta);
     }
 
     swimRef.current.position.x = state.x;
@@ -274,7 +290,12 @@ function FloatingCreature({
     const depthProgress = THREE.MathUtils.inverseLerp(backDepth, frontDepth, state.z);
     const depthScale = THREE.MathUtils.lerp(0.72, 1.24, THREE.MathUtils.smoothstep(depthProgress, 0, 1));
     swimRef.current.scale.setScalar(depthScale);
-    const sideHeading = state.vx >= 0 ? 0 : Math.PI;
+    // Hold the last facing direction around the orbit's horizontal extrema.
+    // Without this small dead zone, tiny frame-to-frame velocity changes make
+    // the model flip rapidly between left and right.
+    if (state.vx > 0.08) facingDirection.current = 1;
+    if (state.vx < -0.08) facingDirection.current = -1;
+    const sideHeading = facingDirection.current > 0 ? 0 : Math.PI;
     const fullDepthHeading = Math.atan2(-state.vz, state.vx);
     const depthTurn = THREE.MathUtils.clamp(
       THREE.MathUtils.euclideanModulo(fullDepthHeading - sideHeading + Math.PI, Math.PI * 2) - Math.PI,
@@ -310,6 +331,7 @@ function FloatingCreature({
         <AquaticCreatureModel
           form={contribution.creatureForm}
           pieces={contribution.parts}
+          baseSeed={contribution.publicId}
           scale={placement.scale * formScale * individualScale}
           animated
           grounded={isBottomDweller}

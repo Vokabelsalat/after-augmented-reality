@@ -63,6 +63,10 @@ export function TraitMarks({
       starfish: { x: 0.72, y: 0.72, cy: 0, z: 0.34 },
       seahorse: { x: 0.38, y: 0.78, cy: 0.08, z: 0.38 },
       seal: { x: 0.96, y: 0.42, cy: 0.02, z: 0.42 },
+      shrimp: { x: 0.92, y: 0.34, cy: 0.08, z: 0.36 },
+      narwhal: { x: 1.08, y: 0.38, cy: 0.02, z: 0.46 },
+      dolphin: { x: 1.02, y: 0.34, cy: 0.02, z: 0.44 },
+      whale: { x: 1.3, y: 0.48, cy: 0.02, z: 0.58 },
       clam: { x: 0.72, y: 0.42, cy: 0.04, z: 0.46 },
       pufferfish: { x: 0.84, y: 0.56, cy: 0, z: 0.65 },
     };

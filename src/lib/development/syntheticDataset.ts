@@ -1,10 +1,23 @@
 import { artifacts } from "@/data/artifacts";
 import { calculateDwellTimes } from "@/lib/contributions/dwellTime";
-import { aquaticForms } from "@/lib/creature/aquaticForms";
+import { aquaticForms, type AquaticForm } from "@/lib/creature/aquaticForms";
 import { generateJourneyNarrative } from "@/lib/narrative/generateJourneyNarrative";
 import type { SharedCreaturePart } from "@/types/contribution";
 
 export const SYNTHETIC_VISITOR_COUNT = 24;
+
+export const SYNTHETIC_FEATURED_FORMS = [
+  "seal",
+  "shrimp",
+  "narwhal",
+  "dolphin",
+  "whale",
+] as const satisfies readonly AquaticForm[];
+
+const syntheticFormRotation: AquaticForm[] = [
+  ...SYNTHETIC_FEATURED_FORMS,
+  ...aquaticForms.filter((form) => !SYNTHETIC_FEATURED_FORMS.some((featured) => featured === form)),
+];
 
 export type SyntheticContribution = {
   publicId: string;
@@ -80,7 +93,7 @@ export function createSyntheticDataset(
     return {
       publicId: `synthetic-${dayKey}-${String(visitorIndex + 1).padStart(3, "0")}`,
       sessionId: `synthetic:${dayKey}:${String(visitorIndex + 1).padStart(3, "0")}`,
-      creatureForm: aquaticForms[visitorIndex % aquaticForms.length],
+      creatureForm: syntheticFormRotation[visitorIndex % syntheticFormRotation.length],
       parts,
       narrative: generateJourneyNarrative(discoveries, artifacts),
       createdAt: new Date(completedAt).toISOString(),

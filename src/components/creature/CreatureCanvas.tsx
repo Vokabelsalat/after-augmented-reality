@@ -19,6 +19,10 @@ const fittedBounds: Record<AquaticForm, { width: number; height: number }> = {
   starfish: { width: 4.4, height: 4.4 },
   seahorse: { width: 3.5, height: 4.8 },
   seal: { width: 5.6, height: 3.7 },
+  shrimp: { width: 5.8, height: 3.8 },
+  narwhal: { width: 7.4, height: 4.2 },
+  dolphin: { width: 6.4, height: 4.1 },
+  whale: { width: 8.2, height: 4.8 },
   clam: { width: 4.2, height: 3.8 },
   pufferfish: { width: 5.1, height: 4.1 },
 };

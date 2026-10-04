@@ -274,6 +274,80 @@ function SealModel(props: AquaticModelProps) {
   );
 }
 
+function ShrimpModel(props: AquaticModelProps) {
+  const colors = aquaticPalette(props.pieces, props.baseSeed);
+  const antennae = useMemo(() => [-1, 1].map((side) => new THREE.CatmullRomCurve3([
+    new THREE.Vector3(1.02, side * 0.18, 0.18),
+    new THREE.Vector3(1.55, side * 0.45, 0.12),
+    new THREE.Vector3(2.05, side * 0.62, 0),
+  ])), []);
+  return (
+    <LivingGroup animated={props.animated} scale={props.scale} motion="coil">
+      {Array.from({ length: 6 }, (_, index) => (
+        <mesh key={`segment-${index}`} position={[-0.62 + index * 0.3, Math.sin(index * 0.42) * 0.12, 0]} scale={[0.34, 0.46 - index * 0.025, 0.32]}>
+          <sphereGeometry args={[1, 18, 14]} />
+          <meshToonMaterial color={index % 2 ? colors.body : colors.light} />
+        </mesh>
+      ))}
+      <mesh position={[1.12, 0.18, 0]} scale={[0.48, 0.42, 0.35]}><sphereGeometry args={[1, 20, 16]} /><meshToonMaterial color={colors.accent} /></mesh>
+      {antennae.map((curve, index) => <mesh key={`antenna-${index}`}><tubeGeometry args={[curve, 18, 0.022, 6, false]} /><meshToonMaterial color={colors.light} /></mesh>)}
+      {[-1, 1].map((side) => <MovingPupil key={side} position={[1.28, side * 0.23, 0.3]} scale={0.075} animated={props.animated} phase={side} />)}
+      {Array.from({ length: 5 }, (_, index) => [-1, 1].map((side) => (
+        <MovingPart key={`leg-${index}-${side}`} animated={props.animated} phase={index * 0.55 + side} base={side * 0.42} amount={0.16} speed={2.1}>
+          <mesh position={[-0.25 + index * 0.28, side * 0.48, -0.08]} rotation={[0, 0, side * 0.55]} scale={[0.035, 0.34, 0.035]}><cylinderGeometry args={[1, 0.65, 1, 7]} /><meshToonMaterial color={colors.dark} /></mesh>
+        </MovingPart>
+      )))}
+      {[-1, 1].map((side) => <mesh key={`tail-${side}`} position={[-1.02, side * 0.28, 0]} rotation={[0, 0, side * 0.42]} scale={[0.48, 0.22, 0.08]}><sphereGeometry args={[1, 14, 10]} /><meshToonMaterial color={colors.accent} /></mesh>)}
+      <TraitMarks pieces={props.pieces} baseSeed={props.baseSeed} form="shrimp" highlightedPart={props.highlightedPart} />
+    </LivingGroup>
+  );
+}
+
+function MarineMammalModel({ kind, ...props }: AquaticModelProps & { kind: "narwhal" | "dolphin" | "whale" }) {
+  const colors = aquaticPalette(props.pieces, props.baseSeed);
+  const whale = kind === "whale";
+  const dolphin = kind === "dolphin";
+  const bodyLength = whale ? 1.72 : dolphin ? 1.38 : 1.46;
+  const bodyHeight = whale ? 0.72 : dolphin ? 0.52 : 0.58;
+  return (
+    <LivingGroup animated={props.animated} scale={props.scale} motion="glide">
+      <mesh scale={[bodyLength, bodyHeight, whale ? 0.62 : 0.48]}><sphereGeometry args={[1, 32, 22]} /><meshToonMaterial color={colors.body} /></mesh>
+      <mesh position={[0.42, -bodyHeight * 0.42, 0.28]} scale={[bodyLength * 0.7, bodyHeight * 0.42, 0.3]}><sphereGeometry args={[1, 24, 16]} /><meshToonMaterial color={colors.light} /></mesh>
+      <mesh position={[bodyLength * 0.92, dolphin ? -0.05 : 0.03, 0]} scale={[dolphin ? 0.58 : 0.42, dolphin ? 0.16 : 0.26, dolphin ? 0.2 : 0.28]}><sphereGeometry args={[1, 20, 14]} /><meshToonMaterial color={colors.light} /></mesh>
+      <mesh position={[0.05, bodyHeight * 0.92, -0.03]} rotation={[0, 0, -0.22]} scale={[whale ? 0.42 : 0.34, whale ? 0.52 : 0.46, 0.09]}><coneGeometry args={[1, 1, 12]} /><meshToonMaterial color={colors.dark} /></mesh>
+      {[-1, 1].map((side) => (
+        <MovingPart key={`flipper-${side}`} animated={props.animated} phase={side} base={side * -0.52} amount={0.12} speed={1.2}>
+          <mesh position={[0.36, side * bodyHeight * 0.8, -0.06]} scale={[whale ? 0.78 : 0.58, whale ? 0.2 : 0.14, 0.08]}><sphereGeometry args={[1, 18, 12]} /><meshToonMaterial color={colors.accent} /></mesh>
+        </MovingPart>
+      ))}
+      {dolphin ? [-1, 1].map((side) => (
+        <MovingPart key={`fluke-${side}`} animated={props.animated} phase={side * 0.7} base={side * 0.62} amount={0.1} speed={1.05}>
+          <mesh position={[-bodyLength * 1.04, side * 0.28, 0]} scale={[0.55, 0.2, 0.1]}><sphereGeometry args={[1, 18, 12]} /><meshToonMaterial color={colors.dark} /></mesh>
+        </MovingPart>
+      )) : (
+        <group position={[-bodyLength * 0.86, 0, 0]}>
+          <MovingPart animated={props.animated} phase={kind === "whale" ? 0.35 : 0.8} amount={whale ? 0.15 : 0.18} speed={whale ? 0.82 : 1.08}>
+            <mesh position={[-0.42, 0, 0]} rotation={[0, 0, Math.PI / 2]} scale={[whale ? 0.18 : 0.14, 0.76, whale ? 0.2 : 0.16]}>
+              <cylinderGeometry args={[0.48, 1, 1, 14]} />
+              <meshToonMaterial color={colors.body} />
+            </mesh>
+            {[-1, 1].map((side) => (
+              <mesh key={`fluke-${side}`} position={[-0.9, side * (whale ? 0.27 : 0.23), 0]} rotation={[0, 0, side * 0.48]} scale={[whale ? 0.7 : 0.56, whale ? 0.23 : 0.19, 0.1]}>
+                <sphereGeometry args={[1, 18, 12]} />
+                <meshToonMaterial color={colors.dark} />
+              </mesh>
+            ))}
+          </MovingPart>
+        </group>
+      )}
+      <MovingPupil position={[bodyLength * 0.67, 0.17, whale ? 0.54 : 0.43]} scale={whale ? 0.07 : 0.075} animated={props.animated} />
+      {kind === "narwhal" && <mesh position={[bodyLength * 1.28, 0.13, 0]} rotation={[0, 0, -Math.PI / 2]} scale={[0.11, 1.05, 0.11]}><coneGeometry args={[1, 1, 12]} /><meshToonMaterial color="#F3F0E8" /></mesh>}
+      {whale && <mesh position={[bodyLength * 0.72, 0.56, 0]} rotation={[Math.PI / 2, 0, 0]} scale={[0.06, 0.06, 0.04]}><torusGeometry args={[1, 0.3, 7, 14]} /><meshBasicMaterial color={colors.dark} /></mesh>}
+      <TraitMarks pieces={props.pieces} baseSeed={props.baseSeed} form={kind} highlightedPart={props.highlightedPart} />
+    </LivingGroup>
+  );
+}
+
 function ClamModel(props: AquaticModelProps) {
   const colors = aquaticPalette(props.pieces, props.baseSeed);
   return (
@@ -359,6 +433,8 @@ export function AdditionalAquaticModel({ form, ...props }: AquaticModelProps & {
   if (form === "starfish") return <StarfishModel {...props} />;
   if (form === "seahorse") return <SeahorseModel {...props} />;
   if (form === "seal") return <SealModel {...props} />;
+  if (form === "shrimp") return <ShrimpModel {...props} />;
+  if (form === "narwhal" || form === "dolphin" || form === "whale") return <MarineMammalModel kind={form} {...props} />;
   if (form === "clam") return <ClamModel {...props} />;
   return <PufferfishModel {...props} />;
 }

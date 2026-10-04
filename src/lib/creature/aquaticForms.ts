@@ -8,6 +8,10 @@ export const aquaticForms = [
   "starfish",
   "seahorse",
   "seal",
+  "shrimp",
+  "narwhal",
+  "dolphin",
+  "whale",
   "clam",
   "pufferfish",
 ] as const;
@@ -24,6 +28,10 @@ export const aquaticFormLabels: Record<AquaticForm, string> = {
   starfish: "starfish",
   seahorse: "seahorse",
   seal: "seal",
+  shrimp: "shrimp",
+  narwhal: "narwhal",
+  dolphin: "dolphin",
+  whale: "whale",
   clam: "clam",
   pufferfish: "pufferfish",
 };

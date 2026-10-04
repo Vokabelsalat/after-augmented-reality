@@ -215,9 +215,9 @@ export function CollectiveWall() {
         <CollectiveHeatmap data={visibleHeatmap} />
       )}
 
-      <header className="absolute inset-x-0 top-0 z-30 flex items-center justify-between px-8 py-7 lg:px-12 lg:py-9">
+      <header className="absolute inset-x-0 top-0 z-30 flex items-center justify-between py-7 lg:py-9">
         <div>
-          <h1 className="font-display text-xl tracking-[-0.03em] lg:text-2xl">The Tank Is Leaking</h1>
+          <h1 className="font-display text-xl tracking-[-0.03em] lg:text-2xl">The Fishbow Leaks</h1>
           <p className="mt-1 text-sm text-white/45">Shared aquarium · daily cycle</p>
         </div>
         <div className="absolute left-1/2 flex -translate-x-1/2 rounded-full border border-white/12 bg-black/20 p-1 text-[10px] tracking-[0.18em] backdrop-blur-md" role="group" aria-label="Collective view">
@@ -327,7 +327,7 @@ export function CollectiveWall() {
 
       {view === "collective" && latestContribution && (
         <aside
-          className="collective-recents absolute inset-x-0 bottom-0 z-30 bg-gradient-to-t from-[#030405] via-[#030405]/95 to-[#030405]/80 px-8 pb-6 lg:px-12 lg:pb-7"
+          className="collective-recents absolute inset-x-0 bottom-0 z-30 bg-gradient-to-t from-[#030405] via-[#030405]/95 to-[#030405]/80 pb-6 lg:pb-7"
           aria-label={`Most recently shared stories and ${activeVisualizationCopy.plural}`}
         >
           <div className="collective-recents-grid grid h-full grid-cols-[minmax(24rem,1.5fr)_minmax(20rem,1fr)] border-t border-white/12 pt-4">

@@ -45,7 +45,7 @@ export function JourneyFinal() {
       <BiomeBackdrop progress={0.88} />
       <header className="relative z-10 flex items-center justify-between">
         <Link href="/" className="font-display text-2xl tracking-[-0.04em]">
-          The Tank Is Leaking
+          The Fishbow Leaks
         </Link>
         <p className="text-[9px] tracking-[0.24em] text-white/42">
           Release chamber

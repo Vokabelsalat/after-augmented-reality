@@ -3,6 +3,7 @@ import { artifacts } from "@/data/artifacts";
 import { aquaticForms } from "@/lib/creature/aquaticForms";
 import {
   createSyntheticDataset,
+  SYNTHETIC_FEATURED_FORMS,
   SYNTHETIC_VISITOR_COUNT,
 } from "@/lib/development/syntheticDataset";
 
@@ -33,5 +34,15 @@ describe("createSyntheticDataset", () => {
     expect(dataset.every((visitor) => visitor.parts.every((part) => knownArtifacts.has(part.artifactId)))).toBe(true);
     expect(dataset.every((visitor) => visitor.parts.every((part) => (part.dwellMs ?? 0) >= 35_000))).toBe(true);
     expect(dataset.every((visitor) => visitor.narrative.length === visitor.parts.length)).toBe(true);
+  });
+
+  it("features the new marine species in the test aquarium", () => {
+    const dataset = createSyntheticDataset(cycleStart);
+
+    expect(dataset.slice(0, SYNTHETIC_FEATURED_FORMS.length).map((visitor) => visitor.creatureForm)).toEqual(
+      [...SYNTHETIC_FEATURED_FORMS],
+    );
+    const includedForms = new Set(dataset.map((visitor) => visitor.creatureForm));
+    SYNTHETIC_FEATURED_FORMS.forEach((form) => expect(includedForms.has(form)).toBe(true));
   });
 });

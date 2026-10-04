@@ -520,8 +520,8 @@ a:focus-visible {
 
 .collective-swim-field {
   top: 0;
-  left: 2.5rem;
-  right: 2.5rem;
+  left: 0;
+  right: 0;
   bottom: var(--collective-recents-height);
 }
 
@@ -534,7 +534,7 @@ a:focus-visible {
 }
 
 .tank-compartments {
-  inset: 0 2.5rem var(--collective-recents-height);
+  inset: 0 0 var(--collective-recents-height);
   border-top: 1px solid rgba(232, 245, 239, 0.28);
   border-bottom: 1px solid rgba(232, 245, 239, 0.28);
   opacity: clamp(0.08, calc(1.12 - var(--tank-progress, 0) * 1.15), 1);
@@ -945,7 +945,6 @@ a:focus-visible {
   }
 
   .collective-recents {
-    padding-inline: 1.25rem;
     padding-bottom: 1rem;
   }
 

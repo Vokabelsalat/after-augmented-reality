@@ -4,7 +4,7 @@ import "@/app/globals.css";
 import { StoreProvider } from "@/store/StoreProvider";
 
 export const metadata: Metadata = {
-  title: "The Tank Is Leaking — After Augmented Reality",
+  title: "The Fishbow Leaks — After Augmented Reality",
   description: "Scan the exhibition, grow an unclassifiable sea creature, and release it into the shared aquarium.",
 };
 
