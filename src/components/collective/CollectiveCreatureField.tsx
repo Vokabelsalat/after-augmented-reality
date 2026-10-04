@@ -31,6 +31,20 @@ const collectiveFormScale: Record<AquaticForm, number> = {
   pufferfish: 1,
 };
 
+const collectiveFormSpeed: Record<AquaticForm, number> = {
+  fish: 1.18,
+  crab: 0.62,
+  jellyfish: 0.68,
+  octopus: 0.82,
+  turtle: 0.58,
+  ray: 1.05,
+  starfish: 0.48,
+  seahorse: 0.72,
+  seal: 1.12,
+  clam: 0.42,
+  pufferfish: 1.08,
+};
+
 const depthHazeLayers = [
   { z: 1.18, color: "#123a3d", opacity: 0.045 },
   { z: 0.48, color: "#0d3038", opacity: 0.06 },
@@ -72,17 +86,18 @@ function FloatingCreature({ contribution, progress }: { contribution: Exhibition
   const directionRef = useRef<THREE.Group>(null);
   const floorOffsetRef = useRef<number | null>(null);
   const isBottomDweller = contribution.creatureForm === "crab" || contribution.creatureForm === "clam";
+  const formSpeed = collectiveFormSpeed[contribution.creatureForm];
   const placement = useMemo(() => ({
     xUnit: -0.84 + seededUnit(contribution.id * 3) * 1.68,
     yUnit: -0.84 + seededUnit(contribution.id * 5) * 1.68,
     z: -1 + seededUnit(contribution.id * 7) * 2,
-    depthSpeed: 0.12 + seededUnit(contribution.id * 11) * 0.13,
+    depthSpeed: (0.07 + seededUnit(contribution.id * 11) * 0.17) * formSpeed,
     depthDirection: seededUnit(contribution.id * 23) > 0.5 ? 1 : -1,
     scale: 0.4,
-    speed: 0.32 + seededUnit(contribution.id * 13) * 0.34,
+    speed: (0.24 + seededUnit(contribution.id * 13) * 0.5) * formSpeed,
     phase: seededUnit(contribution.id * 17) * Math.PI * 2,
     heading: seededUnit(contribution.id * 19) * Math.PI * 2,
-  }), [contribution.id]);
+  }), [contribution.id, formSpeed]);
   const motion = useRef({
     initialized: false,
     x: 0,
@@ -181,12 +196,19 @@ function FloatingCreature({ contribution, progress }: { contribution: Exhibition
     const depthProgress = THREE.MathUtils.inverseLerp(backDepth, frontDepth, state.z);
     const depthScale = THREE.MathUtils.lerp(0.72, 1.24, THREE.MathUtils.smoothstep(depthProgress, 0, 1));
     swimRef.current.scale.setScalar(depthScale);
-    directionRef.current.rotation.y = THREE.MathUtils.damp(
-      directionRef.current.rotation.y,
-      state.vx >= 0 ? 0 : Math.PI,
-      3.4,
-      delta,
+    const sideHeading = state.vx >= 0 ? 0 : Math.PI;
+    const fullDepthHeading = Math.atan2(-state.vz, state.vx);
+    const depthTurn = THREE.MathUtils.clamp(
+      THREE.MathUtils.euclideanModulo(fullDepthHeading - sideHeading + Math.PI, Math.PI * 2) - Math.PI,
+      -0.3,
+      0.3,
     );
+    const depthHeading = sideHeading + depthTurn;
+    const headingDelta = THREE.MathUtils.euclideanModulo(
+      depthHeading - directionRef.current.rotation.y + Math.PI,
+      Math.PI * 2,
+    ) - Math.PI;
+    directionRef.current.rotation.y += headingDelta * (1 - Math.exp(-3.4 * delta));
     const slope = isBottomDweller ? 0 : Math.atan2(state.vy, Math.max(0.08, Math.abs(state.vx)));
     const directedSlope = slope * (state.vx >= 0 ? 1 : -1);
     swimRef.current.rotation.z = THREE.MathUtils.damp(
