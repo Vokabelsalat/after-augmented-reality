@@ -5,6 +5,7 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
 import { AquaticCreatureModel } from "@/components/creature/AquaticCreatureModel";
+import { AquariumDioramaPlants } from "@/components/collective/AquariumDioramaPlants";
 import { creatureSizeScale, type AquaticForm } from "@/lib/creature/aquaticForms";
 import type { ExhibitionContribution } from "@/types/contribution";
 
@@ -183,9 +184,11 @@ export function CollectiveCreatureField({ contributions, progress = 1 }: { contr
       <directionalLight position={[2, 5, 8]} intensity={2.4} color="#FFF4DF" />
       <pointLight position={[-5, 1, 5]} intensity={2.2} color="#58D6FF" />
       <pointLight position={[5, -2, 5]} intensity={1.8} color="#FF7557" />
+      <AquariumDioramaPlants layer="back" />
       {contributions.slice(-32).map((contribution) => (
         <FloatingCreature key={contribution.id} contribution={contribution} progress={progress} />
       ))}
+      <AquariumDioramaPlants layer="front" />
       <AdaptiveDpr pixelated />
     </Canvas>
   );
