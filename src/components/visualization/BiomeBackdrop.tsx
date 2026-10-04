@@ -3,9 +3,11 @@ import type { CSSProperties } from "react";
 export function BiomeBackdrop({
   progress = 0.38,
   quiet = false,
+  surfaceRays = false,
 }: {
   progress?: number;
   quiet?: boolean;
+  surfaceRays?: boolean;
 }) {
   return (
     <div
@@ -13,6 +15,20 @@ export function BiomeBackdrop({
       style={{ "--tank-progress": progress } as CSSProperties}
       aria-hidden="true"
     >
+      {surfaceRays ? (
+        <div className="biome-sunlight" aria-hidden="true">
+          <span className="biome-waterline" />
+          <span className="biome-sunray biome-sunray-one" />
+          <span className="biome-sunray biome-sunray-two" />
+          <span className="biome-sunray biome-sunray-three" />
+          <span className="biome-sunray biome-sunray-four" />
+          <span className="biome-sunray biome-sunray-five" />
+          <span className="biome-sunray biome-sunray-six" />
+          <span className="biome-sunray biome-sunray-seven" />
+          <span className="biome-sunray biome-sunray-eight" />
+          <span className="biome-surface-glimmer" />
+        </div>
+      ) : null}
       <span className="biome-current biome-current-one" />
       <span className="biome-current biome-current-two" />
       <span className="biome-current biome-current-three" />

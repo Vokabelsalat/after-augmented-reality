@@ -246,6 +246,119 @@ a:focus-visible {
   overflow: hidden;
 }
 
+.biome-sunlight {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  opacity: 0;
+  mix-blend-mode: screen;
+  animation: biome-sunlight-appear 24s ease-in-out infinite;
+}
+
+.biome-waterline {
+  position: absolute;
+  inset: -2.5rem -8% auto;
+  height: 7rem;
+  opacity: 0.72;
+  background:
+    radial-gradient(ellipse at 48% 58%, rgba(232, 245, 239, 0.34), transparent 15%),
+    radial-gradient(ellipse at 51% 52%, rgba(185, 255, 220, 0.22), transparent 25%);
+  filter: blur(1rem);
+  animation: biome-waterline-shimmer 8s ease-in-out infinite alternate;
+}
+
+.biome-sunray {
+  position: absolute;
+  top: -1%;
+  width: 2.8%;
+  height: 62%;
+  opacity: 0.12;
+  background: linear-gradient(to bottom, rgba(232, 245, 239, 0.64), rgba(185, 255, 220, 0.12) 58%, transparent);
+  clip-path: polygon(42% 0, 58% 0, 68% 100%, 32% 100%);
+  filter: blur(0.35rem);
+  transform-origin: 50% 0;
+  animation: biome-sunray-shimmer 8s ease-in-out infinite alternate;
+}
+
+.biome-sunray-one {
+  left: 40%;
+  height: 46%;
+  transform: rotate(-5deg);
+}
+
+.biome-sunray-two {
+  left: 42.4%;
+  width: 2.2%;
+  height: 68%;
+  opacity: 0.1;
+  animation-delay: -2s;
+  transform: rotate(-5deg);
+}
+
+.biome-sunray-three {
+  left: 44.2%;
+  width: 3.2%;
+  height: 76%;
+  opacity: 0.09;
+  animation-delay: -4.5s;
+  transform: rotate(-5deg);
+}
+
+.biome-sunray-four {
+  left: 46.8%;
+  width: 1.8%;
+  height: 58%;
+  opacity: 0.14;
+  animation-delay: -6s;
+  transform: rotate(-5deg);
+}
+
+.biome-sunray-five {
+  left: 48.3%;
+  width: 2.5%;
+  height: 72%;
+  opacity: 0.08;
+  animation-delay: -1s;
+  transform: rotate(-5deg);
+}
+
+.biome-sunray-six {
+  left: 50.4%;
+  width: 3%;
+  height: 54%;
+  opacity: 0.11;
+  animation-delay: -3.5s;
+  transform: rotate(-5deg);
+}
+
+.biome-sunray-seven {
+  left: 52.8%;
+  width: 1.9%;
+  height: 70%;
+  opacity: 0.08;
+  animation-delay: -5.5s;
+  transform: rotate(-5deg);
+}
+
+.biome-sunray-eight {
+  left: 54.4%;
+  width: 2.6%;
+  height: 48%;
+  opacity: 0.1;
+  animation-delay: -7s;
+  transform: rotate(-5deg);
+}
+
+.biome-surface-glimmer {
+  position: absolute;
+  inset: 0 -12% auto;
+  height: 5.5rem;
+  opacity: 0.34;
+  background: repeating-radial-gradient(ellipse at 50% -45%, transparent 0 1.9rem, rgba(232, 245, 239, 0.2) 2rem 2.08rem, transparent 2.2rem 3.7rem);
+  filter: blur(1px);
+  animation: biome-surface-glimmer 7s linear infinite;
+}
+
 .biome-water-quiet .biome-current,
 .biome-water-quiet .biome-floor,
 .biome-water-quiet .biome-bloom {
@@ -364,6 +477,28 @@ a:focus-visible {
 @keyframes biome-current-drift {
   from { translate: -3vw -1vh; scale: 0.94 1; }
   to { translate: 7vw 2vh; scale: 1.1 0.82; }
+}
+
+@keyframes biome-waterline-shimmer {
+  from { transform: translateX(-2%) scaleX(0.96); opacity: 0.48; }
+  to { transform: translateX(3%) scaleX(1.05); opacity: 0.78; }
+}
+
+@keyframes biome-sunlight-appear {
+  0%, 18% { opacity: 0; }
+  34%, 54% { opacity: 1; }
+  72%, 100% { opacity: 0; }
+}
+
+@keyframes biome-sunray-shimmer {
+  from { translate: -0.35vw 0; scale: 0.92 0.98; opacity: 0.05; }
+  48% { opacity: 0.14; }
+  to { translate: 0.45vw 0; scale: 1.06 1.02; opacity: 0.08; }
+}
+
+@keyframes biome-surface-glimmer {
+  from { transform: translateX(-3%) scaleX(0.98); }
+  to { transform: translateX(3%) scaleX(1.03); }
 }
 
 @keyframes biome-caustic-sway {

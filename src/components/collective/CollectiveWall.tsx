@@ -179,7 +179,7 @@ export function CollectiveWall() {
 
   return (
     <main className="collective-wall biome-field film-grain relative h-screen overflow-hidden bg-[var(--abyss)] text-[var(--foam)]" style={wallStyle} aria-label={`Collective exhibition ${activeVisualizationCopy.collectivePlace}`}>
-      <BiomeBackdrop progress={dayProgress} />
+      <BiomeBackdrop progress={dayProgress} surfaceRays />
       <div className="tank-compartments pointer-events-none absolute inset-0" aria-hidden="true">
         <div className="tank-compartment tank-compartment-one"><span>memory shelf</span></div>
         <div className="tank-compartment tank-compartment-two"><span>synthetic voice</span></div>
