@@ -318,28 +318,75 @@ function SealModel(props: AquaticModelProps) {
 
 function ShrimpModel(props: AquaticModelProps) {
   const colors = aquaticPalette(props.pieces, props.baseSeed);
-  const antennae = useMemo(() => [-1, 1].map((side) => new THREE.CatmullRomCurve3([
-    new THREE.Vector3(1.02, side * 0.18, 0.18),
-    new THREE.Vector3(1.55, side * 0.45, 0.12),
-    new THREE.Vector3(2.05, side * 0.62, 0),
-  ])), []);
+  const abdomen = [
+    { position: [0.62, 0.14, 0] as const, rotation: -0.04, scale: [0.43, 0.48, 0.34] as const },
+    { position: [0.25, 0.12, 0] as const, rotation: -0.08, scale: [0.42, 0.46, 0.33] as const },
+    { position: [-0.12, 0.03, 0] as const, rotation: -0.2, scale: [0.4, 0.43, 0.31] as const },
+    { position: [-0.45, -0.13, 0] as const, rotation: -0.38, scale: [0.36, 0.4, 0.28] as const },
+    { position: [-0.72, -0.38, 0] as const, rotation: -0.62, scale: [0.31, 0.36, 0.24] as const },
+    { position: [-0.87, -0.68, 0] as const, rotation: -0.9, scale: [0.25, 0.31, 0.2] as const },
+  ];
+  const antennae = useMemo(() => [
+    new THREE.CatmullRomCurve3([
+      new THREE.Vector3(1.22, 0.27, 0.08),
+      new THREE.Vector3(1.7, 0.57, 0.06),
+      new THREE.Vector3(2.28, 0.67, 0.03),
+      new THREE.Vector3(2.82, 0.42, 0),
+    ]),
+    new THREE.CatmullRomCurve3([
+      new THREE.Vector3(1.24, 0.2, 0.02),
+      new THREE.Vector3(1.78, 0.34, 0),
+      new THREE.Vector3(2.42, 0.2, -0.02),
+    ]),
+  ], []);
   return (
     <LivingGroup animated={props.animated} scale={props.scale} motion="coil">
-      {Array.from({ length: 6 }, (_, index) => (
-        <mesh key={`segment-${index}`} position={[-0.62 + index * 0.3, Math.sin(index * 0.42) * 0.12, 0]} scale={[0.34, 0.46 - index * 0.025, 0.32]}>
+      {abdomen.map((segment, index) => (
+        <mesh key={`segment-${index}`} position={segment.position} rotation={[0, 0, segment.rotation]} scale={segment.scale}>
           <sphereGeometry args={[1, 18, 14]} />
           <meshToonMaterial color={index % 2 ? colors.body : colors.light} />
         </mesh>
       ))}
-      <mesh position={[1.12, 0.18, 0]} scale={[0.48, 0.42, 0.35]}><sphereGeometry args={[1, 20, 16]} /><meshToonMaterial color={colors.accent} /></mesh>
-      {antennae.map((curve, index) => <mesh key={`antenna-${index}`}><tubeGeometry args={[curve, 18, 0.022, 6, false]} /><meshToonMaterial color={colors.light} /></mesh>)}
-      {[-1, 1].map((side) => <MovingPupil key={side} position={[1.28, side * 0.23, 0.3]} scale={0.075} animated={props.animated} phase={side} />)}
-      {Array.from({ length: 5 }, (_, index) => [-1, 1].map((side) => (
-        <MovingPart key={`leg-${index}-${side}`} animated={props.animated} phase={index * 0.55 + side} base={side * 0.42} amount={0.16} speed={2.1}>
-          <mesh position={[-0.25 + index * 0.28, side * 0.48, -0.08]} rotation={[0, 0, side * 0.55]} scale={[0.035, 0.34, 0.035]}><cylinderGeometry args={[1, 0.65, 1, 7]} /><meshToonMaterial color={colors.dark} /></mesh>
+      <mesh position={[1.02, 0.2, 0]} rotation={[0, 0, 0.06]} scale={[0.58, 0.43, 0.36]}>
+        <sphereGeometry args={[1, 22, 16]} />
+        <meshToonMaterial color={colors.accent} />
+      </mesh>
+      <mesh position={[1.5, 0.2, 0]} rotation={[0, 0, -Math.PI / 2]} scale={[0.22, 0.42, 0.2]}>
+        <coneGeometry args={[1, 1, 12]} />
+        <meshToonMaterial color={colors.light} />
+      </mesh>
+      {antennae.map((curve, index) => (
+        <mesh key={`antenna-${index}`}>
+          <tubeGeometry args={[curve, 28, index === 0 ? 0.018 : 0.014, 6, false]} />
+          <meshToonMaterial color={colors.light} />
+        </mesh>
+      ))}
+      <MovingPupil position={[1.25, 0.42, 0.31]} scale={[0.085, 0.09, 0.055]} animated={props.animated} />
+      {Array.from({ length: 5 }, (_, index) => [-1, 1].map((depth) => (
+        <MovingPart key={`leg-${index}-${depth}`} animated={props.animated} phase={index * 0.55 + depth} base={-0.18 + index * 0.035} amount={0.13} speed={2.1}>
+          <group position={[0.68 - index * 0.28, -0.18 - index * 0.035, depth * 0.13]}>
+            <mesh position={[0.08, -0.23, 0]} rotation={[0, 0, -0.38]} scale={[0.025, 0.28, 0.025]}>
+              <cylinderGeometry args={[1, 0.7, 1, 7]} />
+              <meshToonMaterial color={colors.dark} />
+            </mesh>
+            <mesh position={[0.22, -0.49, 0]} rotation={[0, 0, -0.68]} scale={[0.018, 0.25, 0.018]}>
+              <cylinderGeometry args={[1, 0.6, 1, 7]} />
+              <meshToonMaterial color={colors.dark} />
+            </mesh>
+          </group>
         </MovingPart>
       )))}
-      {[-1, 1].map((side) => <mesh key={`tail-${side}`} position={[-1.02, side * 0.28, 0]} rotation={[0, 0, side * 0.42]} scale={[0.48, 0.22, 0.08]}><sphereGeometry args={[1, 14, 10]} /><meshToonMaterial color={colors.accent} /></mesh>)}
+      {[-1, 0, 1].map((fan) => (
+        <mesh
+          key={`tail-${fan}`}
+          position={[-0.96 + fan * 0.13, -0.96, fan * 0.04]}
+          rotation={[0, 0, fan * 0.32 - 0.08]}
+          scale={[0.18, 0.4, 0.09]}
+        >
+          <sphereGeometry args={[1, 14, 10]} />
+          <meshToonMaterial color={fan === 0 ? colors.dark : colors.accent} />
+        </mesh>
+      ))}
       <TraitMarks pieces={props.pieces} baseSeed={props.baseSeed} form="shrimp" highlightedPart={props.highlightedPart} />
     </LivingGroup>
   );
