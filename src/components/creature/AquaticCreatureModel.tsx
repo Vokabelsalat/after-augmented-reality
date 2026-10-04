@@ -27,12 +27,19 @@ function CrabModel({
   useFrame(({ clock }) => {
     if (animated === false || !groupRef.current) return;
     const wave = clock.elapsedTime;
-    groupRef.current.position.y = grounded ? 0 : Math.sin(wave * 1.3) * 0.045;
+    const stride = wave * 3.1;
+    groupRef.current.position.y = grounded ? Math.abs(Math.sin(stride)) * 0.025 : Math.sin(wave * 1.3) * 0.045;
     groupRef.current.rotation.z = Math.sin(wave * 0.8) * 0.025;
     if (leftClaw.current) leftClaw.current.rotation.z = 0.35 + Math.sin(wave * 1.7) * 0.14;
     if (rightClaw.current) rightClaw.current.rotation.z = -0.35 - Math.sin(wave * 1.7 + 0.8) * 0.14;
     legs.current.forEach((leg, index) => {
-      if (leg) leg.rotation.x = Math.sin(wave * 2.2 + index * 0.9) * 0.12;
+      if (!leg) return;
+      const side = index < 3 ? -1 : 1;
+      const legIndex = index % 3;
+      const alternatingPhase = (legIndex + (side > 0 ? 1 : 0)) % 2 === 0 ? 0 : Math.PI;
+      const step = Math.sin(stride + alternatingPhase);
+      leg.rotation.z = side * (0.72 + legIndex * 0.17 + step * 0.16);
+      leg.rotation.x = Math.max(0, step) * side * 0.18;
     });
     pupils.current.forEach((pupil, index) => {
       if (!pupil) return;
