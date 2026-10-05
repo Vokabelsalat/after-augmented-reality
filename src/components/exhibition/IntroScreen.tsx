@@ -19,7 +19,7 @@ export function IntroScreen() {
         <section className="grid flex-1 items-center gap-6 py-8 md:grid-cols-[1.1fr_.9fr]" aria-labelledby="intro-title">
           <div className="relative z-10">
             <h1 id="intro-title" className="font-display max-w-3xl text-[clamp(4.2rem,14vw,9rem)] leading-[0.73] tracking-[-0.075em]">
-              The Fishbow
+              The Fishbowl
               <span className="block translate-x-[8vw] italic text-[var(--phosphor)] md:translate-x-20">Leaks</span>
             </h1>
             <p className="mt-8 max-w-md text-lg leading-7 text-white/74">
