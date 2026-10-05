@@ -1,9 +1,5 @@
 # Poster reference images
 
-The reveal uses the same zero-based source images as the compiled MindAR target bundle:
+The runtime catalog contains 16 works with target indices `0` through `15`, following the row order in `public/exhibition.csv`. Compile the final poster images in exactly that order into `public/targets/exhibition.mind`.
 
-- target index `0` → `poster-0.jpeg`
-- target index `1` → `poster-1.jpeg`
-- target index `2` → `poster-2.jpeg`
-
-Each path is explicitly connected to its target in `src/data/artifacts.ts` through `posterImageSrc`. Keep these files visually identical to the images used to compile `public/targets/exhibition.mind`.
+The current `posterImageSrc` values in `src/data/artifacts.ts` deliberately reuse three placeholder images for the reveal UI. They are independent of MindAR's compiled reference images and can be replaced with artwork-specific paths when the final poster files are available.

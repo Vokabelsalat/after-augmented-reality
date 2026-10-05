@@ -23,6 +23,7 @@ const mirroredPartIds = new Set<CreaturePartId>([
   "orbit-ring",
   "heart-plume",
   "helping-arms",
+  "sand-hourglass",
 ]);
 
 type FishProfile = {
@@ -66,6 +67,9 @@ const fishLooks: Record<string, Omit<FishLook, "profile"> & { profile: keyof typ
   "her-name-was-gisberta": { profile: "worldmaking", body: "#D34A79", head: "#A92E59", belly: "#F3B7A3", fin: "#ED7C3D", marking: "#682342", pattern: "spots" },
   "missing-10-hours": { profile: "agency", body: "#C35B4F", head: "#8F3939", belly: "#E9C5A7", fin: "#E2A044", marking: "#582735", pattern: "stripe" },
   goliath: { profile: "worldmaking", body: "#69884A", head: "#405E3B", belly: "#D6CF83", fin: "#D7A62C", marking: "#26372B", pattern: "bands" },
+  "land-of-crystals": { profile: "memory", body: "#6E9EAE", head: "#456F82", belly: "#DCE9E8", fin: "#A8CED7", marking: "#345361", pattern: "spots" },
+  "grand-hotel-sand-fountain": { profile: "worldmaking", body: "#A98254", head: "#795D40", belly: "#E8D3AA", fin: "#CDAA6D", marking: "#57412E", pattern: "bands" },
+  "fiery-sparks-of-light": { profile: "interface", body: "#C84B35", head: "#913326", belly: "#F3C39F", fin: "#F07845", marking: "#67231F", pattern: "stripe" },
 };
 
 const caudalTailShape = new THREE.Shape();
@@ -709,6 +713,70 @@ function FishPartMesh({ piece }: { piece: CreaturePiece }) {
           ))}
         </group>
       );
+    case "crystal-spines":
+      return (
+        <group name={piece.partId} position={[-0.1, 0.72, 0]}>
+          {[-0.48, -0.16, 0.16, 0.48].map((x, index) => (
+            <mesh
+              key={x}
+              position={[x, index % 2 === 0 ? -0.04 : 0.08, 0]}
+              scale={[0.15, 0.36 + index * 0.035, 0.12]}
+            >
+              <octahedronGeometry args={[1, 0]} />
+              <meshToonMaterial
+                color={piece.color}
+                emissive={piece.color}
+                emissiveIntensity={0.24}
+                transparent
+                opacity={0.86}
+              />
+            </mesh>
+          ))}
+        </group>
+      );
+    case "sand-hourglass":
+      return (
+        <group name={piece.partId} position={[0.12, 0, 0.31]} scale={0.72}>
+          <mesh position={[0, 0.2, 0]} rotation={[0, 0, Math.PI]}>
+            <coneGeometry args={[0.28, 0.4, 12]} />
+            <SoftMaterial color={piece.color} opacity={0.72} />
+          </mesh>
+          <mesh position={[0, -0.2, 0]}>
+            <coneGeometry args={[0.28, 0.4, 12]} />
+            <SoftMaterial color={piece.color} opacity={0.72} />
+          </mesh>
+          <mesh>
+            <sphereGeometry args={[0.075, 12, 12]} />
+            {material}
+          </mesh>
+        </group>
+      );
+    case "spark-plume":
+      return (
+        <group name={piece.partId} position={[0.48, 0.56, 0.04]}>
+          {[0, 1, 2, 3, 4].map((index) => {
+            const angle = index * 1.35;
+            return (
+              <mesh
+                key={index}
+                position={[
+                  Math.cos(angle) * (0.09 + index * 0.045),
+                  index * 0.17,
+                  Math.sin(angle) * 0.05,
+                ]}
+                scale={0.13 - index * 0.012}
+              >
+                <octahedronGeometry args={[1, 0]} />
+                <meshToonMaterial
+                  color={piece.color}
+                  emissive={piece.color}
+                  emissiveIntensity={0.8}
+                />
+              </mesh>
+            );
+          })}
+        </group>
+      );
   }
 }
 
@@ -932,6 +1000,16 @@ export function CreatureModel({
           break;
         case "goliath-horns":
           part.rotation.z = Math.sin(time * 1.15) * 0.04 * emphasis;
+          break;
+        case "crystal-spines":
+          part.scale.setScalar(1 + Math.max(0, pulse) * 0.045 * emphasis);
+          break;
+        case "sand-hourglass":
+          part.rotation.z = Math.sin(time * 0.8) * 0.08 * emphasis;
+          break;
+        case "spark-plume":
+          part.rotation.z = Math.sin(time * 1.4) * 0.09 * emphasis;
+          part.scale.setScalar(1 + Math.max(0, pulse) * 0.06 * emphasis);
           break;
       }
     });

@@ -39,7 +39,10 @@ export type CreaturePartId =
   | "orbit-ring"
   | "heart-plume"
   | "helping-arms"
-  | "goliath-horns";
+  | "goliath-horns"
+  | "crystal-spines"
+  | "sand-hourglass"
+  | "spark-plume";
 
 export type CreaturePart = {
   id: CreaturePartId;

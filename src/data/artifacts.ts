@@ -220,6 +220,48 @@ const aquariumLayers: Record<string, AquariumLayer> = {
       ],
     },
   },
+  "land-of-crystals": {
+    marineType: "archive crystal reef",
+    classification: "Synthetic remembrance mineral",
+    visualTraits: ["faceted archive", "borrowed voice"],
+    stateEffects: { memory: 2, voice: 1, coherence: -1 },
+    storylet: "A lost studio returned as crystal, carrying a voice that never survived.",
+    choice: {
+      prompt: "The crystal is holding a fragment of the past.",
+      options: [
+        { id: "preserve", label: "Preserve it", effects: { memory: 2, coherence: 1 } },
+        { id: "refract", label: "Refract it", effects: { openness: 2, coherence: -1 } },
+      ],
+    },
+  },
+  "grand-hotel-sand-fountain": {
+    marineType: "hourglass current",
+    classification: "Recombinant memory fountain",
+    visualTraits: ["falling sand", "haunted fragments"],
+    stateEffects: { memory: 2, openness: 2, coherence: -1 },
+    storylet: "Sand carried three stories through the hotel, rearranging them as it fell.",
+    choice: {
+      prompt: "The fountain is releasing a memory.",
+      options: [
+        { id: "hold", label: "Hold the fragment", effects: { memory: 2, coherence: 1 } },
+        { id: "release", label: "Let it recombine", effects: { openness: 2, coherence: -1 } },
+      ],
+    },
+  },
+  "fiery-sparks-of-light": {
+    marineType: "holographic spark school",
+    classification: "Volumetric language bloom",
+    visualTraits: ["poem sparks", "hologram wake"],
+    stateEffects: { voice: 2, agency: 1, openness: 1 },
+    storylet: "Four voices entered the water as sparks and made language visible.",
+    choice: {
+      prompt: "A spoken line is beginning to glow.",
+      options: [
+        { id: "kindle", label: "Kindle the words", effects: { voice: 2, agency: 1 } },
+        { id: "share", label: "Share the light", effects: { openness: 2, voice: 1 } },
+      ],
+    },
+  },
 };
 
 const exhibitionSources: ArtifactSource[] = [
@@ -454,6 +496,60 @@ const exhibitionSources: ArtifactSource[] = [
       id: "goliath-horns",
       label: "Reality comb",
       description: "A dorsal comb tuned into more than one reality.",
+    },
+  },
+  {
+    id: "land-of-crystals",
+    targetIndex: 13,
+    title: "The Land of Crystals",
+    artist: "The Land of Crystals",
+    visualFamily: "memory",
+    particleForm: "crystal",
+    color: "#8CB6C7",
+    theme: "memory",
+    shortText:
+      "The Land of Crystals reconstructs Edvard Munch’s demolished house and studios at Ekely from archival photographs and historical images. Munch’s writing is spoken by an intentionally speculative AI-generated voice, placing the film between historical absence, technological imagination and the parts of the past that cannot be recovered.",
+    narrativeWords: ["archive", "crystal", "echo", "recover"],
+    creaturePart: {
+      id: "crystal-spines",
+      label: "Crystal spines",
+      description: "Faceted spines that refract fragments of places and voices that disappeared.",
+    },
+  },
+  {
+    id: "grand-hotel-sand-fountain",
+    targetIndex: 14,
+    title: "The Grand Hotel Sand Fountain",
+    artist: "Scott Rettberg, Caitlin Fisher, Roderick Coover, Julian Pillis, Colin Robinson",
+    visualFamily: "memory",
+    particleForm: "hourglass",
+    color: "#C19D65",
+    theme: "memory",
+    shortText:
+      "The Grand Hotel Sand Fountain is a collaborative AR work that extends the imaginary universes of Joseph Cornell and Robert Coover. Personal ephemera, generated imagery, human narration and synthetic speech form three entangled stories about memory, loss and haunted objects coming to life.",
+    narrativeWords: ["sand", "revisit", "haunt", "recombine"],
+    creaturePart: {
+      id: "sand-hourglass",
+      label: "Sand chamber",
+      description: "A small hourglass chamber that lets memories fall into new arrangements.",
+    },
+  },
+  {
+    id: "fiery-sparks-of-light",
+    targetIndex: 15,
+    title: "Fiery Sparks of Light",
+    artist: "Caitlin Fisher",
+    visualFamily: "machine",
+    particleForm: "spiral",
+    color: "#E45D3E",
+    theme: "interface",
+    shortText:
+      "Fiery Sparks of Light is an AR experience presenting poems by Margaret Atwood, Nicole Brossard, Canisia Lubrin and Sarah Tolmie. QR codes in a printed book summon the poets as volumetric holograms while audiovisual effects amplify writing about patriarchy, objectification, stereotyping and oppression.",
+    narrativeWords: ["ignite", "speak", "resist", "appear"],
+    creaturePart: {
+      id: "spark-plume",
+      label: "Spark plume",
+      description: "A luminous plume that turns spoken language into a visible trail.",
     },
   },
 ];

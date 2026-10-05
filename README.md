@@ -72,7 +72,7 @@ Dwell time runs from an artifact's first scan until the next new artifact is sca
 
 Open `/collective` full-screen on the exhibition display. It polls the live contribution feed every 2.5 seconds. Each new story expands into focus, displays its narrative, then contracts into an abstract constellation and joins up to 60 other drifting contributions. Initial history appears directly as the ambient field, so restarting the display does not replay every old story.
 
-Use the **Time map** switch on the collective display to see cumulative dwell time for all 13 artwork stations. This view aggregates every stored contribution (not only the recent stories in the ambient field), ranks the stations by total attention, and shows visit count plus average dwell time. Missing timing data from older stories is excluded from the totals.
+Use the **Time map** switch on the collective display to see cumulative dwell time for all 16 artwork stations. This view aggregates every stored contribution (not only the recent stories in the ambient field), ranks the stations by total attention, and shows visit count plus average dwell time. Missing timing data from older stories is excluded from the totals.
 
 The default database file is `data/exhibition.sqlite` and is ignored by Git. Set `EXHIBITION_DATABASE_PATH` to an absolute persistent volume path in production. Run one server instance against that volume; for horizontal scaling, replace the small database helper with a managed shared SQL store while preserving the API contract.
 
@@ -91,7 +91,7 @@ Add the final print artwork as high-quality JPG or PNG files in `public/images/`
 
 Open the [MindAR image target compiler](https://hiukim.github.io/mind-ar-js-doc/tools/compile/), add the images in this exact order, compile, and export the bundle:
 
-Compile the final artwork images in the same order as `public/exhibition.csv`. The current configuration assigns target indices `0` through `12`, from **Finding Frida** through **Goliath**.
+Compile the final artwork images in the same order as `public/exhibition.csv`. The current configuration assigns target indices `0` through `15`, from **Finding Frida** through **Fiery Sparks of Light**.
 
 Save the downloaded file as:
 
@@ -99,11 +99,11 @@ Save the downloaded file as:
 public/targets/exhibition.mind
 ```
 
-The repository deliberately does not include a fake `.mind` file. An invalid placeholder would make scanner errors harder to diagnose; simulator mode remains fully functional until the real exhibition artwork exists.
+The checked-in `exhibition.mind` bundle predates the complete 16-work catalog and contains only four targets. Rebuild it from all 16 final poster images before physical camera testing. Simulator mode remains fully functional without an updated bundle.
 
 ### 3. Check the configuration mapping
 
-`src/data/artifacts.ts` is the runtime source of truth and follows the CSV row order. `targetIndex` must match the image order used by the compiler. MindAR emits a number, the adapter forwards it, and `artifactByTargetIndex` resolves the exhibition content. The curatorial themes are **Memory**, **Interface**, **Worldmaking**, **Embodiment**, and **Agency**. Until final artwork images are available, the 13 configured works reuse three poster-image families while each keeps the artwork-specific `color` and simplified `particleForm` defined in `public/exhibition.csv`.
+`src/data/artifacts.ts` is the runtime source of truth and follows the CSV row order. `targetIndex` must match the image order used by the compiler. MindAR emits a number, the adapter forwards it, and `artifactByTargetIndex` resolves the exhibition content. The curatorial themes are **Memory**, **Interface**, **Worldmaking**, **Embodiment**, and **Agency**. Until final artwork images are available, the 16 configured works reuse three poster-image families while each keeps the artwork-specific `color` and simplified `particleForm` defined in `public/exhibition.csv`.
 
 ### 4. Serve over HTTPS on a phone
 

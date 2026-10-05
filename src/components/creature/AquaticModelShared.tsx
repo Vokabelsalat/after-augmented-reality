@@ -190,6 +190,61 @@ function AquaticTraitGrowth({
           <TraitMaterial color={color} highlighted={highlighted} />
         </mesh>
       ))}
+
+      {partId === "crystal-spines" && (
+        <group position={[0, 0.22, 0.2]}>
+          {[-0.32, 0, 0.32].map((x, index) => (
+            <mesh
+              key={x}
+              position={[x, index === 1 ? 0.18 : 0, 0]}
+              scale={[0.16, index === 1 ? 0.42 : 0.3, 0.14]}
+            >
+              <octahedronGeometry args={[1, 0]} />
+              <TraitMaterial color={color} highlighted={highlighted} opacity={0.84} />
+            </mesh>
+          ))}
+        </group>
+      )}
+
+      {partId === "sand-hourglass" && (
+        <group position={[0, 0.06, 0.22]}>
+          <mesh position={[0, 0.19, 0]} rotation={[0, 0, Math.PI]}>
+            <coneGeometry args={[0.25, 0.38, 12]} />
+            <TraitMaterial color={color} highlighted={highlighted} opacity={0.72} />
+          </mesh>
+          <mesh position={[0, -0.19, 0]}>
+            <coneGeometry args={[0.25, 0.38, 12]} />
+            <TraitMaterial color={color} highlighted={highlighted} opacity={0.72} />
+          </mesh>
+          <mesh position={[0, 0, 0.04]}>
+            <sphereGeometry args={[0.075, 12, 10]} />
+            <TraitMaterial color={rootColor} highlighted={highlighted} />
+          </mesh>
+        </group>
+      )}
+
+      {partId === "spark-plume" && (
+        <group position={[0, 0.18, 0.2]}>
+          {[0, 1, 2, 3, 4].map((index) => {
+            const angle = index * 1.4;
+            const radius = 0.08 + index * 0.055;
+            return (
+              <mesh
+                key={index}
+                position={[
+                  Math.cos(angle) * radius,
+                  index * 0.16,
+                  Math.sin(angle) * radius * 0.4,
+                ]}
+                scale={0.13 - index * 0.01}
+              >
+                <octahedronGeometry args={[1, 0]} />
+                <TraitMaterial color={color} highlighted={highlighted} />
+              </mesh>
+            );
+          })}
+        </group>
+      )}
     </group>
   );
 }
@@ -246,6 +301,9 @@ export function TraitMarks({
     "heart-plume": [0.12, -0.04],
     "helping-arms": [0.46, -0.54],
     "goliath-horns": [0.58, 0.62],
+    "crystal-spines": [-0.24, 0.68],
+    "sand-hourglass": [0.08, 0.04],
+    "spark-plume": [0.38, 0.66],
   };
   const largePartIds = new Set<CreaturePartId>([
     "memory-crown",
@@ -255,6 +313,8 @@ export function TraitMarks({
     "page-fins",
     "helping-arms",
     "goliath-horns",
+    "crystal-spines",
+    "spark-plume",
   ]);
   const layouts: Record<Exclude<AquaticForm, "fish">, { x: number; y: number; cx: number; cy: number; z: number; scale: number; vertical?: boolean }> = {
     crab: { x: 0.92, y: 0.48, cx: 0, cy: 0.08, z: 0.34, scale: 0.46 },
