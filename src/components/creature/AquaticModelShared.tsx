@@ -1,7 +1,7 @@
 "use client";
 
 import { useFrame } from "@react-three/fiber";
-import { useRef, type ReactNode } from "react";
+import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import * as THREE from "three";
 import type { CreaturePiece } from "@/components/creature/CreatureModel";
 import type { AquaticForm } from "@/lib/creature/aquaticForms";
@@ -190,6 +190,29 @@ function AquaticTraitGrowth({
   );
 }
 
+const traitMarksTag = "aquaticTraitMarks";
+const skinInset = 0.015;
+
+function isInsideTraitMarks(object: THREE.Object3D) {
+  for (let node: THREE.Object3D | null = object; node; node = node.parent) {
+    if (node.userData[traitMarksTag]) return true;
+  }
+  return false;
+}
+
+// Casts a ray along the local z axis of `body` and returns the first skin hit in body-local coordinates.
+function skinDepth(body: THREE.Object3D, x: number, y: number, side: 1 | -1, raycaster: THREE.Raycaster) {
+  const origin = body.localToWorld(new THREE.Vector3(x, y, side * 20));
+  const target = body.localToWorld(new THREE.Vector3(x, y, 0));
+  raycaster.set(origin, target.sub(origin).normalize());
+  const hit = raycaster
+    .intersectObjects(body.children, true)
+    .find((intersection) => intersection.object.visible && !isInsideTraitMarks(intersection.object));
+  return hit ? body.worldToLocal(hit.point.clone()).z : null;
+}
+
+type TraitPlacement = { x: number; y: number; front: number; back: number };
+
 export function TraitMarks({
   pieces,
   form,
@@ -201,6 +224,8 @@ export function TraitMarks({
   highlightedPart?: CreaturePartId;
   baseSeed?: string;
 }) {
+  const groupRef = useRef<THREE.Group>(null);
+  const [placements, setPlacements] = useState<Record<string, TraitPlacement>>({});
   const signature = baseSeed ?? pieces[0]?.artifactId ?? "new";
   const palette = creatureColorPalette(signature);
   const partAnchors: Record<CreaturePartId, [number, number]> = {
@@ -227,51 +252,86 @@ export function TraitMarks({
     "helping-arms",
     "goliath-horns",
   ]);
-  return pieces.map((piece, index) => {
-    const layouts: Record<Exclude<AquaticForm, "fish">, { x: number; y: number; cx: number; cy: number; z: number; scale: number; vertical?: boolean }> = {
-      crab: { x: 0.92, y: 0.48, cx: 0, cy: 0.08, z: 0.34, scale: 0.46 },
-      jellyfish: { x: 0.78, y: 0.48, cx: 0, cy: 0.42, z: 0.5, scale: 0.44 },
-      octopus: { x: 0.66, y: 0.68, cx: 0, cy: 0.36, z: 0.46, scale: 0.44 },
-      turtle: { x: 1.08, y: 0.54, cx: 0.04, cy: 0, z: 0.36, scale: 0.48 },
-      ray: { x: 1.14, y: 0.82, cx: 0.18, cy: 0, z: 0.24, scale: 0.46 },
-      starfish: { x: 0.84, y: 0.84, cx: 0, cy: 0, z: 0.24, scale: 0.4 },
-      seahorse: { x: 0.48, y: 1.06, cx: 0, cy: 0.02, z: 0.3, scale: 0.38, vertical: true },
-      seal: { x: 1.16, y: 0.48, cx: 0, cy: 0.02, z: 0.35, scale: 0.48 },
-      shrimp: { x: 1.08, y: 0.4, cx: 0, cy: 0.08, z: 0.28, scale: 0.4 },
-      narwhal: { x: 1.34, y: 0.46, cx: 0, cy: 0.02, z: 0.46, scale: 0.48 },
-      dolphin: { x: 1.18, y: 0.43, cx: 0, cy: 0.02, z: 0.26, scale: 0.5 },
-      whale: { x: 1.56, y: 0.56, cx: 0, cy: 0.02, z: 0.3, scale: 0.56 },
-      clam: { x: 0.86, y: 0.48, cx: 0, cy: 0.04, z: 0.3, scale: 0.42 },
-      pufferfish: { x: 0.94, y: 0.68, cx: 0, cy: 0, z: 0.6, scale: 0.46 },
-    };
-    const layout = layouts[form];
-    const [anchorX, anchorY] = partAnchors[piece.partId];
-    const position: [number, number, number] = [
+  const layouts: Record<Exclude<AquaticForm, "fish">, { x: number; y: number; cx: number; cy: number; z: number; scale: number; vertical?: boolean }> = {
+    crab: { x: 0.92, y: 0.48, cx: 0, cy: 0.08, z: 0.34, scale: 0.46 },
+    jellyfish: { x: 0.78, y: 0.48, cx: 0, cy: 0.42, z: 0.5, scale: 0.44 },
+    octopus: { x: 0.66, y: 0.68, cx: 0, cy: 0.36, z: 0.46, scale: 0.44 },
+    turtle: { x: 1.08, y: 0.54, cx: 0.04, cy: 0, z: 0.36, scale: 0.48 },
+    ray: { x: 1.14, y: 0.82, cx: 0.18, cy: 0, z: 0.24, scale: 0.46 },
+    starfish: { x: 0.84, y: 0.84, cx: 0, cy: 0, z: 0.24, scale: 0.4 },
+    seahorse: { x: 0.48, y: 1.06, cx: 0, cy: 0.02, z: 0.3, scale: 0.38, vertical: true },
+    seal: { x: 1.16, y: 0.48, cx: 0, cy: 0.02, z: 0.35, scale: 0.48 },
+    shrimp: { x: 1.08, y: 0.4, cx: 0, cy: 0.08, z: 0.28, scale: 0.4 },
+    narwhal: { x: 1.34, y: 0.46, cx: 0, cy: 0.02, z: 0.46, scale: 0.48 },
+    dolphin: { x: 1.18, y: 0.43, cx: 0, cy: 0.02, z: 0.26, scale: 0.5 },
+    whale: { x: 1.56, y: 0.56, cx: 0, cy: 0.02, z: 0.3, scale: 0.56 },
+    clam: { x: 0.86, y: 0.48, cx: 0, cy: 0.04, z: 0.3, scale: 0.42 },
+    pufferfish: { x: 0.94, y: 0.68, cx: 0, cy: 0, z: 0.6, scale: 0.46 },
+  };
+  const layout = layouts[form];
+  const anchorFor = (partId: CreaturePartId): [number, number] => {
+    const [anchorX, anchorY] = partAnchors[partId];
+    return [
       layout.cx + (layout.vertical ? anchorY * layout.x : anchorX * layout.x),
       layout.cy + (layout.vertical ? anchorX * layout.y : anchorY * layout.y),
-      layout.z,
     ];
-    const highlighted = piece.partId === highlightedPart;
-    const markerScale = layout.scale * (largePartIds.has(piece.partId) ? 1.12 : 0.92) * (highlighted ? 1.18 : 1);
-    const color = piece.color || [palette.marking, palette.fin, palette.head, palette.belly][index % 4];
+  };
+  const placementKey = `${form}:${pieces.map((piece) => `${piece.artifactId}/${piece.partId}`).join(",")}`;
 
-    return (
-      <group key={piece.artifactId} position={[position[0], position[1], 0]}>
-        <GrowingTrait active={highlighted}>
-          {[-1, 1].map((side) => (
-            <group key={side} position={[0, 0, side * layout.z]} scale={[1, 1, side]}>
-              <group scale={markerScale}>
-                <AquaticTraitGrowth
-                  partId={piece.partId}
-                  color={color}
-                  rootColor={palette.marking}
-                  highlighted={highlighted}
-                />
+  // Measure where the creature's skin actually is, so traits sit on it instead of at a fixed depth.
+  useLayoutEffect(() => {
+    const body = groupRef.current?.parent;
+    if (!body) return;
+    body.updateWorldMatrix(true, true);
+    const raycaster = new THREE.Raycaster();
+    const next: Record<string, TraitPlacement> = {};
+    for (const piece of pieces) {
+      const [anchorX, anchorY] = anchorFor(piece.partId);
+      // If the anchor misses the body, slide it toward the body centre until it lands on skin.
+      for (let step = 0; step <= 10; step += 1) {
+        const t = step / 10;
+        const x = anchorX + (layout.cx - anchorX) * t;
+        const y = anchorY + (layout.cy - anchorY) * t;
+        const front = skinDepth(body, x, y, 1, raycaster);
+        const back = skinDepth(body, x, y, -1, raycaster);
+        if (front !== null && back !== null) {
+          next[piece.artifactId] = { x, y, front: front - skinInset, back: back + skinInset };
+          break;
+        }
+      }
+    }
+    setPlacements(next);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [placementKey]);
+
+  return (
+    <group ref={groupRef} userData={{ [traitMarksTag]: true }}>
+      {pieces.map((piece, index) => {
+        const [anchorX, anchorY] = anchorFor(piece.partId);
+        const placement = placements[piece.artifactId] ?? { x: anchorX, y: anchorY, front: layout.z, back: -layout.z };
+        const highlighted = piece.partId === highlightedPart;
+        const markerScale = layout.scale * (largePartIds.has(piece.partId) ? 1.12 : 0.92) * (highlighted ? 1.18 : 1);
+        const color = piece.color || [palette.marking, palette.fin, palette.head, palette.belly][index % 4];
+
+        return (
+          <group key={piece.artifactId} position={[placement.x, placement.y, 0]}>
+            {([1, -1] as const).map((side) => (
+              <group key={side} position={[0, 0, side > 0 ? placement.front : placement.back]} scale={[1, 1, side]}>
+                <GrowingTrait active={highlighted}>
+                  <group scale={markerScale}>
+                    <AquaticTraitGrowth
+                      partId={piece.partId}
+                      color={color}
+                      rootColor={palette.marking}
+                      highlighted={highlighted}
+                    />
+                  </group>
+                </GrowingTrait>
               </group>
-            </group>
-          ))}
-        </GrowingTrait>
-      </group>
-    );
-  });
+            ))}
+          </group>
+        );
+      })}
+    </group>
+  );
 }

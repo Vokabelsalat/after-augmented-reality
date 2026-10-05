@@ -49,12 +49,12 @@ function MovingPart({ children, animated, phase, base = 0, amount = 0.1, speed =
   return <group ref={ref} rotation={[0, 0, base]}>{children}</group>;
 }
 
-function MovingPupil({ position, scale, animated, phase = 0 }: { position: [number, number, number]; scale: number | [number, number, number]; animated?: boolean; phase?: number }) {
+function MovingPupil({ position, scale, animated, phase = 0, range = [0.035, 0.025] }: { position: [number, number, number]; scale: number | [number, number, number]; animated?: boolean; phase?: number; range?: [number, number] }) {
   const ref = useRef<THREE.Mesh>(null);
   useFrame(({ clock }) => {
     if (animated === false || !ref.current) return;
-    ref.current.position.x = position[0] + Math.sin(clock.elapsedTime * 0.65 + phase) * 0.035;
-    ref.current.position.y = position[1] + Math.cos(clock.elapsedTime * 0.52 + phase) * 0.025;
+    ref.current.position.x = position[0] + Math.sin(clock.elapsedTime * 0.65 + phase) * range[0];
+    ref.current.position.y = position[1] + Math.cos(clock.elapsedTime * 0.52 + phase) * range[1];
   });
   return <mesh ref={ref} position={position} scale={scale}><sphereGeometry args={[1, 10, 8]} /><meshBasicMaterial color="#071015" /></mesh>;
 }
@@ -777,12 +777,15 @@ function DolphinModel(props: AquaticModelProps) {
         <group name={`Dolphin ${side > 0 ? "near" : "far"} eye`} key={`eye-${side}`} position={[1.17, 0.13, side * 0.215]}>
           <mesh scale={[0.058, 0.055, 0.028]}>
             <sphereGeometry args={[1, 14, 10]} />
-            <meshToonMaterial color="#F3F0E8" />
+            <meshBasicMaterial color="#FFFFFF" />
           </mesh>
-          <mesh position={[0.01, -0.003, side * 0.027]} scale={[0.024, 0.027, 0.014]}>
-            <sphereGeometry args={[1, 12, 10]} />
-            <meshBasicMaterial color="#071015" />
-          </mesh>
+          <MovingPupil
+            position={[0.01, -0.003, side * 0.027]}
+            scale={[0.024, 0.027, 0.014]}
+            animated={props.animated}
+            phase={side * 0.2}
+            range={[0.018, 0.016]}
+          />
         </group>
       ))}
       <TraitMarks pieces={props.pieces} baseSeed={props.baseSeed} form="dolphin" highlightedPart={props.highlightedPart} />
