@@ -1,6 +1,6 @@
 "use client";
 
-import { AdaptiveDpr } from "@react-three/drei";
+import { AdaptiveDpr, OrbitControls } from "@react-three/drei";
 import { Canvas, useThree } from "@react-three/fiber";
 import { useLayoutEffect, useRef, type RefObject } from "react";
 import * as THREE from "three";
@@ -27,20 +27,20 @@ function FitCreatureCamera({
     const object = objectRef.current;
     if (!(currentCamera instanceof THREE.OrthographicCamera) || !object) return;
 
-    object.position.x = 0;
+    object.position.set(0, 0, 0);
     object.updateWorldMatrix(true, true);
     const bounds = new THREE.Box3().setFromObject(object);
     if (bounds.isEmpty()) return;
 
     const center = bounds.getCenter(new THREE.Vector3());
     const dimensions = bounds.getSize(new THREE.Vector3());
-    object.position.x = -center.x;
+    object.position.set(-center.x, -center.y, 0);
     object.updateWorldMatrix(true, true);
 
     const fittedCamera = currentCamera.clone();
     fittedCamera.position.x = 0;
-    fittedCamera.position.y = center.y;
-    fittedCamera.lookAt(0, center.y, 0);
+    fittedCamera.position.y = 0;
+    fittedCamera.lookAt(0, 0, 0);
     fittedCamera.zoom = Math.min(
       size.width / Math.max(dimensions.x, 0.001),
       size.height / Math.max(dimensions.y, 0.001),
@@ -64,6 +64,7 @@ export function CreatureCanvas({
   creatureForm = "fish",
   creatureSeed,
   label,
+  interactive = false,
 }: {
   artifactIds: string[];
   highlightedPart?: CreaturePartId;
@@ -75,6 +76,7 @@ export function CreatureCanvas({
   creatureForm?: AquaticForm;
   creatureSeed?: string;
   label?: string;
+  interactive?: boolean;
 }) {
   const pieces = creaturePiecesFromArtifactIds(artifactIds);
   const creatureRootRef = useRef<THREE.Group>(null);
@@ -82,9 +84,9 @@ export function CreatureCanvas({
 
   return (
     <div
-      className="relative size-full"
+      className={`relative size-full ${interactive ? "cursor-grab touch-none active:cursor-grabbing" : ""}`}
       role="img"
-      aria-label={label ?? `${aquaticFormLabels[creatureForm]} with ${pieces.length} collected ${pieces.length === 1 ? "trait" : "traits"}`}
+      aria-label={`${label ?? `${aquaticFormLabels[creatureForm]} with ${pieces.length} collected ${pieces.length === 1 ? "trait" : "traits"}`}${interactive ? ". Drag to rotate the model." : ""}`}
     >
       <Canvas
         orthographic
@@ -100,6 +102,16 @@ export function CreatureCanvas({
         <group ref={creatureRootRef}>
           <AquaticCreatureModel form={creatureForm} pieces={pieces} baseSeed={creatureSeed} highlightedPart={highlightedPart} scale={(compact ? 0.86 : 1) * creatureScale} />
         </group>
+        {interactive && (
+          <OrbitControls
+            enableDamping
+            dampingFactor={0.08}
+            enablePan={false}
+            enableZoom={false}
+            rotateSpeed={0.65}
+            target={[0, 0, 0]}
+          />
+        )}
         <AdaptiveDpr pixelated />
       </Canvas>
     </div>

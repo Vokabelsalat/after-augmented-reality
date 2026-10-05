@@ -21,6 +21,7 @@ export function PathVisualization({
   creatureForm,
   creatureSeed,
   label,
+  interactive = false,
 }: {
   artifactIds: string[];
   contribution?: ExhibitionContribution;
@@ -32,6 +33,7 @@ export function PathVisualization({
   creatureForm?: AquaticForm | null;
   creatureSeed?: string;
   label?: string;
+  interactive?: boolean;
 }) {
   if (visualizationDesign === "constellation") {
     if (contribution) {
@@ -68,6 +70,7 @@ export function PathVisualization({
       creatureForm={contribution?.creatureForm ?? creatureForm ?? "fish"}
       creatureSeed={contribution?.publicId ?? creatureSeed}
       label={label}
+      interactive={interactive}
     />
   );
 }

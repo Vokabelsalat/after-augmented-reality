@@ -57,13 +57,14 @@ function ArtifactRevealSequence({
           data-phase={phase}
         >
           <div className="creature-reveal-halo" aria-hidden="true" />
-          <div className="creature-reveal-model">
+          <div className="creature-reveal-model pointer-events-auto">
             <PathVisualization
               artifactIds={creatureArtifactIds}
               creatureForm={creatureForm}
               creatureSeed={creatureSeed}
               fitToView
               fitScale={1.14}
+              interactive
               highlightedPart={isGrowing ? artifact.creaturePart.id : undefined}
               label={`${artifact.marineType} altering your ${activeVisualizationCopy.singular}`}
             />

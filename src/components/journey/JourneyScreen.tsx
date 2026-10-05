@@ -46,7 +46,7 @@ export function JourneyScreen() {
       </header>
 
       <div className="mx-auto h-[38dvh] min-h-72 w-full max-w-xl">
-        <PathVisualization artifactIds={discoveries.map((item) => item.artifactId)} creatureForm={creatureForm} creatureSeed={creatureSeed} fitToView label={`Your evolving exhibition ${activeVisualizationCopy.singular}`} />
+        <PathVisualization artifactIds={discoveries.map((item) => item.artifactId)} creatureForm={creatureForm} creatureSeed={creatureSeed} fitToView interactive label={`Your evolving exhibition ${activeVisualizationCopy.singular}`} />
       </div>
 
       <div className="mx-auto w-full max-w-xl flex-1">
