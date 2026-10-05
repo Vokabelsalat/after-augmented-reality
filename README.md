@@ -1,6 +1,6 @@
-# After Augmented Reality
+# The Fishbowl Leaks
 
-**After Augmented Reality** is a mobile-first AR exhibition prototype about extending digital narratives. A visitor scans physical works; particles detach from each work, resolve into accessible exhibition content, and join a persistent personal constellation. The final screen turns the ordered path into a deterministic short poem.
+**The Fishbowl Leaks** is a mobile-first AR exhibition prototype about extending digital narratives. A visitor scans physical works; particles detach from each work, resolve into accessible exhibition content, and join a persistent personal constellation. The final screen turns the ordered path into a deterministic short poem.
 
 The complete prototype loop works without a camera through the built-in simulator. Real image tracking uses MindAR through a narrow adapter and can be enabled by adding one compiled target bundle.
 
@@ -259,7 +259,7 @@ Add:
 
 ```ini
 [Unit]
-Description=After Augmented Reality exhibition
+Description=The Fishbowl Leaks
 Wants=network-online.target
 After=network-online.target
 

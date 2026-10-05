@@ -27,11 +27,6 @@ export function ArtifactContent({ artifact, onContinue, mini = false }: Artifact
       </button>
 
       <div className={`mx-auto w-full max-w-xl overflow-y-auto overscroll-contain ${expanded ? "max-h-[70dvh]" : mini ? "max-h-[42dvh]" : "max-h-[56dvh]"}`}>
-        <div className="mb-4 flex items-center justify-between gap-4 text-sm text-white/65">
-          <span>Specimen {String(artifact.targetIndex + 1).padStart(3, "0")}</span>
-          <span>{artifact.marineType}</span>
-        </div>
-
         <h2 id="artifact-title" className="font-display max-w-lg text-[clamp(2rem,9vw,3.3rem)] leading-[0.94] tracking-[-0.055em]">
           {artifact.title}
         </h2>
@@ -57,7 +52,6 @@ export function ArtifactContent({ artifact, onContinue, mini = false }: Artifact
         className="mx-auto mt-5 flex min-h-14 w-full max-w-xl items-center justify-between border-t border-white/20 pt-4 text-base text-white"
       >
         <span>{mini ? "Return to the tank" : "Continue through the exhibition"}</span>
-        <span aria-hidden="true">↗</span>
       </button>
     </article>
   );

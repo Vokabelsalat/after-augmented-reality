@@ -37,13 +37,13 @@ export function ExhibitionNavigation() {
       <button
         type="button"
         onClick={() => dispatch(setExperiencePhase("journey"))}
-        className="pointer-events-auto flex min-h-16 items-center gap-2 border border-white/25 bg-[var(--abyss)] py-1 pr-4 pl-1.5 text-sm text-white transition-colors hover:bg-black"
+        className="pointer-events-auto flex items-center gap-2 border border-white/25 bg-[var(--abyss)] text-sm text-white pr-2 transition-colors hover:bg-black"
         aria-label={`Open ${activeVisualizationCopy.personalTitle}, ${count} parts collected`}
       >
-        <span key={previewKey} className="specimen-preview-update size-12 overflow-hidden rounded-full bg-white/[0.035]" aria-hidden="true">
+        <div key={previewKey} className="specimen-preview-update size-14 overflow-hidden bg-white/[0.035]" aria-hidden="true">
           <PathVisualization artifactIds={previewDiscoveries.map((item) => item.artifactId)} creatureForm={creatureForm} creatureSeed={creatureSeed} compact />
-        </span>
-        <span>My specimen</span>
+        </div>
+        <span>My Creature</span>
       </button>
     </header>
   );

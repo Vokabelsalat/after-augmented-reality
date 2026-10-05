@@ -11,10 +11,6 @@ export function IntroScreen() {
     <main className="biome-field biome-screen film-grain relative min-h-dvh overflow-hidden bg-[var(--abyss)] px-5 text-[var(--foam)]">
       <BiomeBackdrop progress={0.26} quiet />
       <div className="safe-top relative z-10 mx-auto flex min-h-dvh w-full max-w-5xl flex-col">
-        <header className="flex items-start justify-between border-b border-white/20 pb-3 text-sm">
-          <span>After Augmented Reality</span>
-          <span className="text-right text-white/55">Tank cycle 01<br />containment nominal</span>
-        </header>
 
         <section className="grid flex-1 items-center gap-6 py-8 md:grid-cols-[1.1fr_.9fr]" aria-labelledby="intro-title">
           <div className="relative z-10">
@@ -29,20 +25,29 @@ export function IntroScreen() {
 
           <div className="porthole mx-auto aspect-square w-[min(72vw,25rem)]" aria-hidden="true">
             <div className="porthole-glass">
-              <span className="specimen-word specimen-word-one">memory</span>
-              <span className="specimen-word specimen-word-two">voice</span>
-              <span className="specimen-word specimen-word-three">unclassified</span>
-              <span className="leak-line leak-line-one" />
-              <span className="leak-line leak-line-two" />
-              <span className="marine-snow marine-snow-one">title_004</span>
-              <span className="marine-snow marine-snow-two">open_sea?</span>
+              <span className="radar-range radar-range-outer" />
+              <span className="radar-range radar-range-middle" />
+              <span className="radar-range radar-range-inner" />
+              <span className="radar-axis radar-axis-horizontal" />
+              <span className="radar-axis radar-axis-vertical" />
+              <span className="radar-sweep" />
+              <span className="radar-vessel" />
+              <span className="radar-contact radar-contact-one" />
+              <span className="radar-contact radar-contact-two" />
+              <span className="radar-contact radar-contact-three" />
+              <span className="radar-contact radar-contact-four" />
+              <span className="theme-echo theme-echo-memory">Memory and afterlives</span>
+              <span className="theme-echo theme-echo-systems">Synthetic systems and constructed authority</span>
+              <span className="theme-echo theme-echo-language">Language across materials</span>
+              <span className="theme-echo theme-echo-dreams">Dreams and simulated worlds</span>
+              <span className="theme-echo theme-echo-embodiment">Embodiment, care, and resistance</span>
             </div>
           </div>
         </section>
 
         <div className="safe-bottom relative z-10 grid items-end gap-4 border-t border-white/20 pt-4 md:grid-cols-[1fr_auto]">
-          <p className="max-w-lg text-sm leading-6 text-white/58">
-            One QR code. No download or login. Camera access is requested when you enter the tank.
+          <p className="max-w-lg text-sm align-middle text-white/58">
+            Camera access is requested when you enter the tank.
           </p>
           <button
             type="button"
@@ -50,7 +55,6 @@ export function IntroScreen() {
             className="flex min-h-16 w-full items-center justify-between bg-[var(--phosphor)] px-6 text-base text-[#031015] transition-transform active:scale-[0.99] md:w-80"
           >
             <span>Scan an artwork marker</span>
-            <span aria-hidden="true">→</span>
           </button>
         </div>
       </div>

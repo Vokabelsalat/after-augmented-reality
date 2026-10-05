@@ -2,45 +2,53 @@
 
 import { AdaptiveDpr } from "@react-three/drei";
 import { Canvas, useThree } from "@react-three/fiber";
-import { useLayoutEffect } from "react";
+import { useLayoutEffect, useRef, type RefObject } from "react";
 import * as THREE from "three";
 import { creaturePiecesFromArtifactIds } from "@/components/creature/CreatureModel";
 import { AquaticCreatureModel } from "@/components/creature/AquaticCreatureModel";
 import { aquaticFormLabels, type AquaticForm } from "@/lib/creature/aquaticForms";
 import type { CreaturePartId } from "@/types/exhibition";
 
-const fittedBounds: Record<AquaticForm, { width: number; height: number }> = {
-  fish: { width: 6.2, height: 4.1 },
-  crab: { width: 4.4, height: 3.4 },
-  jellyfish: { width: 3.6, height: 4.5 },
-  octopus: { width: 4.2, height: 4.5 },
-  turtle: { width: 5.3, height: 3.5 },
-  ray: { width: 6.5, height: 4.2 },
-  starfish: { width: 4.4, height: 4.4 },
-  seahorse: { width: 3.5, height: 4.8 },
-  seal: { width: 5.6, height: 3.7 },
-  shrimp: { width: 5.8, height: 3.8 },
-  narwhal: { width: 7.4, height: 4.2 },
-  dolphin: { width: 6.4, height: 4.1 },
-  whale: { width: 8.2, height: 4.8 },
-  clam: { width: 4.2, height: 3.8 },
-  pufferfish: { width: 5.1, height: 4.1 },
-};
-
-function FitCreatureCamera({ creatureForm, scale = 1 }: { creatureForm: AquaticForm; scale?: number }) {
+function FitCreatureCamera({
+  objectRef,
+  fitKey,
+  scale = 1,
+}: {
+  objectRef: RefObject<THREE.Group | null>;
+  fitKey: string;
+  scale?: number;
+}) {
   const size = useThree((state) => state.size);
   const get = useThree((state) => state.get);
   const set = useThree((state) => state.set);
 
   useLayoutEffect(() => {
     const currentCamera = get().camera;
-    if (!(currentCamera instanceof THREE.OrthographicCamera)) return;
-    const bounds = fittedBounds[creatureForm];
+    const object = objectRef.current;
+    if (!(currentCamera instanceof THREE.OrthographicCamera) || !object) return;
+
+    object.position.x = 0;
+    object.updateWorldMatrix(true, true);
+    const bounds = new THREE.Box3().setFromObject(object);
+    if (bounds.isEmpty()) return;
+
+    const center = bounds.getCenter(new THREE.Vector3());
+    const dimensions = bounds.getSize(new THREE.Vector3());
+    object.position.x = -center.x;
+    object.updateWorldMatrix(true, true);
+
     const fittedCamera = currentCamera.clone();
-    fittedCamera.zoom = Math.min(size.width / bounds.width, size.height / bounds.height) * 0.82 * scale;
+    fittedCamera.position.x = 0;
+    fittedCamera.position.y = center.y;
+    fittedCamera.lookAt(0, center.y, 0);
+    fittedCamera.zoom = Math.min(
+      size.width / Math.max(dimensions.x, 0.001),
+      size.height / Math.max(dimensions.y, 0.001),
+    ) * 0.82 * scale;
     fittedCamera.updateProjectionMatrix();
+    fittedCamera.updateMatrixWorld();
     set({ camera: fittedCamera });
-  }, [creatureForm, get, scale, set, size.height, size.width]);
+  }, [fitKey, get, objectRef, scale, set, size.height, size.width]);
 
   return null;
 }
@@ -69,6 +77,8 @@ export function CreatureCanvas({
   label?: string;
 }) {
   const pieces = creaturePiecesFromArtifactIds(artifactIds);
+  const creatureRootRef = useRef<THREE.Group>(null);
+  const fitKey = `${creatureForm}:${artifactIds.join("|")}`;
 
   return (
     <div
@@ -82,12 +92,14 @@ export function CreatureCanvas({
         dpr={[1, compact ? 1.25 : 1.6]}
         gl={{ alpha: true, antialias: true, powerPreference: "high-performance" }}
       >
-        {fitToView && <FitCreatureCamera creatureForm={creatureForm} scale={fitScale} />}
+        {fitToView && <FitCreatureCamera objectRef={creatureRootRef} fitKey={fitKey} scale={fitScale} />}
         <ambientLight intensity={1.5} />
         <directionalLight position={[3, 5, 6]} intensity={2.6} color="#FFF4DF" />
         <pointLight position={[-3, 0, 4]} intensity={2} color="#58D6FF" />
         <pointLight position={[3, -2, 3]} intensity={1.4} color="#FF7557" />
-        <AquaticCreatureModel form={creatureForm} pieces={pieces} baseSeed={creatureSeed} highlightedPart={highlightedPart} scale={(compact ? 0.86 : 1) * creatureScale} />
+        <group ref={creatureRootRef}>
+          <AquaticCreatureModel form={creatureForm} pieces={pieces} baseSeed={creatureSeed} highlightedPart={highlightedPart} scale={(compact ? 0.86 : 1) * creatureScale} />
+        </group>
         <AdaptiveDpr pixelated />
       </Canvas>
     </div>

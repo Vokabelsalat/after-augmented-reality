@@ -101,7 +101,6 @@ export function JourneyScreen() {
         disabled={!readyToRelease}
       >
         <span>{readyToRelease ? "Generate my ending" : `${3 - discoveries.length} more ${3 - discoveries.length === 1 ? "encounter" : "encounters"} before release`}</span>
-        <span aria-hidden="true">→</span>
       </button>
     </main>
   );

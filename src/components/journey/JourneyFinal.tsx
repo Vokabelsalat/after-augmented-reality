@@ -93,7 +93,6 @@ export function JourneyFinal() {
             className="flex min-h-12 items-center justify-between text-sm text-white/72"
           >
             <span>Continue this journey</span>
-            <span aria-hidden="true">↗</span>
           </Link>
           <Link
             href="/"
@@ -101,7 +100,6 @@ export function JourneyFinal() {
             className="mt-2 flex min-h-12 items-center justify-between text-sm text-white"
           >
             <span>Start again</span>
-            <span aria-hidden="true">→</span>
           </Link>
         </div>
       </section>

@@ -50,7 +50,6 @@ export function ShareContribution({
           {state === "error" && "Try sharing again"}
           {state === "idle" && "Release into the shared tank"}
         </span>
-        <span aria-hidden="true">{state === "shared" ? "✓" : "↗"}</span>
       </button>
       <p className="mt-3 px-3 text-center text-sm leading-5 text-white/45" role="status" aria-live="polite">
         {state === "shared"

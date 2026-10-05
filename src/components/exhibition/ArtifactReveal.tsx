@@ -44,11 +44,7 @@ function ArtifactRevealSequence({
   const contentVisible = phase === "content-reveal" || phase === "complete";
   const creatureVisible = !isRevisit && visualizationDesign !== "constellation";
   const isGrowing = phase === "formation";
-  const creatureArtifactIds = isGrowing || contentVisible
-    ? discoveries.map((item) => item.artifactId)
-    : discoveries
-        .filter((item) => item.artifactId !== artifact.id)
-        .map((item) => item.artifactId);
+  const creatureArtifactIds = discoveries.map((item) => item.artifactId);
 
   return (
     <section className="pointer-events-none absolute inset-0 z-40 overflow-hidden" aria-live="polite">
@@ -67,6 +63,7 @@ function ArtifactRevealSequence({
               creatureForm={creatureForm}
               creatureSeed={creatureSeed}
               fitToView
+              fitScale={1.14}
               highlightedPart={isGrowing ? artifact.creaturePart.id : undefined}
               label={`${artifact.marineType} altering your ${activeVisualizationCopy.singular}`}
             />
