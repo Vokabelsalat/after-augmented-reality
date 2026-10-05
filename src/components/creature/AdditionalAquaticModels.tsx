@@ -72,7 +72,7 @@ function PairOfEyes({ x = 0.34, y = 0.25, z = 0.55, animated }: { x?: number; y?
 }
 
 function TurtleModel(props: AquaticModelProps) {
-  const colors = aquaticPalette(props.pieces, props.baseSeed);
+  const colors = aquaticPalette(props.pieces, props.baseSeed, props.colorPalette);
   return (
     <LivingGroup animated={props.animated} scale={props.scale}>
       <mesh scale={[1.18, 0.78, 0.38]}>
@@ -109,7 +109,7 @@ function TurtleModel(props: AquaticModelProps) {
 }
 
 function RayModel(props: AquaticModelProps) {
-  const colors = aquaticPalette(props.pieces, props.baseSeed);
+  const colors = aquaticPalette(props.pieces, props.baseSeed, props.colorPalette);
   const disc = useMemo(() => {
     const shape = new THREE.Shape();
     shape.moveTo(-0.82, 0);
@@ -180,7 +180,7 @@ function RayModel(props: AquaticModelProps) {
 }
 
 function StarfishModel(props: AquaticModelProps) {
-  const colors = aquaticPalette(props.pieces, props.baseSeed);
+  const colors = aquaticPalette(props.pieces, props.baseSeed, props.colorPalette);
   return (
     <LivingGroup animated={props.animated} scale={props.scale} motion="bob">
       {Array.from({ length: 5 }, (_, index) => {
@@ -202,7 +202,7 @@ function StarfishModel(props: AquaticModelProps) {
 }
 
 function SeahorseModel(props: AquaticModelProps) {
-  const colors = aquaticPalette(props.pieces, props.baseSeed);
+  const colors = aquaticPalette(props.pieces, props.baseSeed, props.colorPalette);
   const neck = useMemo(() => new THREE.CatmullRomCurve3([
     new THREE.Vector3(0.12, 1.18, 0),
     new THREE.Vector3(-0.25, 1.02, 0),
@@ -324,7 +324,7 @@ function ArticulatedSealTail({
 }
 
 function SealModel(props: AquaticModelProps) {
-  const colors = aquaticPalette(props.pieces, props.baseSeed);
+  const colors = aquaticPalette(props.pieces, props.baseSeed, props.colorPalette);
   return (
     <LivingGroup animated={props.animated} scale={props.scale}>
       <mesh scale={[1.38, 0.66, 0.46]}>
@@ -354,7 +354,7 @@ function SealModel(props: AquaticModelProps) {
 }
 
 function ShrimpModel(props: AquaticModelProps) {
-  const colors = aquaticPalette(props.pieces, props.baseSeed);
+  const colors = aquaticPalette(props.pieces, props.baseSeed, props.colorPalette);
   const abdomen = [
     { position: [0.62, 0.14, 0] as const, rotation: -0.04, scale: [0.43, 0.48, 0.34] as const },
     { position: [0.25, 0.12, 0] as const, rotation: -0.08, scale: [0.42, 0.46, 0.33] as const },
@@ -515,7 +515,7 @@ function BlueWhaleTail({
 }
 
 function BlueWhaleModel(props: AquaticModelProps) {
-  const colors = aquaticPalette(props.pieces, props.baseSeed);
+  const colors = aquaticPalette(props.pieces, props.baseSeed, props.colorPalette);
   const body = useMemo(() => {
     const shape = new THREE.Shape();
     shape.moveTo(1.78, 0.12);
@@ -685,7 +685,7 @@ function DolphinTail({
 }
 
 function DolphinModel(props: AquaticModelProps) {
-  const colors = aquaticPalette(props.pieces, props.baseSeed);
+  const colors = aquaticPalette(props.pieces, props.baseSeed, props.colorPalette);
   const body = useMemo(() => {
     const shape = new THREE.Shape();
     shape.moveTo(1.32, 0.12);
@@ -794,7 +794,7 @@ function DolphinModel(props: AquaticModelProps) {
 }
 
 function NarwhalModel(props: AquaticModelProps) {
-  const colors = aquaticPalette(props.pieces, props.baseSeed);
+  const colors = aquaticPalette(props.pieces, props.baseSeed, props.colorPalette);
   const bodyLength = 1.46;
   const bodyHeight = 0.58;
   return (
@@ -819,7 +819,7 @@ function NarwhalModel(props: AquaticModelProps) {
 }
 
 function ClamModel(props: AquaticModelProps) {
-  const colors = aquaticPalette(props.pieces, props.baseSeed);
+  const colors = aquaticPalette(props.pieces, props.baseSeed, props.colorPalette);
   return (
     <LivingGroup animated={props.animated} scale={props.scale} motion="pulse" grounded={props.grounded}>
       {[-1, 1].map((side) => (
@@ -894,7 +894,7 @@ function ArticulatedPufferfishTail({
 }
 
 function PufferfishModel(props: AquaticModelProps) {
-  const colors = aquaticPalette(props.pieces, props.baseSeed);
+  const colors = aquaticPalette(props.pieces, props.baseSeed, props.colorPalette);
   return (
     <LivingGroup animated={props.animated} scale={props.scale} motion="pulse">
       <mesh scale={[1.16, 0.82, 0.62]}>

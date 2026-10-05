@@ -6,6 +6,17 @@ export type CreatureColorPalette = {
   marking: string;
 };
 
+const paletteKeys = ["body", "head", "belly", "fin", "marking"] as const;
+const hexColor = /^#[0-9a-f]{6}$/i;
+
+export function isCreatureColorPalette(value: unknown): value is CreatureColorPalette {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as Record<string, unknown>;
+  return paletteKeys.every(
+    (key) => typeof candidate[key] === "string" && hexColor.test(candidate[key]),
+  );
+}
+
 const marinePalettes: CreatureColorPalette[] = [
   { body: "#34789a", head: "#285a7a", belly: "#c8d9d3", fin: "#d5b43d", marking: "#183b55" },
   { body: "#d56d32", head: "#ad4d28", belly: "#f0dfbf", fin: "#d88a38", marking: "#44322c" },

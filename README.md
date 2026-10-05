@@ -66,7 +66,7 @@ Suggested acceptance path:
 
 ## Shared exhibition screen
 
-The finished-story screen can send a visitor's anonymous journey to the server. The submission contains only the journey session ID, completion time, and ordered artifact IDs with their scan timestamps. The server validates those values, regenerates the canonical narrative, attaches the configured glyph themes and colors, calculates each artifact's dwell time, and stores the result in SQLite.
+The finished-story screen can send a visitor's anonymous journey to the server. The submission contains the journey session ID, completion time, ordered artifact IDs with their scan timestamps, creature form, and the creature's explicit color palette. The server validates those values, regenerates the canonical narrative, attaches the configured glyph themes and colors, calculates each artifact's dwell time, and stores the result in SQLite. Keeping the palette with the contribution ensures the creature has the same colors during scanning, in the personal journey, and after release into the collective aquarium.
 
 Dwell time runs from an artifact's first scan until the next new artifact is scanned. The final artifact runs until the visitor finishes the story. On the collective screen, longer dwell times produce larger colored nodes. Sizing combines a bounded logarithmic absolute scale with relative contrast inside each story, making modest timing differences visible without allowing an unusually long visit to overwhelm the composition. Previously stored stories without timing data retain the original neutral node size.
 

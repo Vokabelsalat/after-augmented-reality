@@ -7,6 +7,7 @@ import * as THREE from "three";
 import { AquaticCreatureModel } from "@/components/creature/AquaticCreatureModel";
 import { AquariumDioramaPlants } from "@/components/collective/AquariumDioramaPlants";
 import { creatureSizeScale, type AquaticForm } from "@/lib/creature/aquaticForms";
+import { creatureColorPalette } from "@/lib/creature/colorPalettes";
 import type { ExhibitionContribution } from "@/types/contribution";
 
 function seededUnit(seed: number) {
@@ -404,6 +405,7 @@ function FloatingCreature({
           form={contribution.creatureForm}
           pieces={contribution.parts}
           baseSeed={contribution.publicId}
+          colorPalette={contribution.creaturePalette}
           scale={placement.scale * formScale * individualScale}
           animated
           grounded={isBottomDweller}
@@ -575,12 +577,14 @@ function createBaby(event: PairingEvent): BabyCreature {
     return second.parts.find((candidate) => candidate.partId === part.partId) ?? second.parts[index % second.parts.length] ?? part;
   });
   const id = 1_000_000 + event.sequence;
+  const publicId = `offspring-${first.publicId}-${second.publicId}-${event.sequence}`;
 
   return {
     contribution: {
       id,
-      publicId: `offspring-${first.publicId}-${second.publicId}-${event.sequence}`,
+      publicId,
       creatureForm: first.creatureForm,
+      creaturePalette: creatureColorPalette(publicId),
       parts: inheritedParts,
       narrative: [],
       createdAt: new Date().toISOString(),

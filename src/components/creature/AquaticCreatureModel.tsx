@@ -9,6 +9,7 @@ import { aquaticPalette, TraitMarks } from "@/components/creature/AquaticModelSh
 import type { AquaticForm } from "@/lib/creature/aquaticForms";
 import { applyCreatureModelOverrides } from "@/lib/creature/modelOverrides";
 import type { CreaturePartId } from "@/types/exhibition";
+import type { CreatureColorPalette } from "@/lib/creature/colorPalettes";
 
 function CrabModel({
   pieces,
@@ -17,6 +18,7 @@ function CrabModel({
   grounded,
   highlightedPart,
   scale,
+  colorPalette,
 }: AquaticModelProps) {
   const groupRef = useRef<THREE.Group>(null);
   const leftClaw = useRef<THREE.Group>(null);
@@ -24,7 +26,7 @@ function CrabModel({
   const legs = useRef<Array<THREE.Group | null>>([]);
   const lowerLegs = useRef<Array<THREE.Mesh | null>>([]);
   const pupils = useRef<Array<THREE.Mesh | null>>([]);
-  const colors = aquaticPalette(pieces, baseSeed);
+  const colors = aquaticPalette(pieces, baseSeed, colorPalette);
 
   useFrame(({ clock }) => {
     if (animated === false || !groupRef.current) return;
@@ -132,10 +134,11 @@ function JellyfishModel({
   animated,
   highlightedPart,
   scale,
+  colorPalette,
 }: AquaticModelProps) {
   const groupRef = useRef<THREE.Group>(null);
   const tentacles = useRef<Array<THREE.Mesh | null>>([]);
-  const colors = aquaticPalette(pieces, baseSeed);
+  const colors = aquaticPalette(pieces, baseSeed, colorPalette);
   const curves = useMemo(() => Array.from({ length: 7 }, (_, index) => makeTentacleCurve(index)), []);
 
   useFrame(({ clock }) => {
@@ -187,11 +190,12 @@ function OctopusModel({
   animated,
   highlightedPart,
   scale,
+  colorPalette,
 }: AquaticModelProps) {
   const groupRef = useRef<THREE.Group>(null);
   const armRefs = useRef<Array<THREE.Mesh | null>>([]);
   const pupilRefs = useRef<Array<THREE.Mesh | null>>([]);
-  const colors = aquaticPalette(pieces, baseSeed);
+  const colors = aquaticPalette(pieces, baseSeed, colorPalette);
   const arms = useMemo(() => Array.from({ length: 8 }, (_, index) => makeOctopusArm(index)), []);
 
   useFrame(({ clock }) => {
@@ -249,6 +253,7 @@ export type AquaticModelProps = {
   highlightedPart?: CreaturePartId;
   scale: number;
   grounded?: boolean;
+  colorPalette?: CreatureColorPalette;
 };
 
 export function AquaticCreatureModel({
@@ -259,6 +264,7 @@ export function AquaticCreatureModel({
   highlightedPart,
   scale = 1,
   grounded = false,
+  colorPalette,
 }: AquaticModelProps & { form: AquaticForm }) {
   const editorRootRef = useRef<THREE.Group>(null);
 
@@ -268,15 +274,15 @@ export function AquaticCreatureModel({
 
   let model;
   if (form === "crab") {
-    model = <CrabModel pieces={pieces} baseSeed={baseSeed} animated={animated} grounded={grounded} highlightedPart={highlightedPart} scale={scale} />;
+    model = <CrabModel pieces={pieces} baseSeed={baseSeed} animated={animated} grounded={grounded} highlightedPart={highlightedPart} scale={scale} colorPalette={colorPalette} />;
   } else if (form === "jellyfish") {
-    model = <JellyfishModel pieces={pieces} baseSeed={baseSeed} animated={animated} highlightedPart={highlightedPart} scale={scale} />;
+    model = <JellyfishModel pieces={pieces} baseSeed={baseSeed} animated={animated} highlightedPart={highlightedPart} scale={scale} colorPalette={colorPalette} />;
   } else if (form === "octopus") {
-    model = <OctopusModel pieces={pieces} baseSeed={baseSeed} animated={animated} highlightedPart={highlightedPart} scale={scale} />;
+    model = <OctopusModel pieces={pieces} baseSeed={baseSeed} animated={animated} highlightedPart={highlightedPart} scale={scale} colorPalette={colorPalette} />;
   } else if (form !== "fish") {
-    model = <AdditionalAquaticModel form={form} pieces={pieces} baseSeed={baseSeed} animated={animated} grounded={grounded} highlightedPart={highlightedPart} scale={scale} />;
+    model = <AdditionalAquaticModel form={form} pieces={pieces} baseSeed={baseSeed} animated={animated} grounded={grounded} highlightedPart={highlightedPart} scale={scale} colorPalette={colorPalette} />;
   } else {
-    model = <CreatureModel pieces={pieces} baseSeed={baseSeed} animated={animated} highlightedPart={highlightedPart} scale={scale} />;
+    model = <CreatureModel pieces={pieces} baseSeed={baseSeed} animated={animated} highlightedPart={highlightedPart} scale={scale} colorPalette={colorPalette} />;
   }
   return <group ref={editorRootRef}>{model}</group>;
 }

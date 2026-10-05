@@ -8,6 +8,7 @@ import { creaturePiecesFromArtifactIds } from "@/components/creature/CreatureMod
 import { AquaticCreatureModel } from "@/components/creature/AquaticCreatureModel";
 import { aquaticFormLabels, type AquaticForm } from "@/lib/creature/aquaticForms";
 import type { CreaturePartId } from "@/types/exhibition";
+import type { CreatureColorPalette } from "@/lib/creature/colorPalettes";
 
 function FitCreatureCamera({
   objectRef,
@@ -63,6 +64,7 @@ export function CreatureCanvas({
   creatureScale = 1,
   creatureForm = "fish",
   creatureSeed,
+  creaturePalette,
   label,
   interactive = false,
 }: {
@@ -75,6 +77,7 @@ export function CreatureCanvas({
   creatureScale?: number;
   creatureForm?: AquaticForm;
   creatureSeed?: string;
+  creaturePalette?: CreatureColorPalette;
   label?: string;
   interactive?: boolean;
 }) {
@@ -100,7 +103,7 @@ export function CreatureCanvas({
         <pointLight position={[-3, 0, 4]} intensity={2} color="#58D6FF" />
         <pointLight position={[3, -2, 3]} intensity={1.4} color="#FF7557" />
         <group ref={creatureRootRef}>
-          <AquaticCreatureModel form={creatureForm} pieces={pieces} baseSeed={creatureSeed} highlightedPart={highlightedPart} scale={(compact ? 0.86 : 1) * creatureScale} />
+          <AquaticCreatureModel form={creatureForm} pieces={pieces} baseSeed={creatureSeed} colorPalette={creaturePalette} highlightedPart={highlightedPart} scale={(compact ? 0.86 : 1) * creatureScale} />
         </group>
         {interactive && (
           <OrbitControls

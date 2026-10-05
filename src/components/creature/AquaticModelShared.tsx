@@ -5,12 +5,16 @@ import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import * as THREE from "three";
 import type { CreaturePiece } from "@/components/creature/CreatureModel";
 import type { AquaticForm } from "@/lib/creature/aquaticForms";
-import { creatureColorPalette } from "@/lib/creature/colorPalettes";
+import { creatureColorPalette, type CreatureColorPalette } from "@/lib/creature/colorPalettes";
 import type { CreaturePartId } from "@/types/exhibition";
 
-export function aquaticPalette(pieces: CreaturePiece[], baseSeed?: string) {
+export function aquaticPalette(
+  pieces: CreaturePiece[],
+  baseSeed?: string,
+  colorPalette?: CreatureColorPalette,
+) {
   const signature = baseSeed ?? pieces[0]?.artifactId ?? "new";
-  const palette = creatureColorPalette(signature);
+  const palette = colorPalette ?? creatureColorPalette(signature);
   const base = new THREE.Color(palette.body);
   return {
     body: base.getStyle(),

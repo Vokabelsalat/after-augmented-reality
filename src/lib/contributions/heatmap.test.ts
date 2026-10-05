@@ -14,6 +14,13 @@ function contribution(
     id,
     publicId: `public-${id}`,
     creatureForm: "fish",
+    creaturePalette: {
+      body: "#34789a",
+      head: "#285a7a",
+      belly: "#c8d9d3",
+      fin: "#d5b43d",
+      marking: "#183b55",
+    },
     parts,
     narrative: [],
     createdAt: "2026-09-17T00:00:00.000Z",

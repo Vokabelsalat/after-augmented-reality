@@ -5,7 +5,7 @@ import { useMemo, useRef } from "react";
 import * as THREE from "three";
 import { artifactById } from "@/data/artifacts";
 import { GrowingTrait } from "@/components/creature/AquaticModelShared";
-import { creatureColorPalette } from "@/lib/creature/colorPalettes";
+import { creatureColorPalette, type CreatureColorPalette } from "@/lib/creature/colorPalettes";
 import type { CreaturePartId, ThemeId } from "@/types/exhibition";
 
 export type CreaturePiece = {
@@ -790,12 +790,14 @@ export function CreatureModel({
   animated = true,
   highlightedPart,
   scale = 1,
+  colorPalette: encodedColorPalette,
 }: {
   pieces: CreaturePiece[];
   baseSeed?: string;
   animated?: boolean;
   highlightedPart?: CreaturePartId;
   scale?: number;
+  colorPalette?: CreatureColorPalette;
 }) {
   const groupRef = useRef<THREE.Group>(null);
   const tailRef = useRef<THREE.Group>(null);
@@ -818,14 +820,17 @@ export function CreatureModel({
     winkEvery: 4.2 + hashUnit(`${signature}:wink-speed`) * 3.8,
     winkOffset: hashUnit(`${signature}:wink-offset`) * 7,
   }), [profile, signature]);
-  const colorPalette = creatureColorPalette(signature);
+  const colorPalette = encodedColorPalette ?? creatureColorPalette(signature);
   const baseColor = colorPalette.body;
   const headColor = colorPalette.head;
   const bellyColor = colorPalette.belly;
   const finColor = colorPalette.fin;
   const markingColor = colorPalette.marking;
   const pattern = configuredLook?.pattern ?? "belly";
-  const finVariation = hashUnit(`${signature}:fin-palette`) - 0.5;
+  const colorSignature = encodedColorPalette
+    ? Object.values(encodedColorPalette).join(":")
+    : signature;
+  const finVariation = hashUnit(`${colorSignature}:fin-palette`) - 0.5;
   const finPalette = {
     tail: shiftedFinColor(finColor, bellyColor, 0.08, finVariation * 0.08, 0.04, 0.03),
     dorsal: shiftedFinColor(finColor, markingColor, 0.12, 0.035 + finVariation * 0.12, 0.08, 0.04),

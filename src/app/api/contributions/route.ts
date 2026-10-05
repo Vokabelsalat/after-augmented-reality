@@ -10,6 +10,7 @@ import {
 import { generateJourneyNarrative } from "@/lib/narrative/generateJourneyNarrative";
 import { calculateDwellTimes } from "@/lib/contributions/dwellTime";
 import { isAquaticForm, pickAquaticForm } from "@/lib/creature/aquaticForms";
+import { creatureColorPalette, isCreatureColorPalette } from "@/lib/creature/colorPalettes";
 import type { ContributionSubmission, SharedCreaturePart } from "@/types/contribution";
 
 export const runtime = "nodejs";
@@ -70,9 +71,12 @@ function parseSubmission(value: unknown): ContributionSubmission | null {
   const creatureForm = isAquaticForm(candidate.creatureForm)
     ? candidate.creatureForm
     : pickAquaticForm(`${candidate.sessionId}:${discoveries[0]?.artifactId ?? "unknown"}:${firstDiscoveredAt}`);
+  const creaturePalette = isCreatureColorPalette(candidate.creaturePalette)
+    ? candidate.creaturePalette
+    : creatureColorPalette(candidate.sessionId);
 
   return valid && validCompletion
-    ? { sessionId: candidate.sessionId, creatureForm, completedAt: candidate.completedAt, discoveries }
+    ? { sessionId: candidate.sessionId, creatureForm, creaturePalette, completedAt: candidate.completedAt, discoveries }
     : null;
 }
 
@@ -128,6 +132,7 @@ export async function POST(request: Request) {
     publicId: randomUUID(),
     sessionId: submission.sessionId,
     creatureForm: submission.creatureForm,
+    creaturePalette: submission.creaturePalette,
     parts,
     narrative,
   });

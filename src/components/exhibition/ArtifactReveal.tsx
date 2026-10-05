@@ -15,7 +15,7 @@ import type { ExhibitionArtifact } from "@/types/exhibition";
 import { ParticleNarrative } from "@/components/particles/ParticleNarrative";
 import { PathVisualization } from "@/components/visualization/PathVisualization";
 import { activeVisualizationCopy, visualizationDesign } from "@/config/visualization";
-import { selectCreatureForm, selectCreatureSeed, selectDiscoveries } from "@/store/selectors";
+import { selectCreatureForm, selectCreaturePalette, selectCreatureSeed, selectDiscoveries } from "@/store/selectors";
 
 type RevealPresentation = "tracked-ar" | "simulated";
 
@@ -32,6 +32,7 @@ function ArtifactRevealSequence({
   const discoveries = useAppSelector(selectDiscoveries);
   const creatureForm = useAppSelector(selectCreatureForm);
   const creatureSeed = useAppSelector(selectCreatureSeed);
+  const creaturePalette = useAppSelector(selectCreaturePalette);
   const handleContentReady = useCallback(() => {
     dispatch(artifactCollected(artifact.id));
   }, [artifact.id, dispatch]);
@@ -62,6 +63,7 @@ function ArtifactRevealSequence({
               artifactIds={creatureArtifactIds}
               creatureForm={creatureForm}
               creatureSeed={creatureSeed}
+              creaturePalette={creaturePalette ?? undefined}
               fitToView
               fitScale={1.14}
               interactive

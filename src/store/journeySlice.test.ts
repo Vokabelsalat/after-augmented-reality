@@ -9,6 +9,7 @@ import {
   setActiveArtifact,
   startJourney,
 } from "@/store/journeySlice";
+import { creatureColorPalette } from "@/lib/creature/colorPalettes";
 
 describe("journeySlice", () => {
   it("starts a reproducible journey session", () => {
@@ -24,6 +25,7 @@ describe("journeySlice", () => {
       discoveries: [],
     });
     expect(state.creatureForm).not.toBeNull();
+    expect(state.creaturePalette).toEqual(creatureColorPalette("session-test"));
   });
 
   it("discovers artifacts in order", () => {
@@ -110,6 +112,7 @@ describe("journeySlice", () => {
       activeArtifactId: null,
       experiencePhase: "intro",
       creatureForm: null,
+      creaturePalette: null,
     });
   });
 

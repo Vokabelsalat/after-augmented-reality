@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { artifacts } from "@/data/artifacts";
 import { aquaticForms } from "@/lib/creature/aquaticForms";
+import { isCreatureColorPalette } from "@/lib/creature/colorPalettes";
 import {
   createSyntheticDataset,
   SYNTHETIC_FEATURED_FORMS,
@@ -50,5 +51,11 @@ describe("createSyntheticDataset", () => {
     );
     const includedForms = new Set(dataset.map((visitor) => visitor.creatureForm));
     SYNTHETIC_FEATURED_FORMS.forEach((form) => expect(includedForms.has(form)).toBe(true));
+  });
+
+  it("encodes a valid color palette with every creature", () => {
+    const dataset = createSyntheticDataset(cycleStart);
+
+    expect(dataset.every((visitor) => isCreatureColorPalette(visitor.creaturePalette))).toBe(true);
   });
 });

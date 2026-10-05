@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { creatureColorPalette } from "@/lib/creature/colorPalettes";
+import { creatureColorPalette, isCreatureColorPalette } from "@/lib/creature/colorPalettes";
 
 describe("creatureColorPalette", () => {
   it("keeps an individual creature's colors stable", () => {
@@ -16,5 +16,10 @@ describe("creatureColorPalette", () => {
     );
 
     expect(whalePalettes.size).toBeGreaterThan(4);
+  });
+
+  it("accepts encoded palettes and rejects malformed colors", () => {
+    expect(isCreatureColorPalette(creatureColorPalette("creature-42"))).toBe(true);
+    expect(isCreatureColorPalette({ ...creatureColorPalette("creature-42"), fin: "orange" })).toBe(false);
   });
 });

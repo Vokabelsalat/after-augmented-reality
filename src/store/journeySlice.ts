@@ -1,6 +1,7 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import { artifactById } from "@/data/artifacts";
 import { pickAquaticForm, type AquaticForm } from "@/lib/creature/aquaticForms";
+import { creatureColorPalette, type CreatureColorPalette } from "@/lib/creature/colorPalettes";
 import type { NarrativeState } from "@/types/exhibition";
 
 export type ExperiencePhase =
@@ -27,12 +28,17 @@ export type JourneyState = {
   experiencePhase: ExperiencePhase;
   narrativeState: NarrativeState;
   creatureForm: AquaticForm | null;
+  creaturePalette: CreatureColorPalette | null;
 };
 
 export type PersistedJourney = Pick<
   JourneyState,
   "sessionId" | "startedAt" | "completedAt" | "discoveries"
-> & { narrativeState?: NarrativeState; creatureForm?: AquaticForm | null };
+> & {
+  narrativeState?: NarrativeState;
+  creatureForm?: AquaticForm | null;
+  creaturePalette?: CreatureColorPalette | null;
+};
 
 export const neutralNarrativeState: NarrativeState = {
   openness: 0,
@@ -51,6 +57,7 @@ export const initialJourneyState: JourneyState = {
   experiencePhase: "intro",
   narrativeState: { ...neutralNarrativeState },
   creatureForm: null,
+  creaturePalette: null,
 };
 
 function makeSessionId() {
@@ -75,6 +82,9 @@ const journeySlice = createSlice({
         }
         if (!state.creatureForm) {
           state.creatureForm = pickAquaticForm(state.sessionId ?? action.payload.sessionId);
+        }
+        if (!state.creaturePalette) {
+          state.creaturePalette = creatureColorPalette(state.sessionId ?? action.payload.sessionId);
         }
         state.activeArtifactId = null;
         state.completedAt = null;
@@ -103,6 +113,9 @@ const journeySlice = createSlice({
 
         if (!state.creatureForm) {
           state.creatureForm = pickAquaticForm(state.sessionId ?? "anonymous");
+        }
+        if (!state.creaturePalette) {
+          state.creaturePalette = creatureColorPalette(state.sessionId ?? "anonymous");
         }
 
         state.discoveries.push({
@@ -196,6 +209,8 @@ const journeySlice = createSlice({
           : firstDiscovery
             ? pickAquaticForm("anonymous")
             : null);
+      state.creaturePalette = action.payload.creaturePalette
+        ?? (action.payload.sessionId ? creatureColorPalette(action.payload.sessionId) : null);
       state.activeArtifactId = null;
       state.experiencePhase = action.payload.sessionId ? "scanning" : "intro";
     },

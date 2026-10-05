@@ -8,6 +8,7 @@ import {
   saveJourney,
   subscribeToJourneyPersistence,
 } from "@/store/persistence";
+import { creatureColorPalette } from "@/lib/creature/colorPalettes";
 
 class MemoryStorage {
   private values = new Map<string, string>();
@@ -33,6 +34,7 @@ describe("journey persistence", () => {
       startedAt: 100,
       completedAt: null,
       creatureForm: "jellyfish" as const,
+      creaturePalette: creatureColorPalette("session-test"),
       discoveries: [
         { artifactId: "memory-fragment", sequence: 1, discoveredAt: 200 },
       ],

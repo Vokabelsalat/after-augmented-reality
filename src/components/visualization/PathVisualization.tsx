@@ -9,6 +9,7 @@ import type { ExhibitionContribution } from "@/types/contribution";
 import type { CreaturePartId } from "@/types/exhibition";
 import type { AquaticForm } from "@/lib/creature/aquaticForms";
 import { creatureSizeScale } from "@/lib/creature/aquaticForms";
+import type { CreatureColorPalette } from "@/lib/creature/colorPalettes";
 
 export function PathVisualization({
   artifactIds,
@@ -20,6 +21,7 @@ export function PathVisualization({
   fitScale = 1,
   creatureForm,
   creatureSeed,
+  creaturePalette,
   label,
   interactive = false,
 }: {
@@ -32,6 +34,7 @@ export function PathVisualization({
   fitScale?: number;
   creatureForm?: AquaticForm | null;
   creatureSeed?: string;
+  creaturePalette?: CreatureColorPalette;
   label?: string;
   interactive?: boolean;
 }) {
@@ -68,7 +71,8 @@ export function PathVisualization({
       fitScale={fitScale}
       creatureScale={contribution ? creatureSizeScale(contribution.publicId) : 1}
       creatureForm={contribution?.creatureForm ?? creatureForm ?? "fish"}
-      creatureSeed={contribution?.publicId ?? creatureSeed}
+      creatureSeed={creatureSeed ?? contribution?.publicId}
+      creaturePalette={contribution?.creaturePalette ?? creaturePalette}
       label={label}
       interactive={interactive}
     />

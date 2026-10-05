@@ -3,6 +3,7 @@ import { calculateDwellTimes } from "@/lib/contributions/dwellTime";
 import { aquaticForms, type AquaticForm } from "@/lib/creature/aquaticForms";
 import { generateJourneyNarrative } from "@/lib/narrative/generateJourneyNarrative";
 import type { SharedCreaturePart } from "@/types/contribution";
+import { creatureColorPalette, type CreatureColorPalette } from "@/lib/creature/colorPalettes";
 
 export const SYNTHETIC_VISITOR_COUNT = 24;
 
@@ -23,6 +24,7 @@ export type SyntheticContribution = {
   publicId: string;
   sessionId: string;
   creatureForm: (typeof aquaticForms)[number];
+  creaturePalette: CreatureColorPalette;
   parts: SharedCreaturePart[];
   narrative: string[];
   createdAt: string;
@@ -90,10 +92,13 @@ export function createSyntheticDataset(
       };
     });
 
+    const publicId = `synthetic-${dayKey}-${String(visitorIndex + 1).padStart(3, "0")}`;
+    const sessionId = `synthetic:${dayKey}:${String(visitorIndex + 1).padStart(3, "0")}`;
     return {
-      publicId: `synthetic-${dayKey}-${String(visitorIndex + 1).padStart(3, "0")}`,
-      sessionId: `synthetic:${dayKey}:${String(visitorIndex + 1).padStart(3, "0")}`,
+      publicId,
+      sessionId,
       creatureForm: syntheticFormRotation[visitorIndex % syntheticFormRotation.length],
+      creaturePalette: creatureColorPalette(sessionId),
       parts,
       narrative: generateJourneyNarrative(discoveries, artifacts),
       createdAt: new Date(completedAt).toISOString(),

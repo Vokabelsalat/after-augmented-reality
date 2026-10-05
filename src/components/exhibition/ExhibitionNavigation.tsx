@@ -6,6 +6,7 @@ import {
   selectDiscoveryCount,
   selectCreatureForm,
   selectCreatureSeed,
+  selectCreaturePalette,
   selectExperiencePhase,
   selectActiveArtifactId,
 } from "@/store/selectors";
@@ -19,6 +20,7 @@ export function ExhibitionNavigation() {
   const discoveries = useAppSelector(selectDiscoveries);
   const creatureForm = useAppSelector(selectCreatureForm);
   const creatureSeed = useAppSelector(selectCreatureSeed);
+  const creaturePalette = useAppSelector(selectCreaturePalette);
   const phase = useAppSelector(selectExperiencePhase);
   const activeArtifactId = useAppSelector(selectActiveArtifactId);
   const previewDiscoveries = phase === "revealing"
@@ -41,7 +43,7 @@ export function ExhibitionNavigation() {
         aria-label={`Open ${activeVisualizationCopy.personalTitle}, ${count} parts collected`}
       >
         <div key={previewKey} className="specimen-preview-update size-14 overflow-hidden bg-white/[0.035]" aria-hidden="true">
-          <PathVisualization artifactIds={previewDiscoveries.map((item) => item.artifactId)} creatureForm={creatureForm} creatureSeed={creatureSeed} compact />
+          <PathVisualization artifactIds={previewDiscoveries.map((item) => item.artifactId)} creatureForm={creatureForm} creatureSeed={creatureSeed} creaturePalette={creaturePalette ?? undefined} compact />
         </div>
         <span>My Creature</span>
       </button>

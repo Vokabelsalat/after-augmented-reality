@@ -9,11 +9,18 @@ import { artifacts } from "@/data/artifacts";
 import { aggregateContributionDwellTimes } from "@/lib/contributions/heatmap";
 import { isAquaticForm, type AquaticForm } from "@/lib/creature/aquaticForms";
 import { generateJourneyNarrative } from "@/lib/narrative/generateJourneyNarrative";
+import {
+  creatureColorPalette,
+  isCreatureColorPalette,
+  type CreatureColorPalette,
+} from "@/lib/creature/colorPalettes";
 
 type ContributionRow = {
   id: number;
   public_id: string;
+  session_id: string;
   creature_form: string;
+  creature_palette_json: string | null;
   glyphs_json: string;
   narrative_json: string;
   created_at: string;
@@ -24,7 +31,7 @@ const globalForDatabase = globalThis as typeof globalThis & {
   exhibitionDatabaseSchemaVersion?: number;
 };
 
-const DATABASE_SCHEMA_VERSION = 2;
+const DATABASE_SCHEMA_VERSION = 3;
 
 const exhibitionClock = new Intl.DateTimeFormat("en-CA", {
   timeZone: "Europe/Oslo",
@@ -89,6 +96,7 @@ function openDatabase() {
         public_id TEXT NOT NULL UNIQUE,
         session_id TEXT NOT NULL UNIQUE,
         creature_form TEXT NOT NULL DEFAULT 'fish',
+        creature_palette_json TEXT,
         glyphs_json TEXT NOT NULL,
         narrative_json TEXT NOT NULL,
         is_synthetic INTEGER NOT NULL DEFAULT 0,
@@ -106,6 +114,9 @@ function openDatabase() {
     }
     if (!contributionColumns.some((column) => column.name === "is_synthetic")) {
       database.exec("ALTER TABLE contributions ADD COLUMN is_synthetic INTEGER NOT NULL DEFAULT 0");
+    }
+    if (!contributionColumns.some((column) => column.name === "creature_palette_json")) {
+      database.exec("ALTER TABLE contributions ADD COLUMN creature_palette_json TEXT");
     }
     globalForDatabase.exhibitionDatabaseSchemaVersion = DATABASE_SCHEMA_VERSION;
   }
@@ -127,10 +138,21 @@ function deserialize(row: ContributionRow): ExhibitionContribution {
     } as SharedCreaturePart];
   });
   const createdAt = Date.parse(row.created_at);
+  let storedPalette: unknown = null;
+  try {
+    storedPalette = row.creature_palette_json
+      ? JSON.parse(row.creature_palette_json)
+      : null;
+  } catch {
+    storedPalette = null;
+  }
   return {
     id: row.id,
     publicId: row.public_id,
     creatureForm: isAquaticForm(row.creature_form) ? row.creature_form : "fish",
+    creaturePalette: isCreatureColorPalette(storedPalette)
+      ? storedPalette
+      : creatureColorPalette(row.session_id),
     parts,
     narrative: generateJourneyNarrative(
       parts.map((part) => ({
@@ -147,7 +169,7 @@ function deserialize(row: ContributionRow): ExhibitionContribution {
 export function listContributions(afterId = 0, limit = 80) {
   const rows = openDatabase()
     .prepare(
-      `SELECT id, public_id, creature_form, glyphs_json, narrative_json, created_at
+      `SELECT id, public_id, session_id, creature_form, creature_palette_json, glyphs_json, narrative_json, created_at
        FROM contributions
        WHERE id > ? AND created_at >= ?
        ORDER BY id ASC
@@ -161,7 +183,7 @@ export function listContributions(afterId = 0, limit = 80) {
 export function getCollectiveHeatmap() {
   const rows = openDatabase()
     .prepare(
-      `SELECT id, public_id, creature_form, glyphs_json, narrative_json, created_at
+      `SELECT id, public_id, session_id, creature_form, creature_palette_json, glyphs_json, narrative_json, created_at
        FROM contributions
        WHERE created_at >= ?
        ORDER BY id ASC`,
@@ -178,6 +200,7 @@ export function createContribution(input: {
   publicId: string;
   sessionId: string;
   creatureForm: AquaticForm;
+  creaturePalette: CreatureColorPalette;
   parts: SharedCreaturePart[];
   narrative: string[];
   createdAt?: string;
@@ -186,14 +209,15 @@ export function createContribution(input: {
   const database = openDatabase();
   database
     .prepare(
-      `INSERT INTO contributions (public_id, session_id, creature_form, glyphs_json, narrative_json, is_synthetic, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?)
+      `INSERT INTO contributions (public_id, session_id, creature_form, creature_palette_json, glyphs_json, narrative_json, is_synthetic, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT(session_id) DO NOTHING`,
     )
     .run(
       input.publicId,
       input.sessionId,
       input.creatureForm,
+      JSON.stringify(input.creaturePalette),
       JSON.stringify(input.parts),
       JSON.stringify(input.narrative),
       input.synthetic ? 1 : 0,
@@ -202,7 +226,7 @@ export function createContribution(input: {
 
   const row = database
     .prepare(
-      `SELECT id, public_id, creature_form, glyphs_json, narrative_json, created_at
+      `SELECT id, public_id, session_id, creature_form, creature_palette_json, glyphs_json, narrative_json, created_at
        FROM contributions
        WHERE session_id = ?`,
     )

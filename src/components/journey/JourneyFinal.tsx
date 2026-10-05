@@ -59,6 +59,7 @@ export function JourneyFinal() {
         <PathVisualization
           artifactIds={discoveries.map((item) => item.artifactId)}
           creatureForm={journey.creatureForm}
+          creaturePalette={journey.creaturePalette ?? undefined}
           creatureSeed={journey.sessionId ?? undefined}
           fitToView
           label={`Your finished exhibition ${activeVisualizationCopy.singular}`}
@@ -83,6 +84,7 @@ export function JourneyFinal() {
             completedAt={journey.completedAt}
             discoveries={discoveries}
             creatureForm={journey.creatureForm}
+            creaturePalette={journey.creaturePalette}
           />
         </div>
 
