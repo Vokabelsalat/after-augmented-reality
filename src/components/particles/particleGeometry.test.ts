@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { artifacts } from "@/data/artifacts";
+import { particleFormIds } from "@/types/exhibition";
 import {
   createArtifactFormationPositions,
   createConstellationGeometry,
@@ -26,6 +27,25 @@ describe("artifact particle formations", () => {
     expect(Array.from(formations[0])).not.toEqual(Array.from(formations[1]));
     expect(Array.from(formations[1])).not.toEqual(Array.from(formations[2]));
     expect(Array.from(formations[2])).not.toEqual(Array.from(formations[0]));
+  });
+
+  it("supports every form available to the exhibition CSV", () => {
+    const formations = particleFormIds.map((particleForm) =>
+      createArtifactFormationPositions(
+        { id: `test-${particleForm}`, particleForm },
+        192,
+      ),
+    );
+
+    formations.forEach((formation) => {
+      expect(formation).toHaveLength(192 * 3);
+      expect(Array.from(formation).every(Number.isFinite)).toBe(true);
+    });
+
+    const signatures = formations.map((formation) =>
+      Array.from(formation.slice(0, 72), (value) => value.toFixed(3)).join(","),
+    );
+    expect(new Set(signatures).size).toBe(particleFormIds.length);
   });
 
   it("starts as a circle and releases every particle toward the edges", () => {

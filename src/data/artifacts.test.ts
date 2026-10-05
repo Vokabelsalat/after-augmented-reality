@@ -11,7 +11,7 @@ describe("artifact target image configuration", () => {
     expect(artifacts[12].title).toBe("Goliath");
   });
 
-  it("reuses only the three established visual families", () => {
+  it("keeps the three poster families while assigning artwork-specific particles", () => {
     expect(new Set(artifacts.map(({ posterImageSrc }) => posterImageSrc))).toEqual(
       new Set([
         "/images/melting-eye.jpeg",
@@ -22,14 +22,21 @@ describe("artifact target image configuration", () => {
     expect(new Set(artifacts.map(({ theme }) => theme))).toEqual(
       new Set(["memory", "interface", "worldmaking", "embodiment", "agency"]),
     );
-    expect(
-      artifacts.every(
-        ({ particleForm, color }) =>
-          (particleForm === "memory" && color === "#FF7557") ||
-          (particleForm === "machine" && color === "#58D6FF") ||
-          (particleForm === "body" && color === "#C69CFF"),
-      ),
-    ).toBe(true);
+    expect(artifacts.map(({ particleForm, color }) => [particleForm, color])).toEqual([
+      ["torus", "#356B4B"],
+      ["triad", "#6C3F61"],
+      ["tree", "#597D8C"],
+      ["cuboid", "#79A83B"],
+      ["nest", "#D5A62E"],
+      ["prism", "#C4473D"],
+      ["book", "#202020"],
+      ["skateboard", "#8B5E3C"],
+      ["sphere", "#555555"],
+      ["tower", "#51477F"],
+      ["pillar", "#B44772"],
+      ["fork", "#28374F"],
+      ["dodecahedron", "#2D7F88"],
+    ]);
   });
 
   it("gives every artifact a distinct creature part", () => {

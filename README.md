@@ -103,7 +103,7 @@ The repository deliberately does not include a fake `.mind` file. An invalid pla
 
 ### 3. Check the configuration mapping
 
-`src/data/artifacts.ts` is the runtime source of truth and follows the CSV row order. `targetIndex` must match the image order used by the compiler. MindAR emits a number, the adapter forwards it, and `artifactByTargetIndex` resolves the exhibition content. The curatorial themes are **Memory**, **Interface**, **Worldmaking**, **Embodiment**, and **Agency**. Until final artwork images are available, a separate `particleForm` field lets the 13 works reuse the existing memory, machine, and body images, colors, and formations without reducing their themes to those three visual placeholders.
+`src/data/artifacts.ts` is the runtime source of truth and follows the CSV row order. `targetIndex` must match the image order used by the compiler. MindAR emits a number, the adapter forwards it, and `artifactByTargetIndex` resolves the exhibition content. The curatorial themes are **Memory**, **Interface**, **Worldmaking**, **Embodiment**, and **Agency**. Until final artwork images are available, the 13 configured works reuse three poster-image families while each keeps the artwork-specific `color` and simplified `particleForm` defined in `public/exhibition.csv`.
 
 ### 4. Serve over HTTPS on a phone
 
@@ -148,7 +148,7 @@ collective wall field
 The prototype uses the reliability-first handoff described in the brief:
 
 1. MindAR owns its native Three.js tracking scene.
-2. R3F plays the cinematic screen-space release: particles fill the view, disappear, and reform as the artifact's memory, machine, or body shape.
+2. R3F plays the cinematic screen-space release: particles fill the view, disappear, and reform as the artifact-specific geometric shape configured in the exhibition data.
 3. `onTargetFound(targetIndex)` crosses the boundary as a plain number.
 4. The formation positions are shared as typed arrays, not tracking objects. At the content handoff, MindAR renders that shape as a separate `THREE.Points` group above the target. It follows the anchor while tracking is active and retains its last valid pose through brief tracking interruptions.
 5. A normal HTML article sheet resolves over the lower part of the camera view. Pressing **Continue scanning** explicitly removes the anchored cluster.

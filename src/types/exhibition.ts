@@ -5,7 +5,26 @@ export type ThemeId =
   | "embodiment"
   | "agency";
 
-export type ParticleFormId = "memory" | "machine" | "body";
+export const particleFormIds = [
+  "torus",
+  "triad",
+  "tree",
+  "cuboid",
+  "nest",
+  "prism",
+  "book",
+  "skateboard",
+  "sphere",
+  "tower",
+  "pillar",
+  "fork",
+  "dodecahedron",
+  "crystal",
+  "hourglass",
+  "spiral",
+] as const;
+
+export type ParticleFormId = (typeof particleFormIds)[number];
 
 export type CreaturePartId =
   | "memory-crown"
