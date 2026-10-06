@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { decode } from "@msgpack/msgpack";
 import { describe, expect, it } from "vitest";
 import { artifacts } from "@/data/artifacts";
 
@@ -61,5 +63,14 @@ describe("artifact target image configuration", () => {
       expect(artifact.storylet).toBeTruthy();
       expect(artifact.choice.options).toHaveLength(2);
     });
+  });
+});
+
+describe("compiled MindAR bundle", () => {
+  it("contains one target per artifact", () => {
+    const bundle = decode(readFileSync("public/targets/exhibition.mind")) as {
+      dataList: unknown[];
+    };
+    expect(bundle.dataList).toHaveLength(artifacts.length);
   });
 });

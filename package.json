@@ -10,7 +10,10 @@
     "postinstall": "node scripts/patch-mindar.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "targets:export": "node scripts/export-particle-targets.mjs",
+    "targets:compile": "node scripts/compile-mind-targets.mjs",
+    "targets:verify": "node scripts/verify-mind-targets.mjs"
   },
   "dependencies": {
     "@react-three/drei": "10.7.8",
@@ -24,6 +27,7 @@
     "three": "0.185.1"
   },
   "devDependencies": {
+    "@msgpack/msgpack": "2.8.0",
     "@tailwindcss/postcss": "4.3.3",
     "@types/node": "26.2.0",
     "@types/react": "19.2.18",

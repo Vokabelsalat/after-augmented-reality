@@ -91,7 +91,7 @@ Add the final print artwork as high-quality JPG or PNG files in `public/images/`
 
 Open the [MindAR image target compiler](https://hiukim.github.io/mind-ar-js-doc/tools/compile/), add the images in this exact order, compile, and export the bundle:
 
-Compile the final artwork images in the same order as `public/exhibition.csv`. The current configuration assigns target indices `0` through `15`, from **Finding Frida** through **Fiery Sparks of Light**.
+Compile the final artwork images in the same order as `public/exhibition.csv`. The current configuration assigns target indices `0` through `15`, from **Finding Frida** through **Fiery Sparks of Light**, so target index `N` is the artwork with exhibition ID `N + 1`.
 
 Save the downloaded file as:
 
@@ -99,7 +99,9 @@ Save the downloaded file as:
 public/targets/exhibition.mind
 ```
 
-The checked-in `exhibition.mind` bundle predates the complete 16-work catalog and contains only four targets. Rebuild it from all 16 final poster images before physical camera testing. Simulator mode remains fully functional without an updated bundle.
+The checked-in `exhibition.mind` bundle contains all 16 targets, compiled from the particle constellation images in `public/targets/` (`1-finding-frida.png` through `16-fiery-sparks-of-light.png`, in exhibition ID order). `npm run targets:export` regenerates those images from the current particle formations, and `npm run targets:compile` recompiles the bundle from them with MindAR's offline compiler (about two minutes), so the web compiler is optional. Recompile whenever the images change.
+
+Run `npm run targets:verify` after compiling. Each compiled target keeps a downscaled copy of its source image, and the script matches it against the PNGs to confirm that target index `N` resolves to the artifact with `targetIndex` `N`. It also prints how many tracking feature points MindAR found per target.
 
 ### 3. Check the configuration mapping
 
@@ -384,7 +386,7 @@ The localStorage key is `say-hi:journey:v1`. It stores only session ID, start an
 
 ## Known prototype limitations
 
-- Real tracking cannot be demonstrated until `public/targets/exhibition.mind` is compiled from the actual physical poster artwork.
+- The particle constellation targets are sparse dots on a dark background, which gives MindAR few tracking feature points (as few as zero for some targets). Detection and tracking must be validated with the printed targets.
 - The current AR-first experiment retains the last valid particle pose when tracking is lost and realigns it when the poster is reacquired. Because MindAR image tracking is not world-tracking/SLAM, that frozen pose cannot remain physically registered if the camera moves significantly while the poster is outside the frame.
 - Detection has been architected for Safari/Chrome lifecycle constraints, but final tracking quality and filter tuning must be validated against the actual prints and exhibition lighting.
 - The poem is template-based and English-only. It varies by first/last work, intermediate order, narrative vocabulary, count, and repeated themes, but it is not an LLM.

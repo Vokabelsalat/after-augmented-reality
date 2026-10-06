@@ -1,5 +1,5 @@
 # MindAR target file
 
-Place the compiled 16-target bundle here as `exhibition.mind`.
+`exhibition.mind` contains all 16 targets, compiled from the PNG images in this folder in exhibition ID order (`1-finding-frida.png` through `16-fiery-sparks-of-light.png`). Target index `N` belongs to the artifact with exhibition ID `N + 1`.
 
-The current checked-in bundle contains four targets and does not cover the complete runtime catalog. The simulator works without replacing it. See the repository README for compilation and target-index mapping instructions.
+Regenerate the images with `npm run targets:export`, recompile the bundle with `npm run targets:compile`, and check the result with `npm run targets:verify`. See the repository README for details.

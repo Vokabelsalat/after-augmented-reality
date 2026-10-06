@@ -19,7 +19,8 @@ type PreparedArtifact = ParticlePreviewArtifact & {
 
 type Orientation = { yaw: number; pitch: number };
 
-const previewParticleCount = 620;
+const previewParticleCount = 1500;
+const particleRadiusScale = 1.6;
 const initialOrientation: Orientation = { yaw: 0.5, pitch: -0.16 };
 const dragRadiansPerPixel = 0.01;
 const maxPitch = Math.PI / 2;
@@ -84,7 +85,7 @@ function paintFormation(
     const perspective = 2.8 / (2.8 + depth);
     const screenX = width / 2 + rotatedX * baseScale * perspective;
     const screenY = height / 2 - rotatedY * baseScale * perspective;
-    const radius = Math.max(0.75, 1.25 * perspective);
+    const radius = Math.max(0.75, 1.25 * perspective) * particleRadiusScale;
     const alpha = Math.min(0.92, Math.max(0.28, 0.58 + depth * 0.2));
 
     context.fillStyle = `rgba(${red}, ${green}, ${blue}, ${alpha})`;

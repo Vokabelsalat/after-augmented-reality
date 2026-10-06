@@ -9,7 +9,8 @@ import { createArtifactFormationPositions } from "../src/components/particles/pa
 import { artifacts } from "../src/data/artifacts.ts";
 
 const outputDirectory = join(dirname(fileURLToPath(import.meta.url)), "../public/targets");
-const previewParticleCount = 620;
+const previewParticleCount = 1500;
+const particleRadiusScale = 1.6;
 const width = 400;
 const height = 300;
 const pixelRatio = 4;
@@ -48,7 +49,7 @@ function renderFormation(artifact) {
     const perspective = 2.8 / (2.8 + depth);
     const screenX = width / 2 + rotatedX * baseScale * perspective;
     const screenY = height / 2 - rotatedY * baseScale * perspective;
-    const radius = Math.max(0.75, 1.25 * perspective);
+    const radius = Math.max(0.75, 1.25 * perspective) * particleRadiusScale;
     const alpha = Math.min(0.92, Math.max(0.28, 0.58 + depth * 0.2));
 
     context.fillStyle = `rgba(${red}, ${green}, ${blue}, ${alpha})`;
