@@ -1,4 +1,8 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
+import { artifactById } from "@/data/artifacts";
+import { pickAquaticForm, type AquaticForm } from "@/lib/creature/aquaticForms";
+import { creatureColorPalette, type CreatureColorPalette } from "@/lib/creature/colorPalettes";
+import type { NarrativeState } from "@/types/exhibition";
 
 export type ExperiencePhase =
   | "intro"
@@ -12,6 +16,7 @@ export type Discovery = {
   artifactId: string;
   sequence: number;
   discoveredAt: number;
+  choiceId?: string;
 };
 
 export type JourneyState = {
@@ -21,12 +26,27 @@ export type JourneyState = {
   discoveries: Discovery[];
   activeArtifactId: string | null;
   experiencePhase: ExperiencePhase;
+  narrativeState: NarrativeState;
+  creatureForm: AquaticForm | null;
+  creaturePalette: CreatureColorPalette | null;
 };
 
 export type PersistedJourney = Pick<
   JourneyState,
   "sessionId" | "startedAt" | "completedAt" | "discoveries"
->;
+> & {
+  narrativeState?: NarrativeState;
+  creatureForm?: AquaticForm | null;
+  creaturePalette?: CreatureColorPalette | null;
+};
+
+export const neutralNarrativeState: NarrativeState = {
+  openness: 0,
+  memory: 0,
+  agency: 0,
+  coherence: 0,
+  voice: 0,
+};
 
 export const initialJourneyState: JourneyState = {
   sessionId: null,
@@ -35,6 +55,9 @@ export const initialJourneyState: JourneyState = {
   discoveries: [],
   activeArtifactId: null,
   experiencePhase: "intro",
+  narrativeState: { ...neutralNarrativeState },
+  creatureForm: null,
+  creaturePalette: null,
 };
 
 function makeSessionId() {
@@ -56,6 +79,12 @@ const journeySlice = createSlice({
         if (!state.sessionId) {
           state.sessionId = action.payload.sessionId;
           state.startedAt = action.payload.startedAt;
+        }
+        if (!state.creatureForm) {
+          state.creatureForm = pickAquaticForm(state.sessionId ?? action.payload.sessionId);
+        }
+        if (!state.creaturePalette) {
+          state.creaturePalette = creatureColorPalette(state.sessionId ?? action.payload.sessionId);
         }
         state.activeArtifactId = null;
         state.completedAt = null;
@@ -82,11 +111,32 @@ const journeySlice = createSlice({
 
         if (alreadyDiscovered) return;
 
+        if (!state.creatureForm) {
+          state.creatureForm = pickAquaticForm(state.sessionId ?? "anonymous");
+        }
+        if (!state.creaturePalette) {
+          state.creaturePalette = creatureColorPalette(state.sessionId ?? "anonymous");
+        }
+
         state.discoveries.push({
           artifactId,
           discoveredAt,
           sequence: state.discoveries.length + 1,
         });
+        const artifact = artifactById.get(artifactId);
+        if (artifact) {
+          (Object.keys(artifact.stateEffects) as Array<keyof NarrativeState>).forEach(
+            (axis) => {
+              state.narrativeState[axis] = Math.max(
+                -8,
+                Math.min(
+                  8,
+                  state.narrativeState[axis] + (artifact.stateEffects[axis] ?? 0),
+                ),
+              );
+            },
+          );
+        }
         state.completedAt = null;
         state.activeArtifactId = artifactId;
         state.experiencePhase = "revealing";
@@ -107,6 +157,28 @@ const journeySlice = createSlice({
       if (!wasDiscovered) return;
       state.activeArtifactId = action.payload;
       state.experiencePhase = "revealing";
+    },
+    choiceMade(
+      state,
+      action: PayloadAction<{
+        artifactId: string;
+        choiceId: string;
+        effects: Partial<NarrativeState>;
+      }>,
+    ) {
+      const discovery = state.discoveries.find(
+        (item) => item.artifactId === action.payload.artifactId,
+      );
+      if (!discovery || discovery.choiceId) return;
+      discovery.choiceId = action.payload.choiceId;
+      (Object.keys(action.payload.effects) as Array<keyof NarrativeState>).forEach(
+        (axis) => {
+          state.narrativeState[axis] = Math.max(
+            -8,
+            Math.min(8, state.narrativeState[axis] + (action.payload.effects[axis] ?? 0)),
+          );
+        },
+      );
     },
     setActiveArtifact(state, action: PayloadAction<string | null>) {
       state.activeArtifactId = action.payload;
@@ -129,6 +201,16 @@ const journeySlice = createSlice({
       state.startedAt = action.payload.startedAt;
       state.completedAt = action.payload.completedAt;
       state.discoveries = action.payload.discoveries;
+      state.narrativeState = { ...(action.payload.narrativeState ?? neutralNarrativeState) };
+      const firstDiscovery = action.payload.discoveries[0];
+      state.creatureForm = action.payload.creatureForm
+        ?? (action.payload.sessionId
+          ? pickAquaticForm(action.payload.sessionId)
+          : firstDiscovery
+            ? pickAquaticForm("anonymous")
+            : null);
+      state.creaturePalette = action.payload.creaturePalette
+        ?? (action.payload.sessionId ? creatureColorPalette(action.payload.sessionId) : null);
       state.activeArtifactId = null;
       state.experiencePhase = action.payload.sessionId ? "scanning" : "intro";
     },
@@ -142,6 +224,7 @@ export const {
   artifactCollected,
   artifactDetected,
   artifactRevisited,
+  choiceMade,
   finishJourney,
   hydrateJourney,
   resetJourney,

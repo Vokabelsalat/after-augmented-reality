@@ -7,39 +7,63 @@ import { finishJourney, setExperiencePhase } from "@/store/journeySlice";
 import {
   selectDiscoveries,
   selectDiscoveredArtifacts,
+  selectNarrativeState,
+  selectCreatureForm,
+  selectCreatureSeed,
+  selectCreaturePalette,
 } from "@/store/selectors";
 import { PathVisualization } from "@/components/visualization/PathVisualization";
 import { activeVisualizationCopy, visualizationDesign } from "@/config/visualization";
+import { BiomeBackdrop } from "@/components/visualization/BiomeBackdrop";
+import { aquaticFormLabels } from "@/lib/creature/aquaticForms";
 
 export function JourneyScreen() {
   const dispatch = useAppDispatch();
   const router = useRouter();
   const discoveries = useAppSelector(selectDiscoveries);
   const discoveredArtifacts = useAppSelector(selectDiscoveredArtifacts);
+  const narrativeState = useAppSelector(selectNarrativeState);
+  const creatureForm = useAppSelector(selectCreatureForm);
+  const creatureSeed = useAppSelector(selectCreatureSeed);
+  const creaturePalette = useAppSelector(selectCreaturePalette);
+  const readyToRelease = discoveries.length >= 3;
 
   return (
-    <main className="film-grain safe-top safe-bottom flex min-h-dvh flex-col overflow-hidden bg-[#050505] px-5">
+    <main className="biome-field biome-screen film-grain safe-top safe-bottom relative flex min-h-dvh flex-col overflow-x-hidden bg-[var(--abyss)] px-5">
+      <BiomeBackdrop progress={Math.min(0.82, 0.24 + discoveries.length * 0.1)} quiet />
       <header className="flex items-start justify-between">
         <div>
-          <p className="text-[10px] tracking-[0.24em] text-white/42">Born from your path</p>
-          <h1 className="font-display mt-2 text-4xl tracking-[-0.045em]">{activeVisualizationCopy.personalTitle}</h1>
+          <p className="text-sm text-white/50">Provisional specimen record</p>
+          <h1 className="font-display mt-1 text-4xl tracking-[-0.045em]">
+            Your unclassified {creatureForm ? aquaticFormLabels[creatureForm] : "sea creature"}
+          </h1>
         </div>
         <button
           type="button"
           onClick={() => dispatch(setExperiencePhase("scanning"))}
-          className="min-h-11 rounded-full bg-white/[0.07] px-5 text-xs text-white/75"
+          className="min-h-11 border border-white/25 px-5 text-sm text-white/75"
         >
           Return
         </button>
       </header>
 
-      <div className="mx-auto h-[44dvh] w-full max-w-xl">
-        <PathVisualization artifactIds={discoveries.map((item) => item.artifactId)} label={`Your evolving exhibition ${activeVisualizationCopy.singular}`} />
+      <div className="mx-auto h-[38dvh] min-h-72 w-full max-w-xl">
+        <PathVisualization artifactIds={discoveries.map((item) => item.artifactId)} creatureForm={creatureForm} creatureSeed={creatureSeed} creaturePalette={creaturePalette ?? undefined} fitToView interactive label={`Your evolving exhibition ${activeVisualizationCopy.singular}`} />
       </div>
 
       <div className="mx-auto w-full max-w-xl flex-1">
-        <p className="text-[10px] tracking-[0.22em] text-white/35">
-          {visualizationDesign === "constellation" ? "In the order you found them" : "Its parts, in the order you found them"}
+        <div className="mb-6 grid grid-cols-5 gap-2 border-y border-white/15 py-4" aria-label="Narrative state">
+          {Object.entries(narrativeState).map(([axis, value]) => (
+            <div key={axis} className="min-w-0">
+              <span className="block truncate text-xs text-white/45">{axis}</span>
+              <span className="mt-2 block h-1 bg-white/10">
+                <span className="block h-full bg-[var(--phosphor)] transition-all" style={{ width: `${Math.max(8, ((value + 8) / 16) * 100)}%` }} />
+              </span>
+            </div>
+          ))}
+        </div>
+        <p className="text-sm text-white/45">
+          {visualizationDesign === "constellation" ? "Signals, in encounter order" : "Traits crossing the glass"}
         </p>
         <ol className="mt-4 space-y-3">
           {discoveredArtifacts.length === 0 ? (
@@ -51,17 +75,17 @@ export function JourneyScreen() {
           ) : (
             discoveredArtifacts.map(({ artifact, sequence }) => (
               <li key={artifact.id} className="flex items-baseline gap-4">
-                <span className="text-[10px] text-white/30">0{sequence}</span>
+                <span className="text-sm text-white/30">{String(sequence).padStart(2, "0")}</span>
                 {visualizationDesign === "constellation" ? (
                   <span className="font-display text-xl">{artifact.title}</span>
                 ) : (
                   <span>
                     <span className="font-display block text-xl">{artifact.creaturePart.label}</span>
-                    <span className="mt-0.5 block text-[10px] text-white/38">from {artifact.title}</span>
+                    <span className="mt-0.5 block text-sm text-white/45">{artifact.marineType} · from {artifact.title}</span>
                   </span>
                 )}
-                <span className="ml-auto text-[9px] tracking-[0.14em]" style={{ color: artifact.color }}>
-                  {themes[artifact.theme].label}
+                <span className="ml-auto text-xs" style={{ color: artifact.color }}>
+                  {themes[artifact.theme].label.toLowerCase()}
                 </span>
               </li>
             ))
@@ -75,11 +99,10 @@ export function JourneyScreen() {
           dispatch(finishJourney());
           router.push("/journey");
         }}
-        className="mx-auto mt-7 flex min-h-14 w-full max-w-xl items-center justify-between rounded-full bg-[#F3F0E8] px-6 text-sm text-black disabled:cursor-not-allowed disabled:opacity-35"
-        disabled={discoveries.length === 0}
+        className="mx-auto mt-7 flex min-h-14 w-full max-w-xl items-center justify-between bg-[var(--phosphor)] px-6 text-base text-[#031015] disabled:cursor-not-allowed disabled:opacity-35"
+        disabled={!readyToRelease}
       >
-        <span>{activeVisualizationCopy.finish}</span>
-        <span aria-hidden="true">→</span>
+        <span>{readyToRelease ? "Generate my ending" : `${3 - discoveries.length} more ${3 - discoveries.length === 1 ? "encounter" : "encounters"} before release`}</span>
       </button>
     </main>
   );

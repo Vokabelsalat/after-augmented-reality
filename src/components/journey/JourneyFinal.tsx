@@ -13,6 +13,7 @@ import { themes } from "@/data/themes";
 import { PathVisualization } from "@/components/visualization/PathVisualization";
 import { activeVisualizationCopy } from "@/config/visualization";
 import dynamic from "next/dynamic";
+import { BiomeBackdrop } from "@/components/visualization/BiomeBackdrop";
 
 const GeneratedNarrative = dynamic(() =>
   import("@/components/journey/GeneratedNarrative").then(
@@ -40,21 +41,29 @@ export function JourneyFinal() {
   }, [dispatch, journey.completedAt]);
 
   return (
-    <main className="film-grain safe-top safe-bottom min-h-dvh overflow-x-hidden bg-[#050505] px-5">
+    <main className="biome-field biome-screen film-grain safe-top safe-bottom relative min-h-dvh overflow-x-hidden bg-[var(--abyss)] px-5">
+      <BiomeBackdrop progress={0.88} />
       <header className="relative z-10 flex items-center justify-between">
         <Link href="/" className="font-display text-2xl tracking-[-0.04em]">
-          After Augmented Reality
+          The Fishbowl Leaks
         </Link>
         <p className="text-[9px] tracking-[0.24em] text-white/42">
-          Your {activeVisualizationCopy.singular}
+          Release chamber
         </p>
       </header>
 
-      <section className="relative mx-auto mt-1 h-[46dvh] min-h-80 w-full max-w-3xl" aria-labelledby="reading-title">
+      <section className="relative left-1/2 mt-1 h-[46dvh] min-h-80 w-screen -translate-x-1/2 overflow-visible" aria-labelledby="reading-title">
         <h1 id="reading-title" className="absolute inset-x-0 top-6 z-10 text-center text-[10px] tracking-[0.32em] text-white/48">
-          Your {activeVisualizationCopy.singular}
+          Specimen pending release
         </h1>
-        <PathVisualization artifactIds={discoveries.map((item) => item.artifactId)} label={`Your finished exhibition ${activeVisualizationCopy.singular}`} />
+        <PathVisualization
+          artifactIds={discoveries.map((item) => item.artifactId)}
+          creatureForm={journey.creatureForm}
+          creaturePalette={journey.creaturePalette ?? undefined}
+          creatureSeed={journey.sessionId ?? undefined}
+          fitToView
+          label={`Your finished exhibition ${activeVisualizationCopy.singular}`}
+        />
         <div className="absolute inset-x-0 bottom-5 flex flex-wrap justify-center gap-x-4 gap-y-1">
           {themesInOrder.map((artifact, index) => (
             <span key={`${artifact.id}-${index}`} className="flex items-center gap-1.5 text-[9px] tracking-[0.14em] text-white/48">
@@ -66,7 +75,7 @@ export function JourneyFinal() {
       </section>
 
       <section className="relative z-10 mx-auto max-w-xl pb-8">
-        <p className="mb-6 text-[9px] tracking-[0.24em] text-white/35">The voice it found along your path</p>
+        <p className="mb-6 text-sm text-white/45">The aquarium, remembered from inside</p>
         <GeneratedNarrative lines={lines} />
 
         <div className="mt-14">
@@ -74,6 +83,8 @@ export function JourneyFinal() {
             sessionId={journey.sessionId}
             completedAt={journey.completedAt}
             discoveries={discoveries}
+            creatureForm={journey.creatureForm}
+            creaturePalette={journey.creaturePalette}
           />
         </div>
 
@@ -84,7 +95,6 @@ export function JourneyFinal() {
             className="flex min-h-12 items-center justify-between text-sm text-white/72"
           >
             <span>Continue this journey</span>
-            <span aria-hidden="true">↗</span>
           </Link>
           <Link
             href="/"
@@ -92,7 +102,6 @@ export function JourneyFinal() {
             className="mt-2 flex min-h-12 items-center justify-between text-sm text-white"
           >
             <span>Start again</span>
-            <span aria-hidden="true">→</span>
           </Link>
         </div>
       </section>

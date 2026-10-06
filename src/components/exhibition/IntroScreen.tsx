@@ -2,58 +2,61 @@
 
 import { useAppDispatch } from "@/store/hooks";
 import { startJourney } from "@/store/journeySlice";
-import { CategoryOrbit } from "../ar/ARScanner";
-import { visualizationDesign } from "@/config/visualization";
+import { BiomeBackdrop } from "@/components/visualization/BiomeBackdrop";
 
 export function IntroScreen() {
   const dispatch = useAppDispatch();
 
   return (
-    <main className="film-grain relative min-h-dvh overflow-hidden bg-[#050505] px-6 text-[#F3F0E8] grid grid-cols-1 grid-rows-[auto_auto_auto]">
-      {/* <div className="safe-top flex items-center justify-between text-[10px] tracking-[0.24em] text-white/45">
-      </div> */}
+    <main className="biome-field biome-screen film-grain relative min-h-dvh overflow-hidden bg-[var(--abyss)] px-5 text-[var(--foam)]">
+      <BiomeBackdrop progress={0.26} quiet />
+      <div className="safe-top relative z-10 mx-auto flex min-h-dvh w-full max-w-5xl flex-col">
 
-      {/* <div className="pointer-events-none absolute top-[15%] left-1/2 h-[38vh] w-px -translate-x-1/2 bg-white/10" />
-      <div className="animate-breathe pointer-events-none absolute top-[29%] left-1/2 size-2 -translate-x-1/2 rounded-full bg-white shadow-[0_0_24px_8px_rgba(255,255,255,0.34)]" /> */}
-
-      <div className="flex flex-col justify-center items-center">
-        <h1 className="font-display -ml-1 text-[clamp(2.4rem,19vw,5rem)] leading-[1.2] font-normal tracking-[-0.085em]">
-          Extending
-          <br />
-          <span className="ml-[25vw] italic">Narrative</span>
-        </h1>
-        {/* <p className="mt-4 text-xs tracking-[0.26em] text-white/80">
-          Extend the narrative
-        </p> */}
-      </div>
-      <div className="flex flex-col justify-center items-center">
-        <div>
-          <div className="flex scale-150">
-            <CategoryOrbit />
-          </div>
-          <div className="flex flex-3 safe-bottom relative z-10">
-            <p className="max-w-sm text-lg leading-7 text-white/80">
-              {visualizationDesign === "constellation"
-                ? "Scan works throughout the exhibition. Each encounter adds a new fragment to your path."
-                : visualizationDesign === "creature"
-                  ? "Scan works throughout the exhibition. Each encounter gives your creature a new body part."
-                  : "Scan works throughout the exhibition. Each encounter gives your fish a new body part."}
+        <section className="grid flex-1 items-center gap-6 py-8 md:grid-cols-[1.1fr_.9fr]" aria-labelledby="intro-title">
+          <div className="relative z-10">
+            <h1 id="intro-title" className="font-display max-w-3xl text-[clamp(4.2rem,14vw,9rem)] leading-[0.73] tracking-[-0.075em]">
+              The Fishbowl
+              <span className="block translate-x-[8vw] italic text-[var(--phosphor)] md:translate-x-20">Leaks</span>
+            </h1>
+            <p className="mt-8 max-w-md text-lg leading-7 text-white/74">
+              This aquarium is trying to classify the exhibition. Scan the markers, gather fragments of a story, and grow a creature it cannot fully contain.
             </p>
           </div>
+
+          <div className="porthole mx-auto aspect-square w-[min(72vw,25rem)]" aria-hidden="true">
+            <div className="porthole-glass">
+              <span className="radar-range radar-range-outer" />
+              <span className="radar-range radar-range-middle" />
+              <span className="radar-range radar-range-inner" />
+              <span className="radar-axis radar-axis-horizontal" />
+              <span className="radar-axis radar-axis-vertical" />
+              <span className="radar-sweep" />
+              <span className="radar-vessel" />
+              <span className="radar-contact radar-contact-one" />
+              <span className="radar-contact radar-contact-two" />
+              <span className="radar-contact radar-contact-three" />
+              <span className="radar-contact radar-contact-four" />
+              <span className="theme-echo theme-echo-memory">Memory and afterlives</span>
+              <span className="theme-echo theme-echo-systems">Synthetic systems and constructed authority</span>
+              <span className="theme-echo theme-echo-language">Language across materials</span>
+              <span className="theme-echo theme-echo-dreams">Dreams and simulated worlds</span>
+              <span className="theme-echo theme-echo-embodiment">Embodiment, care, and resistance</span>
+            </div>
+          </div>
+        </section>
+
+        <div className="safe-bottom relative z-10 grid items-end gap-4 border-t border-white/20 pt-4 md:grid-cols-[1fr_auto]">
+          <p className="max-w-lg text-sm align-middle text-white/58">
+            Camera access is requested when you enter the tank.
+          </p>
+          <button
+            type="button"
+            onClick={() => dispatch(startJourney())}
+            className="flex min-h-16 w-full items-center justify-between bg-[var(--phosphor)] px-6 text-base text-[#031015] transition-transform active:scale-[0.99] md:w-80"
+          >
+            <span>Scan an artwork marker</span>
+          </button>
         </div>
-      </div>
-      <div className="flex flex-col justify-end items-center">
-        <button
-          type="button"
-          onClick={() => dispatch(startJourney())}
-          className="flex min-h-14 w-full items-center justify-between rounded-full bg-[#F3F0E8] px-6 text-sm font-medium text-black transition-transform active:scale-[0.98] animate-pulse"
-        >
-          <span>Start experience</span>
-          <span aria-hidden="true">→</span>
-        </button>
-        <p className="mt-4 text-center text-[10px] leading-4 tracking-[0.12em] text-white/35">
-          Camera access is requested on the next screen
-        </p>
       </div>
     </main>
   );

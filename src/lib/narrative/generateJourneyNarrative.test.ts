@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import { artifacts } from "@/data/artifacts";
 import { generateJourneyNarrative } from "@/lib/narrative/generateJourneyNarrative";
 import type { Discovery } from "@/store/journeySlice";
-import type { ExhibitionArtifact } from "@/types/exhibition";
 
 function discoveries(ids: string[]): Discovery[] {
   return ids.map((artifactId, index) => ({
@@ -13,71 +12,50 @@ function discoveries(ids: string[]): Discovery[] {
 }
 
 describe("generateJourneyNarrative", () => {
-  it("is deterministic for the same path", () => {
-    const path = discoveries([
-      "between-page-and-screen",
-      "finding-frida",
-      "emperor",
-    ]);
-    const first = generateJourneyNarrative(path, artifacts);
-    const second = generateJourneyNarrative(path, artifacts);
+  it("concatenates each artifact phrase in encounter order", () => {
+    const lines = generateJourneyNarrative(
+      discoveries(["grand-hotel-bald-cockatoo", "emperor"]),
+      artifacts,
+    );
 
-    expect(first).toEqual(second);
-    expect(first).toHaveLength(5);
-    expect(first.join(" ")).toMatch(/interface/i);
-    expect(first.join(" ")).toMatch(/memory/i);
-    expect(first.join(" ")).toMatch(/embodiment/i);
+    expect(lines).toEqual([
+      "A hotel nested inside the tank and printed a fortune for the tide.",
+      "A word descended beyond reach. A hand-drawn light followed it down.",
+    ]);
   });
 
-  it("changes when discovery order changes", () => {
-    const machineFirst = generateJourneyNarrative(
+  it("preserves the scanned route without an introduction or conclusion", () => {
+    const letterFirst = generateJourneyNarrative(
       discoveries(["between-page-and-screen", "finding-frida"]),
       artifacts,
     );
-    const memoryFirst = generateJourneyNarrative(
+    const archiveFirst = generateJourneyNarrative(
       discoveries(["finding-frida", "between-page-and-screen"]),
       artifacts,
     );
 
-    expect(machineFirst[0]).toMatch(/interface/i);
-    expect(memoryFirst[0]).toMatch(/memory/i);
-    expect(machineFirst).not.toEqual(memoryFirst);
-  });
-
-  it("uses a compact single-part form", () => {
-    const lines = generateJourneyNarrative(
-      discoveries(["finding-frida"]),
-      artifacts,
+    expect(letterFirst).toHaveLength(2);
+    expect(letterFirst[0]).toBe(
+      "P sent a letter through the glass. S answered from the water.",
     );
-
-    expect(lines).toHaveLength(3);
-    expect(lines.join(" ")).toMatch(/memory/i);
-    expect(lines.join(" ")).toContain("Finding Frida");
-  });
-
-  it("acknowledges a repeated theme", () => {
-    const secondMemory: ExhibitionArtifact = {
-      ...artifacts[0],
-      id: "memory-return",
-      title: "Memory Returns",
-    };
-    const lines = generateJourneyNarrative(
-      discoveries(["finding-frida", "between-page-and-screen", "memory-return"]),
-      [...artifacts, secondMemory],
+    expect(archiveFirst[0]).toBe(
+      "A photograph sank into the substrate. By morning, it had grown roots.",
     );
-
-    expect(lines.at(-1)).toMatch(/memory.*(return|surface)/i);
   });
 
-  it("varies its sentence structures across related paths", () => {
-    const relatedPaths = [
-      ["finding-frida", "historically-yours", "from-ingrid-to-bergen"],
-      ["historically-yours", "from-ingrid-to-bergen", "finding-frida"],
-      ["from-ingrid-to-bergen", "finding-frida", "historically-yours"],
-      ["finding-frida", "from-ingrid-to-bergen", "historically-yours"],
-    ].map((path) => generateJourneyNarrative(discoveries(path), artifacts));
+  it("keeps every stop in a longer path", () => {
+    const path = discoveries([
+      "finding-frida",
+      "historically-yours",
+      "from-ingrid-to-bergen",
+      "your-update-has-failed",
+      "between-page-and-screen",
+    ]);
 
-    expect(new Set(relatedPaths.map((lines) => lines[0])).size).toBeGreaterThanOrEqual(3);
-    expect(new Set(relatedPaths.map((lines) => lines.at(-1))).size).toBeGreaterThanOrEqual(2);
+    expect(generateJourneyNarrative(path, artifacts)).toHaveLength(path.length);
+  });
+
+  it("waits quietly before the first scan", () => {
+    expect(generateJourneyNarrative([], artifacts)).toEqual(["The fishbowl waits."]);
   });
 });

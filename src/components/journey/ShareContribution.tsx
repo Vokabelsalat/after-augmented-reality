@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { activeVisualizationCopy } from "@/config/visualization";
+import type { AquaticForm } from "@/lib/creature/aquaticForms";
+import type { CreatureColorPalette } from "@/lib/creature/colorPalettes";
 import type { Discovery } from "@/store/journeySlice";
 
 type ShareState = "idle" | "sharing" | "shared" | "error";
@@ -10,10 +12,14 @@ export function ShareContribution({
   sessionId,
   completedAt,
   discoveries,
+  creatureForm,
+  creaturePalette,
 }: {
   sessionId: string | null;
   completedAt: number | null;
   discoveries: Discovery[];
+  creatureForm: AquaticForm | null;
+  creaturePalette: CreatureColorPalette | null;
 }) {
   const [state, setState] = useState<ShareState>("idle");
 
@@ -24,7 +30,7 @@ export function ShareContribution({
       const response = await fetch("/api/contributions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId, completedAt, discoveries }),
+        body: JSON.stringify({ sessionId, completedAt, discoveries, creatureForm, creaturePalette }),
       });
       if (!response.ok) throw new Error("Share failed");
       setState("shared");
@@ -34,27 +40,26 @@ export function ShareContribution({
   }
 
   return (
-    <div className="border-t border-white/12 pt-6">
+    <div className="border-t border-white/20 pt-6">
       <button
         type="button"
         onClick={share}
         disabled={!sessionId || !completedAt || discoveries.length === 0 || state === "sharing" || state === "shared"}
-        className="flex min-h-14 w-full items-center justify-between rounded-full bg-[#F3F0E8] px-6 text-sm text-black transition-opacity disabled:cursor-not-allowed disabled:opacity-50"
+        className="flex min-h-16 w-full items-center justify-between bg-[var(--phosphor)] px-6 text-base text-[#031015] transition-opacity disabled:cursor-not-allowed disabled:opacity-50"
       >
         <span>
           {state === "sharing" && `Releasing your ${activeVisualizationCopy.singular}…`}
-          {state === "shared" && `Your ${activeVisualizationCopy.singular} has joined`}
+          {state === "shared" && `Your ${activeVisualizationCopy.singular} crossed the glass`}
           {state === "error" && "Try sharing again"}
-          {state === "idle" && "Release to the collective"}
+          {state === "idle" && "Release into the shared tank"}
         </span>
-        <span aria-hidden="true">{state === "shared" ? "✓" : "↗"}</span>
       </button>
-      <p className="mt-3 px-3 text-center text-[10px] leading-4 tracking-[0.08em] text-white/35" role="status" aria-live="polite">
+      <p className="mt-3 px-3 text-center text-sm leading-5 text-white/45" role="status" aria-live="polite">
         {state === "shared"
-          ? `Your ${activeVisualizationCopy.singular} has joined the collective ${activeVisualizationCopy.collectivePlace}.`
+          ? `Your ${activeVisualizationCopy.singular} is now swimming on the shared screen.`
           : state === "error"
             ? "The screen could not be reached. Your story is still safe on this device."
-            : `Your ${activeVisualizationCopy.singular} and its voice will appear anonymously in the collective ${activeVisualizationCopy.collectivePlace}.`}
+            : `Its body and story will appear anonymously in the shared aquarium.`}
       </p>
     </div>
   );

@@ -9,6 +9,7 @@ import {
   setActiveArtifact,
   startJourney,
 } from "@/store/journeySlice";
+import { creatureColorPalette } from "@/lib/creature/colorPalettes";
 
 describe("journeySlice", () => {
   it("starts a reproducible journey session", () => {
@@ -23,6 +24,8 @@ describe("journeySlice", () => {
       experiencePhase: "scanning",
       discoveries: [],
     });
+    expect(state.creatureForm).not.toBeNull();
+    expect(state.creaturePalette).toEqual(creatureColorPalette("session-test"));
   });
 
   it("discovers artifacts in order", () => {
@@ -39,6 +42,34 @@ describe("journeySlice", () => {
     ]);
     expect(state.activeArtifactId).toBe("body-space");
     expect(state.experiencePhase).toBe("revealing");
+    expect(state.creatureForm).not.toBeNull();
+  });
+
+  it("chooses the aquatic form when the journey starts and keeps it through scans", () => {
+    let state = journeyReducer(
+      undefined,
+      startJourney({ sessionId: "session-creature", startedAt: 100 }),
+    );
+    const firstForm = state.creatureForm;
+    state = journeyReducer(state, artifactDetected("first-work", 200));
+    state = journeyReducer(state, artifactDetected("second-work", 300));
+
+    expect(firstForm).not.toBeNull();
+    expect(state.creatureForm).toBe(firstForm);
+  });
+
+  it("lets a scan shape the narrative without requiring a choice", () => {
+    const state = journeyReducer(
+      undefined,
+      artifactDetected("grand-hotel-bald-cockatoo", 200),
+    );
+
+    expect(state.discoveries[0]).not.toHaveProperty("choiceId");
+    expect(state.narrativeState).toMatchObject({
+      openness: 2,
+      coherence: -2,
+      voice: 1,
+    });
   });
 
   it("ignores duplicate scans without changing sequence or active state", () => {
@@ -80,6 +111,8 @@ describe("journeySlice", () => {
       discoveries: [],
       activeArtifactId: null,
       experiencePhase: "intro",
+      creatureForm: null,
+      creaturePalette: null,
     });
   });
 

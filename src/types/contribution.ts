@@ -1,4 +1,6 @@
 import type { CreaturePartId, ThemeId } from "@/types/exhibition";
+import type { AquaticForm } from "@/lib/creature/aquaticForms";
+import type { CreatureColorPalette } from "@/lib/creature/colorPalettes";
 
 export type SharedCreaturePart = {
   artifactId: string;
@@ -14,17 +16,29 @@ export type SharedCreaturePart = {
 export type ExhibitionContribution = {
   id: number;
   publicId: string;
+  creatureForm: AquaticForm;
+  creaturePalette: CreatureColorPalette;
   parts: SharedCreaturePart[];
   narrative: string[];
   createdAt: string;
 };
 
+export type CollectiveHeatDatum = {
+  artifactId: string;
+  totalDwellMs: number;
+  visitCount: number;
+  averageDwellMs: number;
+};
+
 export type ContributionSubmission = {
   sessionId: string;
+  creatureForm: AquaticForm;
+  creaturePalette: CreatureColorPalette;
   completedAt: number;
   discoveries: Array<{
     artifactId: string;
     sequence: number;
     discoveredAt: number;
+    choiceId?: string;
   }>;
 };

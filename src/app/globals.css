@@ -1,8 +1,12 @@
 @import "tailwindcss";
 
 :root {
-  --background: #050505;
-  --foreground: #f3f0e8;
+  --abyss: #031015;
+  --background: var(--abyss);
+  --foreground: #e8f5ef;
+  --foam: #e8f5ef;
+  --phosphor: #b9ffdc;
+  --signal: #ff8a62;
 }
 
 * {
@@ -20,7 +24,7 @@ body {
   overflow-x: hidden;
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: "Avenir Next", Avenir, "Helvetica Neue", Arial, sans-serif;
   text-rendering: optimizeLegibility;
 }
 
@@ -41,7 +45,242 @@ a:focus-visible {
 }
 
 .font-display {
-  font-family: "Iowan Old Style", "Baskerville", "Times New Roman", serif;
+  font-family: "Iowan Old Style", Baskerville, "Times New Roman", serif;
+}
+
+.shape-editor {
+  min-width: 70rem;
+}
+
+.shape-editor-workspace {
+  height: calc(100dvh - 6.7rem);
+}
+
+.shape-editor-canvas {
+  height: min(65vh, 42rem);
+}
+
+.shape-editor-range {
+  height: 1.25rem;
+  appearance: none;
+  background: transparent;
+}
+
+.shape-editor-range::-webkit-slider-runnable-track {
+  height: 1px;
+  background: rgba(232, 245, 239, 0.28);
+}
+
+.shape-editor-range::-webkit-slider-thumb {
+  width: 0.75rem;
+  height: 0.75rem;
+  margin-top: -0.34rem;
+  appearance: none;
+  border: 1px solid rgba(3, 16, 21, 0.8);
+  border-radius: 50%;
+  background: var(--phosphor);
+}
+
+.shape-editor-range::-moz-range-track {
+  height: 1px;
+  background: rgba(232, 245, 239, 0.28);
+}
+
+.shape-editor-range::-moz-range-thumb {
+  width: 0.75rem;
+  height: 0.75rem;
+  border: 1px solid rgba(3, 16, 21, 0.8);
+  border-radius: 50%;
+  background: var(--phosphor);
+}
+
+.tank-panel {
+  background: rgba(3, 16, 21, 0.96);
+  border-top: 1px solid rgba(232, 245, 239, 0.24);
+  box-shadow: 0 -1.5rem 5rem rgba(0, 0, 0, 0.48);
+  backdrop-filter: blur(20px);
+}
+
+.porthole {
+  position: relative;
+  padding: clamp(0.8rem, 3vw, 1.45rem);
+  border: 1px solid rgba(232, 245, 239, 0.62);
+  border-radius: 999px;
+  background: rgba(3, 16, 21, 0.82);
+  box-shadow:
+    inset 0 0 0 0.34rem var(--abyss),
+    inset 0 0 0 0.44rem rgba(232, 245, 239, 0.32),
+    0 0 3rem rgba(185, 255, 220, 0.08);
+}
+
+.porthole::before,
+.porthole::after {
+  position: absolute;
+  top: 50%;
+  z-index: 2;
+  width: 0.56rem;
+  height: 0.56rem;
+  content: "";
+  border: 1px solid rgba(232, 245, 239, 0.65);
+  border-radius: 50%;
+  background: var(--abyss);
+  box-shadow: inset 0 0 0 1px rgba(185, 255, 220, 0.14);
+}
+
+.porthole::before { left: 0.28rem; }
+.porthole::after { right: 0.28rem; }
+
+.porthole-glass {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+  border: 1px solid rgba(185, 255, 220, 0.5);
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at center, rgba(185, 255, 220, 0.08) 0 1px, transparent 2px),
+    linear-gradient(145deg, transparent 34%, rgba(232, 245, 239, 0.06) 35%, transparent 38%),
+    rgba(3, 16, 21, 0.72);
+  box-shadow:
+    inset 0 0 2.4rem rgba(185, 255, 220, 0.1),
+    inset 0 0 5rem rgba(0, 0, 0, 0.38);
+}
+
+.porthole-glass::before {
+  position: absolute;
+  inset: 3.5%;
+  content: "";
+  border: 1px solid rgba(185, 255, 220, 0.24);
+  border-radius: 50%;
+  background: repeating-conic-gradient(
+    from -0.5deg,
+    rgba(185, 255, 220, 0.5) 0 1deg,
+    transparent 1deg 14deg,
+    rgba(185, 255, 220, 0.24) 14deg 15deg,
+    transparent 15deg 30deg
+  );
+  mask: radial-gradient(circle, transparent 0 91%, #000 91.5% 100%);
+}
+
+.radar-range,
+.radar-axis,
+.radar-sweep,
+.radar-contact,
+.radar-vessel,
+.theme-echo {
+  position: absolute;
+}
+
+.radar-range {
+  top: 50%;
+  left: 50%;
+  aspect-ratio: 1;
+  border: 1px solid rgba(185, 255, 220, 0.2);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.radar-range-outer { width: 72%; }
+.radar-range-middle { width: 48%; }
+.radar-range-inner { width: 24%; }
+
+.radar-axis {
+  top: 50%;
+  left: 50%;
+  background: rgba(185, 255, 220, 0.16);
+  transform: translate(-50%, -50%);
+}
+
+.radar-axis-horizontal {
+  width: 92%;
+  height: 1px;
+}
+
+.radar-axis-vertical {
+  width: 1px;
+  height: 92%;
+}
+
+.radar-sweep {
+  inset: 7.5%;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 228deg,
+    transparent 0deg 300deg,
+    rgba(185, 255, 220, 0.02) 318deg,
+    rgba(185, 255, 220, 0.2) 351deg,
+    rgba(185, 255, 220, 0.78) 359deg,
+    transparent 360deg
+  );
+  animation: radar-scan 8s linear infinite;
+}
+
+.radar-vessel {
+  top: 50%;
+  left: 50%;
+  z-index: 2;
+  width: 0.7rem;
+  height: 1rem;
+  border: 1px solid var(--phosphor);
+  clip-path: polygon(50% 0, 100% 100%, 50% 78%, 0 100%);
+  background: var(--abyss);
+  filter: drop-shadow(0 0 0.35rem rgba(185, 255, 220, 0.65));
+  transform: translate(-50%, -50%);
+}
+
+.radar-contact {
+  z-index: 2;
+  width: 0.32rem;
+  height: 0.32rem;
+  border-radius: 50%;
+  background: var(--phosphor);
+  box-shadow: 0 0 0.7rem rgba(185, 255, 220, 0.9);
+  animation: radar-contact-pulse 3.4s ease-in-out infinite;
+}
+
+.radar-contact-one { top: 25%; left: 31%; }
+.radar-contact-two { top: 38%; right: 18%; animation-delay: -1.3s; }
+.radar-contact-three { right: 29%; bottom: 23%; animation-delay: -2.1s; }
+.radar-contact-four { bottom: 35%; left: 20%; animation-delay: -2.8s; }
+
+.theme-echo {
+  z-index: 3;
+  max-width: 9.5rem;
+  color: var(--phosphor);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: clamp(0.58rem, 1.9vw, 0.74rem);
+  line-height: 1.25;
+  text-wrap: balance;
+  text-shadow: 0 0 0.65rem rgba(185, 255, 220, 0.7);
+  animation: theme-echo-drift 9s ease-in-out infinite;
+}
+
+.theme-echo-memory { top: 27%; left: 14%; max-width: 7.6rem; }
+.theme-echo-systems { top: 37%; right: 8%; max-width: 8.2rem; animation-delay: -3.8s; }
+.theme-echo-language { bottom: 22%; left: 12%; animation-delay: -6.1s; }
+.theme-echo-dreams { top: 12%; right: 13%; max-width: 8rem; animation-delay: -2.2s; }
+.theme-echo-embodiment { right: 13%; bottom: 13%; max-width: 8.8rem; animation-delay: -7.4s; }
+
+@keyframes radar-scan {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes radar-contact-pulse {
+  0%, 100% { opacity: 0.3; transform: scale(0.7); }
+  45%, 62% { opacity: 1; transform: scale(1.2); }
+}
+
+@keyframes theme-echo-drift {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(-2deg); }
+  45% { transform: translate3d(0.7rem, -0.45rem, 0) rotate(1deg); }
+  70% { transform: translate3d(-0.25rem, 0.4rem, 0) rotate(0deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .radar-sweep,
+  .radar-contact,
+  .theme-echo {
+    animation: none;
+  }
 }
 
 .safe-top {
@@ -92,8 +331,491 @@ a:focus-visible {
     radial-gradient(circle at 56% 84%, rgba(255, 117, 87, 0.06), transparent 26%);
 }
 
+.biome-field {
+  background:
+    radial-gradient(ellipse at 50% -10%, rgba(185, 255, 220, 0.16), transparent 42%),
+    radial-gradient(ellipse at 12% 72%, rgba(62, 146, 153, 0.14), transparent 36%),
+    radial-gradient(ellipse at 88% 66%, rgba(255, 138, 98, 0.1), transparent 34%),
+    var(--abyss);
+}
+
+.biome-screen > .biome-water {
+  z-index: 0;
+}
+
+.biome-screen > :not(.biome-water) {
+  position: relative;
+  z-index: 1;
+}
+
+.biome-water {
+  overflow: hidden;
+}
+
+.biome-sunlight {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  opacity: 0;
+  mix-blend-mode: screen;
+  animation: biome-sunlight-appear 24s ease-in-out infinite;
+}
+
+.biome-waterline {
+  position: absolute;
+  inset: -2.5rem -8% auto;
+  height: 7rem;
+  opacity: 0.72;
+  background:
+    radial-gradient(ellipse at 48% 58%, rgba(232, 245, 239, 0.34), transparent 15%),
+    radial-gradient(ellipse at 51% 52%, rgba(185, 255, 220, 0.22), transparent 25%);
+  filter: blur(1rem);
+  animation: biome-waterline-shimmer 8s ease-in-out infinite alternate;
+}
+
+.biome-sunray {
+  position: absolute;
+  top: -1%;
+  width: 2.8%;
+  height: 62%;
+  opacity: 0.12;
+  background: linear-gradient(to bottom, rgba(232, 245, 239, 0.64), rgba(185, 255, 220, 0.12) 58%, transparent);
+  clip-path: polygon(42% 0, 58% 0, 68% 100%, 32% 100%);
+  filter: blur(0.35rem);
+  transform-origin: 50% 0;
+  animation: biome-sunray-shimmer 8s ease-in-out infinite alternate;
+}
+
+.biome-sunray-one {
+  left: 40%;
+  height: 46%;
+  transform: rotate(-5deg);
+}
+
+.biome-sunray-two {
+  left: 42.4%;
+  width: 2.2%;
+  height: 68%;
+  opacity: 0.1;
+  animation-delay: -2s;
+  transform: rotate(-5deg);
+}
+
+.biome-sunray-three {
+  left: 44.2%;
+  width: 3.2%;
+  height: 76%;
+  opacity: 0.09;
+  animation-delay: -4.5s;
+  transform: rotate(-5deg);
+}
+
+.biome-sunray-four {
+  left: 46.8%;
+  width: 1.8%;
+  height: 58%;
+  opacity: 0.14;
+  animation-delay: -6s;
+  transform: rotate(-5deg);
+}
+
+.biome-sunray-five {
+  left: 48.3%;
+  width: 2.5%;
+  height: 72%;
+  opacity: 0.08;
+  animation-delay: -1s;
+  transform: rotate(-5deg);
+}
+
+.biome-sunray-six {
+  left: 50.4%;
+  width: 3%;
+  height: 54%;
+  opacity: 0.11;
+  animation-delay: -3.5s;
+  transform: rotate(-5deg);
+}
+
+.biome-sunray-seven {
+  left: 52.8%;
+  width: 1.9%;
+  height: 70%;
+  opacity: 0.08;
+  animation-delay: -5.5s;
+  transform: rotate(-5deg);
+}
+
+.biome-sunray-eight {
+  left: 54.4%;
+  width: 2.6%;
+  height: 48%;
+  opacity: 0.1;
+  animation-delay: -7s;
+  transform: rotate(-5deg);
+}
+
+.biome-surface-glimmer {
+  position: absolute;
+  inset: 0 -12% auto;
+  height: 5.5rem;
+  opacity: 0.34;
+  background: repeating-radial-gradient(ellipse at 50% -45%, transparent 0 1.9rem, rgba(232, 245, 239, 0.2) 2rem 2.08rem, transparent 2.2rem 3.7rem);
+  filter: blur(1px);
+  animation: biome-surface-glimmer 7s linear infinite;
+}
+
+.biome-water-quiet .biome-current,
+.biome-water-quiet .biome-floor,
+.biome-water-quiet .biome-bloom {
+  opacity: 0.12;
+}
+
+.biome-water-quiet .biome-caustic {
+  opacity: 0.07;
+}
+
+.biome-water-quiet .biome-snow i {
+  opacity: 0.2;
+}
+
+.biome-current {
+  position: absolute;
+  width: 76vw;
+  height: 15vh;
+  border-radius: 50%;
+  opacity: calc(0.1 + var(--tank-progress, 0) * 0.16);
+  filter: blur(2.6rem);
+  mix-blend-mode: screen;
+  animation: biome-current-drift 22s ease-in-out infinite alternate;
+}
+
+.biome-current-one {
+  top: 23%;
+  left: -24%;
+  transform: rotate(-9deg);
+  background: rgba(88, 214, 255, 0.24);
+}
+
+.biome-current-two {
+  top: 49%;
+  right: -31%;
+  animation-delay: -8s;
+  transform: rotate(12deg);
+  background: rgba(185, 255, 220, 0.2);
+}
+
+.biome-current-three {
+  bottom: 8%;
+  left: 8%;
+  animation-delay: -14s;
+  transform: rotate(-4deg);
+  background: rgba(255, 138, 98, 0.14);
+}
+
+.biome-floor {
+  position: absolute;
+  inset: auto -10% -21% -10%;
+  height: 44%;
+  border-radius: 50% 50% 0 0;
+  opacity: 0.58;
+  background:
+    radial-gradient(ellipse at 23% 25%, rgba(185, 255, 220, 0.18), transparent 16%),
+    radial-gradient(ellipse at 71% 18%, rgba(255, 138, 98, 0.16), transparent 13%),
+    radial-gradient(ellipse at 48% 44%, rgba(62, 146, 153, 0.3), transparent 37%);
+  filter: blur(1.2rem);
+  transform: translateY(calc(var(--tank-progress, 0) * 3vh));
+}
+
+.biome-caustic {
+  position: absolute;
+  top: -18%;
+  width: 2px;
+  height: 78%;
+  opacity: 0.12;
+  background: linear-gradient(to bottom, var(--phosphor), transparent);
+  filter: blur(2px);
+  transform-origin: top center;
+  animation: biome-caustic-sway 14s ease-in-out infinite alternate;
+}
+
+.biome-caustic-one { left: 22%; transform: rotate(13deg); }
+.biome-caustic-two { left: 51%; animation-delay: -5s; transform: rotate(-9deg); }
+.biome-caustic-three { right: 19%; animation-delay: -9s; transform: rotate(16deg); }
+
+.biome-bloom {
+  position: absolute;
+  border-radius: 50%;
+  opacity: calc(0.24 + var(--tank-progress, 0) * 0.28);
+  filter: blur(1.3rem);
+  animation: biome-breathe 9s ease-in-out infinite alternate;
+}
+
+.biome-bloom-one {
+  left: 7%;
+  bottom: 17%;
+  width: min(22vw, 19rem);
+  aspect-ratio: 1.8;
+  background: rgba(185, 255, 220, 0.12);
+}
+
+.biome-bloom-two {
+  right: 9%;
+  bottom: 13%;
+  width: min(17vw, 14rem);
+  aspect-ratio: 1.3;
+  animation-delay: -4s;
+  background: rgba(255, 138, 98, 0.1);
+}
+
+.biome-snow i {
+  position: absolute;
+  top: -2rem;
+  left: var(--snow-x);
+  width: var(--snow-size);
+  height: var(--snow-size);
+  border-radius: 50%;
+  opacity: 0.36;
+  background: var(--foam);
+  animation: biome-snow-fall var(--snow-duration) linear var(--snow-delay) infinite;
+}
+
+@keyframes biome-current-drift {
+  from { translate: -3vw -1vh; scale: 0.94 1; }
+  to { translate: 7vw 2vh; scale: 1.1 0.82; }
+}
+
+@keyframes biome-waterline-shimmer {
+  from { transform: translateX(-2%) scaleX(0.96); opacity: 0.48; }
+  to { transform: translateX(3%) scaleX(1.05); opacity: 0.78; }
+}
+
+@keyframes biome-sunlight-appear {
+  0%, 18% { opacity: 0; }
+  34%, 54% { opacity: 1; }
+  72%, 100% { opacity: 0; }
+}
+
+@keyframes biome-sunray-shimmer {
+  from { translate: -0.35vw 0; scale: 0.92 0.98; opacity: 0.05; }
+  48% { opacity: 0.14; }
+  to { translate: 0.45vw 0; scale: 1.06 1.02; opacity: 0.08; }
+}
+
+@keyframes biome-surface-glimmer {
+  from { transform: translateX(-3%) scaleX(0.98); }
+  to { transform: translateX(3%) scaleX(1.03); }
+}
+
+@keyframes biome-caustic-sway {
+  from { rotate: -4deg; scale: 1 0.9; opacity: 0.06; }
+  to { rotate: 7deg; scale: 1 1.12; opacity: 0.18; }
+}
+
+@keyframes biome-breathe {
+  from { transform: scale(0.82) translateY(0); }
+  to { transform: scale(1.18) translateY(-1.2rem); }
+}
+
+@keyframes biome-snow-fall {
+  from { transform: translate3d(0, -4vh, 0); opacity: 0; }
+  12% { opacity: 0.38; }
+  86% { opacity: 0.24; }
+  to { transform: translate3d(3vw, 104vh, 0); opacity: 0; }
+}
+
 .collective-swim-field {
-  bottom: clamp(14rem, 29vh, 20rem);
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: var(--collective-recents-height);
+}
+
+.collective-wall {
+  --collective-recents-height: clamp(12rem, 23vh, 16rem);
+}
+
+.specimen-dialog-backdrop {
+  background: rgba(1, 7, 10, 0.76);
+  backdrop-filter: blur(10px);
+}
+
+.specimen-dialog {
+  box-shadow: 0 2rem 7rem rgba(0, 0, 0, 0.65);
+}
+
+.collective-recents {
+  height: var(--collective-recents-height);
+}
+
+.tank-compartments {
+  inset: 0 0 var(--collective-recents-height);
+  border-top: 1px solid rgba(232, 245, 239, 0.28);
+  border-bottom: 1px solid rgba(232, 245, 239, 0.28);
+  opacity: clamp(0.08, calc(1.12 - var(--tank-progress, 0) * 1.15), 1);
+  transition: opacity 250ms ease;
+}
+
+.tank-compartment {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 30% 36%, var(--compartment-glow), transparent 42%),
+    rgba(3, 16, 21, 0.3);
+  transition: background 250ms ease;
+}
+
+.tank-compartment span {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  color: rgba(232, 245, 239, 0.62);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  opacity: clamp(0, calc(1 - var(--tank-progress, 0) * 1.35), 1);
+}
+
+.tank-compartment-one {
+  --compartment-glow: rgba(255, 138, 98, 0.18);
+  left: 0;
+  width: 18%;
+}
+
+.tank-compartment-two {
+  --compartment-glow: rgba(198, 156, 255, 0.16);
+  left: 18%;
+  width: 28%;
+}
+
+.tank-compartment-three {
+  --compartment-glow: rgba(88, 214, 255, 0.17);
+  left: 46%;
+  width: 14%;
+}
+
+.tank-compartment-three span {
+  left: 50%;
+  transform: translateX(-50%);
+  writing-mode: vertical-rl;
+}
+
+.tank-compartment-four {
+  --compartment-glow: rgba(185, 255, 220, 0.16);
+  left: 60%;
+  width: 24%;
+}
+
+.tank-compartment-five {
+  --compartment-glow: rgba(255, 207, 92, 0.15);
+  left: 84%;
+  width: 16%;
+}
+
+.compartment-wall {
+  position: absolute;
+  inset-block: 0;
+  left: var(--wall-left);
+  width: 2px;
+  transform: translateX(-1px);
+}
+
+.compartment-wall i {
+  position: absolute;
+  left: 0;
+  width: 2px;
+  background: rgba(232, 245, 239, 0.62);
+  box-shadow: 0 0 0.8rem rgba(185, 255, 220, 0.28);
+  transition: height 250ms ease;
+}
+
+.compartment-wall-top {
+  top: 0;
+  height: var(--wall-top-height);
+}
+
+.compartment-wall-bottom {
+  bottom: 0;
+  height: var(--wall-bottom-height);
+}
+
+.compartment-breach {
+  position: absolute;
+  top: calc(var(--wall-hole) * 1%);
+  left: 50%;
+  width: calc(0.35rem + var(--wall-open) * 5rem);
+  height: calc(0.35rem + var(--wall-open) * 5rem);
+  border-radius: 50%;
+  opacity: var(--wall-open);
+  background: rgba(185, 255, 220, 0.19);
+  box-shadow: 0 0 calc(0.5rem + var(--wall-open) * 2rem) rgba(185, 255, 220, 0.35);
+  filter: blur(calc(var(--wall-open) * 0.4rem));
+  transform: translate(-50%, -50%) scale(calc(0.25 + var(--wall-open) * 0.75));
+}
+
+.compartment-flows {
+  inset: 0 0 var(--collective-recents-height);
+  opacity: clamp(0, calc(var(--tank-progress, 0) * 0.78), 0.72);
+  transition: opacity 300ms ease;
+}
+
+.compartment-flows span {
+  position: absolute;
+  width: calc(8rem + var(--tank-progress, 0) * 28vw);
+  height: calc(2rem + var(--tank-progress, 0) * 7vh);
+  border-radius: 50%;
+  filter: blur(calc(1.4rem + var(--tank-progress, 0) * 2rem));
+  background: rgba(185, 255, 220, 0.16);
+  animation: compartment-flow 11s ease-in-out infinite alternate;
+}
+
+.compartment-flows span:nth-child(1) { left: 22%; top: 31%; transform: rotate(-20deg); }
+.compartment-flows span:nth-child(2) { right: 18%; top: 38%; animation-delay: -3s; transform: rotate(18deg); background: rgba(88, 214, 255, 0.14); }
+.compartment-flows span:nth-child(3) { left: 31%; bottom: 22%; animation-delay: -6s; transform: rotate(27deg); background: rgba(255, 138, 98, 0.12); }
+.compartment-flows span:nth-child(4) { right: 29%; bottom: 18%; animation-delay: -8s; transform: rotate(-12deg); }
+
+@keyframes compartment-flow {
+  from { translate: -2vw -1vh; scale: 0.72 0.8; }
+  to { translate: 4vw 2vh; scale: 1.18 1.05; }
+}
+
+.tank-time-slider {
+  height: 1.5rem;
+  cursor: ew-resize;
+  appearance: none;
+  background: transparent;
+}
+
+.tank-time-slider::-webkit-slider-runnable-track {
+  height: 1px;
+  background: rgba(232, 245, 239, 0.42);
+}
+
+.tank-time-slider::-webkit-slider-thumb {
+  width: 1.15rem;
+  height: 1.15rem;
+  margin-top: -0.55rem;
+  appearance: none;
+  border: 1px solid var(--abyss);
+  border-radius: 50%;
+  background: var(--phosphor);
+  box-shadow: 0 0 0 3px rgba(185, 255, 220, 0.16);
+}
+
+.tank-time-slider::-moz-range-track {
+  height: 1px;
+  background: rgba(232, 245, 239, 0.42);
+}
+
+.tank-time-slider::-moz-range-thumb {
+  width: 1.15rem;
+  height: 1.15rem;
+  border: 1px solid var(--abyss);
+  border-radius: 50%;
+  background: var(--phosphor);
+  box-shadow: 0 0 0 3px rgba(185, 255, 220, 0.16);
 }
 
 @keyframes collective-float {
@@ -108,9 +830,9 @@ a:focus-visible {
 }
 
 @keyframes arrival-stage {
-  0% { opacity: 0; background: rgba(3, 4, 5, 0); }
-  8%, 82% { opacity: 1; background: rgba(3, 4, 5, 0.9); }
-  100% { opacity: 0; background: rgba(3, 4, 5, 0); }
+  0% { opacity: 0; }
+  8%, 82% { opacity: 1; }
+  100% { opacity: 0; }
 }
 
 @keyframes arrival-graph {
@@ -131,6 +853,7 @@ a:focus-visible {
 
 .collective-arrival-creature {
   animation: arrival-graph 17s cubic-bezier(0.22, 1, 0.36, 1) both;
+  overflow: visible;
 }
 
 .collective-story {
@@ -138,7 +861,20 @@ a:focus-visible {
 }
 
 .collective-arrival-glow {
-  background: radial-gradient(circle at 35% 50%, rgba(255, 255, 255, 0.08), transparent 28%);
+  background: radial-gradient(circle at 32% 50%, rgba(255, 255, 255, 0.11), transparent 38%);
+  backdrop-filter: blur(2px) brightness(0.58);
+}
+
+.collective-plan-stage {
+  box-shadow: inset 0 0 80px rgba(12, 104, 156, 0.08);
+}
+
+.collective-plan-object {
+  background: rgba(1, 9, 14, 0.46);
+}
+
+.collective-plan-legend {
+  background: linear-gradient(90deg, rgb(37, 99, 235), rgb(34, 197, 94));
 }
 
 @keyframes category-orbit {
@@ -172,6 +908,121 @@ a:focus-visible {
   animation: resolve-in 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+.creature-reveal-stage {
+  isolation: isolate;
+  transition: height 900ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 900ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.creature-reveal-model {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  transition: filter 700ms ease, opacity 700ms ease;
+}
+
+.creature-reveal-stage[data-phase="attached"] .creature-reveal-model {
+  animation: creature-arrive 1.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.creature-reveal-stage[data-phase="release"] .creature-reveal-model,
+.creature-reveal-stage[data-phase="content-reveal"] .creature-reveal-model,
+.creature-reveal-stage[data-phase="complete"] .creature-reveal-model {
+  opacity: 1;
+  filter: blur(0) brightness(1) saturate(1);
+}
+
+.creature-reveal-stage[data-phase="formation"] .creature-reveal-model {
+  animation: creature-grow 2.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.creature-reveal-halo {
+  position: absolute;
+  z-index: 1;
+  top: 50%;
+  left: 50%;
+  width: min(76vw, 30rem);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  opacity: 0.18;
+  background: radial-gradient(circle, rgba(185, 255, 220, 0.42), rgba(88, 214, 255, 0.12) 42%, transparent 70%);
+  filter: blur(1rem);
+  transform: translate(-50%, -50%);
+}
+
+.creature-reveal-stage[data-phase="formation"] .creature-reveal-halo {
+  animation: creature-halo 2.6s ease-out both;
+}
+
+.creature-reveal-rings {
+  position: absolute;
+  z-index: 3;
+  inset: 50% auto auto 50%;
+  width: min(68vw, 27rem);
+  aspect-ratio: 1;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+.creature-reveal-rings i {
+  position: absolute;
+  inset: 42%;
+  border: 1px solid rgba(185, 255, 220, 0.7);
+  border-radius: 50%;
+  opacity: 0;
+}
+
+.creature-reveal-stage[data-phase="formation"] .creature-reveal-rings i {
+  animation: creature-ring 2.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.creature-reveal-stage[data-phase="formation"] .creature-reveal-rings i:nth-child(2) { animation-delay: 380ms; }
+.creature-reveal-stage[data-phase="formation"] .creature-reveal-rings i:nth-child(3) { animation-delay: 760ms; }
+
+.creature-reveal-status {
+  animation: reveal-status-in 600ms ease-out both;
+  text-shadow: 0 1px 1rem rgba(3, 16, 21, 0.9);
+}
+
+.specimen-preview-update {
+  animation: specimen-preview-update 900ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes specimen-preview-update {
+  0% { opacity: 0.45; transform: scale(0.78); filter: brightness(1.7); }
+  55% { opacity: 1; transform: scale(1.12); }
+  100% { opacity: 1; transform: scale(1); filter: brightness(1); }
+}
+
+@keyframes creature-arrive {
+  from { opacity: 0; filter: blur(12px) brightness(0.72); }
+  to { opacity: 1; filter: blur(0) brightness(1); }
+}
+
+@keyframes creature-grow {
+  0% { filter: brightness(0.85) saturate(0.8); }
+  32% { filter: brightness(1.45) saturate(1.35); }
+  58% { filter: brightness(1.12) saturate(1.15); }
+  100% { filter: brightness(1) saturate(1); }
+}
+
+@keyframes creature-halo {
+  0% { opacity: 0.12; transform: translate(-50%, -50%) scale(0.55); }
+  38% { opacity: 0.72; }
+  100% { opacity: 0.18; transform: translate(-50%, -50%) scale(1.2); }
+}
+
+@keyframes creature-ring {
+  0% { inset: 44%; opacity: 0; }
+  18% { opacity: 0.65; }
+  100% { inset: 2%; opacity: 0; }
+}
+
+@keyframes reveal-status-in {
+  from { opacity: 0; transform: translateY(0.5rem); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -189,22 +1040,58 @@ a:focus-visible {
 }
 
 @media (max-width: 800px) {
-  .collective-swim-field {
-    bottom: 0;
+  .collective-wall {
+    --collective-recents-height: 11rem;
   }
 
-  .collective-arrival > div:last-child {
-    grid-template-columns: 1fr;
-    gap: 1rem;
+  .collective-arrival .collective-story {
+    align-self: end;
+    margin: 0 auto 2rem;
     text-align: center;
+    width: calc(100vw - 2rem);
   }
 
   .collective-arrival-creature {
-    margin-inline: auto;
-    width: min(44vh, 70vw);
+    inset: 0;
+    height: 68vh;
+    width: 100vw;
   }
 
   .collective-recents {
+    padding-bottom: 1rem;
+  }
+
+  .collective-recents-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .collective-recents-latest {
+    grid-template-columns: 5.5rem 1fr;
+    gap: 1rem;
+    border-right: 0;
+    padding-right: 0;
+  }
+
+  .collective-recents-previous {
+    display: none;
+  }
+
+  .collective-plan-heatmap {
+    top: 12.5rem;
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(0, 1fr) auto;
+    gap: 1rem;
+    padding-inline: 1.25rem;
+  }
+
+  .collective-plan-heatmap aside {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  .collective-plan-heatmap aside ol,
+  .collective-plan-heatmap aside > div:first-child p:last-child {
     display: none;
   }
 }

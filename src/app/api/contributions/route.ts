@@ -2,10 +2,15 @@ import { randomUUID } from "node:crypto";
 import { artifacts, artifactById } from "@/data/artifacts";
 import {
   createContribution,
+  getCollectiveHeatmap,
+  getCycleDate,
+  getSyntheticContributionCount,
   listContributions,
 } from "@/lib/contributions/database";
 import { generateJourneyNarrative } from "@/lib/narrative/generateJourneyNarrative";
 import { calculateDwellTimes } from "@/lib/contributions/dwellTime";
+import { isAquaticForm, pickAquaticForm } from "@/lib/creature/aquaticForms";
+import { creatureColorPalette, isCreatureColorPalette } from "@/lib/creature/colorPalettes";
 import type { ContributionSubmission, SharedCreaturePart } from "@/types/contribution";
 
 export const runtime = "nodejs";
@@ -37,6 +42,7 @@ function parseSubmission(value: unknown): ContributionSubmission | null {
       artifactId: typeof item?.artifactId === "string" ? item.artifactId : "",
       sequence: Number(item?.sequence),
       discoveredAt: Number(item?.discoveredAt),
+      choiceId: typeof item?.choiceId === "string" ? item.choiceId : undefined,
     }))
     .sort((a, b) => a.sequence - b.sequence);
 
@@ -47,6 +53,7 @@ function parseSubmission(value: unknown): ContributionSubmission | null {
       item.sequence !== index + 1 ||
       !Number.isFinite(item.discoveredAt) ||
       item.discoveredAt <= 0 ||
+      (item.choiceId !== undefined && !artifactById.get(item.artifactId)?.choice.options.some((option) => option.id === item.choiceId)) ||
       (index > 0 && item.discoveredAt < discoveries[index - 1].discoveredAt)
     ) {
       return false;
@@ -61,8 +68,15 @@ function parseSubmission(value: unknown): ContributionSubmission | null {
     candidate.completedAt >= lastDiscoveredAt &&
     candidate.completedAt - firstDiscoveredAt <= 24 * 60 * 60_000;
 
+  const creatureForm = isAquaticForm(candidate.creatureForm)
+    ? candidate.creatureForm
+    : pickAquaticForm(`${candidate.sessionId}:${discoveries[0]?.artifactId ?? "unknown"}:${firstDiscoveredAt}`);
+  const creaturePalette = isCreatureColorPalette(candidate.creaturePalette)
+    ? candidate.creaturePalette
+    : creatureColorPalette(candidate.sessionId);
+
   return valid && validCompletion
-    ? { sessionId: candidate.sessionId, completedAt: candidate.completedAt, discoveries }
+    ? { sessionId: candidate.sessionId, creatureForm, creaturePalette, completedAt: candidate.completedAt, discoveries }
     : null;
 }
 
@@ -71,7 +85,12 @@ export async function GET(request: Request) {
   const after = Math.max(0, Number.parseInt(url.searchParams.get("after") ?? "0", 10) || 0);
   const limit = Math.min(100, Math.max(1, Number.parseInt(url.searchParams.get("limit") ?? "80", 10) || 80));
   return Response.json(
-    { contributions: listContributions(after, limit) },
+    {
+      contributions: listContributions(after, limit),
+      heatmap: getCollectiveHeatmap(),
+      cycleDate: getCycleDate(),
+      syntheticCount: getSyntheticContributionCount(),
+    },
     { headers: responseHeaders },
   );
 }
@@ -112,6 +131,8 @@ export async function POST(request: Request) {
   const contribution = createContribution({
     publicId: randomUUID(),
     sessionId: submission.sessionId,
+    creatureForm: submission.creatureForm,
+    creaturePalette: submission.creaturePalette,
     parts,
     narrative,
   });

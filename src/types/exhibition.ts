@@ -5,7 +5,26 @@ export type ThemeId =
   | "embodiment"
   | "agency";
 
-export type ParticleFormId = "memory" | "machine" | "body";
+export const particleFormIds = [
+  "torus",
+  "triad",
+  "tree",
+  "cuboid",
+  "nest",
+  "prism",
+  "book",
+  "skateboard",
+  "brain",
+  "hotel",
+  "pillar",
+  "butterfly",
+  "dodecahedron",
+  "crystal",
+  "hourglass",
+  "spiral",
+] as const;
+
+export type ParticleFormId = (typeof particleFormIds)[number];
 
 export type CreaturePartId =
   | "memory-crown"
@@ -20,7 +39,10 @@ export type CreaturePartId =
   | "orbit-ring"
   | "heart-plume"
   | "helping-arms"
-  | "goliath-horns";
+  | "goliath-horns"
+  | "crystal-spines"
+  | "sand-hourglass"
+  | "spark-plume";
 
 export type CreaturePart = {
   id: CreaturePartId;
@@ -28,8 +50,27 @@ export type CreaturePart = {
   description: string;
 };
 
+export type NarrativeAxis =
+  | "openness"
+  | "memory"
+  | "agency"
+  | "coherence"
+  | "voice";
+
+export type NarrativeState = Record<NarrativeAxis, number>;
+
+export type ArtifactChoice = {
+  prompt: string;
+  options: [
+    { id: string; label: string; effects: Partial<NarrativeState> },
+    { id: string; label: string; effects: Partial<NarrativeState> },
+  ];
+};
+
 export type ExhibitionArtifact = {
   id: string;
+  /** The `ID` column of public/exhibition.csv. */
+  exhibitionId: number;
   targetIndex: number;
   posterImageSrc: `/images/${string}`;
   title: string;
@@ -40,6 +81,12 @@ export type ExhibitionArtifact = {
   shortText: string;
   narrativeWords: string[];
   creaturePart: CreaturePart;
+  marineType: string;
+  classification: string;
+  visualTraits: string[];
+  stateEffects: Partial<NarrativeState>;
+  storylet: string;
+  choice: ArtifactChoice;
 };
 
 export type ThemeDefinition = {

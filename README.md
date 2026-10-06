@@ -1,19 +1,19 @@
-# After Augmented Reality
+# The Fishbowl Leaks
 
-**After Augmented Reality** is a mobile-first AR exhibition prototype about extending digital narratives. A visitor scans physical works; particles detach from each work, resolve into accessible exhibition content, and join a persistent personal constellation. The final screen turns the ordered path into a deterministic short poem.
+**The Fishbowl Leaks** is a mobile-first AR exhibition prototype about extending digital narratives. A visitor scans physical works; particles detach from each work, resolve into accessible exhibition content, and join a persistent personal constellation. The final screen turns the ordered path into a deterministic short poem.
 
 The complete prototype loop works without a camera through the built-in simulator. Real image tracking uses MindAR through a narrow adapter and can be enabled by adding one compiled target bundle.
 
 ## Setup
 
-Use a current Node.js release (Node 20 or newer; this repository was verified on Node 24).
+Use Node.js 22.13 or newer (the contribution database uses the built-in `node:sqlite` module; this repository was verified on Node 24).
 
 ```bash
 npm install
 npm run dev
 ```
 
-Open [http://localhost:3066](http://localhost:3066). Tap **Start experience**. Camera access is never requested until the separate **Start camera** action.
+Open [http://localhost:3066](http://localhost:3066). Tap **Scan an artwork marker** to enter the scanner and request camera access.
 
 ### Visualization design
 
@@ -66,11 +66,13 @@ Suggested acceptance path:
 
 ## Shared exhibition screen
 
-The finished-story screen can send a visitor's anonymous journey to the server. The submission contains only the journey session ID, completion time, and ordered artifact IDs with their scan timestamps. The server validates those values, regenerates the canonical narrative, attaches the configured glyph themes and colors, calculates each artifact's dwell time, and stores the result in SQLite.
+The finished-story screen can send a visitor's anonymous journey to the server. The submission contains the journey session ID, completion time, ordered artifact IDs with their scan timestamps, creature form, and the creature's explicit color palette. The server validates those values, regenerates the canonical narrative, attaches the configured glyph themes and colors, calculates each artifact's dwell time, and stores the result in SQLite. Keeping the palette with the contribution ensures the creature has the same colors during scanning, in the personal journey, and after release into the collective aquarium.
 
 Dwell time runs from an artifact's first scan until the next new artifact is scanned. The final artifact runs until the visitor finishes the story. On the collective screen, longer dwell times produce larger colored nodes. Sizing combines a bounded logarithmic absolute scale with relative contrast inside each story, making modest timing differences visible without allowing an unusually long visit to overwhelm the composition. Previously stored stories without timing data retain the original neutral node size.
 
 Open `/collective` full-screen on the exhibition display. It polls the live contribution feed every 2.5 seconds. Each new story expands into focus, displays its narrative, then contracts into an abstract constellation and joins up to 60 other drifting contributions. Initial history appears directly as the ambient field, so restarting the display does not replay every old story.
+
+Use the **Time map** switch on the collective display to see cumulative dwell time for all 16 artwork stations. This view aggregates every stored contribution (not only the recent stories in the ambient field), ranks the stations by total attention, and shows visit count plus average dwell time. Missing timing data from older stories is excluded from the totals.
 
 The default database file is `data/exhibition.sqlite` and is ignored by Git. Set `EXHIBITION_DATABASE_PATH` to an absolute persistent volume path in production. Run one server instance against that volume; for horizontal scaling, replace the small database helper with a managed shared SQL store while preserving the API contract.
 
@@ -89,7 +91,7 @@ Add the final print artwork as high-quality JPG or PNG files in `public/images/`
 
 Open the [MindAR image target compiler](https://hiukim.github.io/mind-ar-js-doc/tools/compile/), add the images in this exact order, compile, and export the bundle:
 
-Compile the final artwork images in the same order as `public/exhibition.csv`. The current configuration assigns target indices `0` through `12`, from **Finding Frida** through **Goliath**.
+Compile the final artwork images in the same order as `public/exhibition.csv`. The current configuration assigns target indices `0` through `15`, from **Finding Frida** through **Fiery Sparks of Light**, so target index `N` is the artwork with exhibition ID `N + 1`.
 
 Save the downloaded file as:
 
@@ -97,18 +99,20 @@ Save the downloaded file as:
 public/targets/exhibition.mind
 ```
 
-The repository deliberately does not include a fake `.mind` file. An invalid placeholder would make scanner errors harder to diagnose; simulator mode remains fully functional until the real exhibition artwork exists.
+The checked-in `exhibition.mind` bundle contains all 16 targets, compiled from the particle constellation images in `public/targets/` (`1-finding-frida.png` through `16-fiery-sparks-of-light.png`, in exhibition ID order). `npm run targets:export` regenerates those images from the current particle formations, and `npm run targets:compile` recompiles the bundle from them with MindAR's offline compiler (about two minutes), so the web compiler is optional. Recompile whenever the images change.
+
+Run `npm run targets:verify` after compiling. Each compiled target keeps a downscaled copy of its source image, and the script matches it against the PNGs to confirm that target index `N` resolves to the artifact with `targetIndex` `N`. It also prints how many tracking feature points MindAR found per target.
 
 ### 3. Check the configuration mapping
 
-`src/data/artifacts.ts` is the runtime source of truth and follows the CSV row order. `targetIndex` must match the image order used by the compiler. MindAR emits a number, the adapter forwards it, and `artifactByTargetIndex` resolves the exhibition content. The curatorial themes are **Memory**, **Interface**, **Worldmaking**, **Embodiment**, and **Agency**. Until final artwork images are available, a separate `particleForm` field lets the 13 works reuse the existing memory, machine, and body images, colors, and formations without reducing their themes to those three visual placeholders.
+`src/data/artifacts.ts` is the runtime source of truth and follows the CSV row order. `targetIndex` must match the image order used by the compiler. MindAR emits a number, the adapter forwards it, and `artifactByTargetIndex` resolves the exhibition content. The curatorial themes are **Memory**, **Interface**, **Worldmaking**, **Embodiment**, and **Agency**. Until final artwork images are available, the 16 configured works reuse three poster-image families while each keeps the artwork-specific `color` and simplified `particleForm` defined in `public/exhibition.csv`.
 
 ### 4. Serve over HTTPS on a phone
 
 Camera APIs require a secure context. `localhost` is treated as secure on the development computer, but a phone visiting a plain `http://192.168.x.x:3000` address is not. Use an HTTPS-capable local proxy/tunnel or deploy a preview build over HTTPS, then:
 
 1. open the HTTPS URL in iPhone Safari or Android Chrome;
-2. tap **Start experience**, then **Start camera**;
+2. tap **Scan an artwork marker**;
 3. allow camera permission;
 4. hold a compiled poster in view and move slowly while it locks on.
 
@@ -135,7 +139,7 @@ collective wall field
 ```
 
 - `src/components/ar/MindARAdapter.ts` is the only application module that imports MindAR. It owns camera startup, anchors, its renderer loop, repeated-target gating, and disposal.
-- `src/components/ar/ARScanner.tsx` dynamically imports the adapter only after the user taps **Start camera**. No MindAR or camera code runs during SSR.
+- `src/components/ar/ARScanner.tsx` dynamically imports the adapter when the visitor enters the scanner. No MindAR or camera code runs during SSR.
 - `src/store/journeySlice.ts` contains only serializable application state. Three.js scenes, anchors, buffers, cameras, and DOM nodes remain local.
 - `src/lib/animation/revealMachine.ts` centralizes reveal phase timings. Real and simulated detections both use the R3F full-screen source, release, disappearance, and theme-formation sequence. Real detections then hand the same deterministic formation positions to a target-anchored MindAR point cloud. Neither path updates React or Redux each frame.
 - `src/components/particles/JourneyConstellation.tsx` builds one point cloud and one chronological line geometry, keeping draw calls low.
@@ -146,7 +150,7 @@ collective wall field
 The prototype uses the reliability-first handoff described in the brief:
 
 1. MindAR owns its native Three.js tracking scene.
-2. R3F plays the cinematic screen-space release: particles fill the view, disappear, and reform as the artifact's memory, machine, or body shape.
+2. R3F plays the cinematic screen-space release: particles fill the view, disappear, and reform as the artifact-specific geometric shape configured in the exhibition data.
 3. `onTargetFound(targetIndex)` crosses the boundary as a plain number.
 4. The formation positions are shared as typed arrays, not tracking objects. At the content handoff, MindAR renders that shape as a separate `THREE.Points` group above the target. It follows the anchor while tracking is active and retains its last valid pose through brief tracking interruptions.
 5. A normal HTML article sheet resolves over the lower part of the camera view. Pressing **Continue scanning** explicitly removes the anchored cluster.
@@ -162,13 +166,17 @@ MindAR transforms, cameras, and render loops are not shared with the R3F rendere
 
 Artifact content, target mapping, particles, persistence, constellation encoding, and narrative generation all read configuration data; no individual reveal component needs exhibition-specific logic.
 
+## Production deployment on Ubuntu with Caddy
+
+See [DEPLOYMENT.md](DEPLOYMENT.md) for running the app as a systemd service on `127.0.0.1:3066` behind Caddy, including updates, backups and troubleshooting.
+
 ## Persistence
 
 The localStorage key is `say-hi:journey:v1`. It stores only session ID, start and completion times, artifact IDs, discovery order, and scan timestamps. Hydration validates malformed data before handing it to Redux. **Start again** or the development reset returns to a clean intro state. Shared journeys are separate, anonymous server records; resetting the phone does not remove a story already shared with the exhibition.
 
 ## Known prototype limitations
 
-- Real tracking cannot be demonstrated until `public/targets/exhibition.mind` is compiled from the actual physical poster artwork.
+- The particle constellation targets are sparse dots on a dark background, which gives MindAR few tracking feature points (as few as zero for some targets). Detection and tracking must be validated with the printed targets.
 - The current AR-first experiment retains the last valid particle pose when tracking is lost and realigns it when the poster is reacquired. Because MindAR image tracking is not world-tracking/SLAM, that frozen pose cannot remain physically registered if the camera moves significantly while the poster is outside the frame.
 - Detection has been architected for Safari/Chrome lifecycle constraints, but final tracking quality and filter tuning must be validated against the actual prints and exhibition lighting.
 - The poem is template-based and English-only. It varies by first/last work, intermediate order, narrative vocabulary, count, and repeated themes, but it is not an LLM.

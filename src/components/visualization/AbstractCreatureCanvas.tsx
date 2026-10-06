@@ -129,6 +129,64 @@ function AbstractPart({ piece }: { piece: CreaturePiece }) {
           ))}
         </group>
       );
+    case "crystal-spines":
+      return (
+        <group position={[0, 1.68, -0.04]}>
+          {[-0.48, -0.16, 0.16, 0.48].map((x, index) => (
+            <mesh
+              key={x}
+              position={[x, index % 2 === 0 ? 0 : 0.14, 0]}
+              scale={[0.16, 0.36 + index * 0.04, 0.14]}
+            >
+              <octahedronGeometry args={[1, 0]} />
+              <PartMaterial color={piece.color} opacity={0.84} />
+            </mesh>
+          ))}
+        </group>
+      );
+    case "sand-hourglass":
+      return (
+        <group position={[0, 0.18, 0.72]} scale={0.8}>
+          <mesh position={[0, 0.22, 0]} rotation={[0, 0, Math.PI]}>
+            <coneGeometry args={[0.32, 0.44, 12]} />
+            <PartMaterial color={piece.color} opacity={0.7} />
+          </mesh>
+          <mesh position={[0, -0.22, 0]}>
+            <coneGeometry args={[0.32, 0.44, 12]} />
+            <PartMaterial color={piece.color} opacity={0.7} />
+          </mesh>
+          <mesh>
+            <sphereGeometry args={[0.08, 12, 12]} />
+            {material}
+          </mesh>
+        </group>
+      );
+    case "spark-plume":
+      return (
+        <group position={[0.36, 1.5, 0.08]}>
+          {[0, 1, 2, 3, 4].map((index) => {
+            const angle = index * 1.35;
+            return (
+              <mesh
+                key={index}
+                position={[
+                  Math.cos(angle) * (0.1 + index * 0.05),
+                  index * 0.18,
+                  Math.sin(angle) * 0.06,
+                ]}
+                scale={0.14 - index * 0.012}
+              >
+                <octahedronGeometry args={[1, 0]} />
+                <meshStandardMaterial
+                  color={piece.color}
+                  emissive={piece.color}
+                  emissiveIntensity={0.9}
+                />
+              </mesh>
+            );
+          })}
+        </group>
+      );
   }
 }
 

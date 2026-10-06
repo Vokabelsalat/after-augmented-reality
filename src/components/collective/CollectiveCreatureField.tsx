@@ -1,10 +1,13 @@
 "use client";
 
 import { AdaptiveDpr } from "@react-three/drei";
-import { Canvas, useFrame } from "@react-three/fiber";
-import { useMemo, useRef } from "react";
+import { Canvas, useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
+import { useCallback, useEffect, useMemo, useRef, useState, type MutableRefObject } from "react";
 import * as THREE from "three";
-import { CreatureModel } from "@/components/creature/CreatureModel";
+import { AquaticCreatureModel } from "@/components/creature/AquaticCreatureModel";
+import { AquariumDioramaPlants } from "@/components/collective/AquariumDioramaPlants";
+import { creatureSizeScale, type AquaticForm } from "@/lib/creature/aquaticForms";
+import { creatureColorPalette } from "@/lib/creature/colorPalettes";
 import type { ExhibitionContribution } from "@/types/contribution";
 
 function seededUnit(seed: number) {
@@ -12,25 +15,202 @@ function seededUnit(seed: number) {
   return value - Math.floor(value);
 }
 
-function FloatingCreature({ contribution }: { contribution: ExhibitionContribution }) {
+const compartmentBounds = [-1, -0.64, -0.08, 0.2, 0.68, 1] as const;
+const wallThresholds = [0.14, 0.32, 0.5, 0.68] as const;
+const wallHolePositions = [34, 66, 43, 72] as const;
+const pairingDistance = 0.65;
+const whaleDepth = -5.4;
+const whaleScale = 9.5;
+const whaleOffscreenMargin = 9.5;
+const collectiveFormScale: Record<AquaticForm, number> = {
+  fish: 1,
+  crab: 1.04,
+  jellyfish: 1.24,
+  octopus: 1.12,
+  turtle: 1.08,
+  ray: 1.05,
+  starfish: 0.96,
+  seahorse: 1.2,
+  seal: 1.05,
+  shrimp: 0.82,
+  narwhal: 1.32,
+  dolphin: 1.2,
+  whale: whaleScale,
+  clam: 1.08,
+  pufferfish: 1,
+};
+
+const collectiveFormSpeed: Record<AquaticForm, number> = {
+  fish: 1.18,
+  crab: 0.62,
+  jellyfish: 0.68,
+  octopus: 0.82,
+  turtle: 0.58,
+  ray: 1.05,
+  starfish: 0.48,
+  seahorse: 0.72,
+  seal: 1.12,
+  shrimp: 0.9,
+  narwhal: 0.82,
+  dolphin: 1.28,
+  whale: 0.46,
+  clam: 0.42,
+  pufferfish: 1.08,
+};
+
+const depthHazeLayers = [
+  { z: 1.18, color: "#123a3d", opacity: 0.045 },
+  { z: 0.48, color: "#0d3038", opacity: 0.06 },
+  { z: -0.22, color: "#092731", opacity: 0.075 },
+  { z: -0.92, color: "#061f2b", opacity: 0.1 },
+] as const;
+
+function DepthHazeLayers() {
+  const viewport = useThree((state) => state.viewport);
+
+  return (
+    <group>
+      {depthHazeLayers.map((layer) => (
+        <mesh key={layer.z} position={[0, 0, layer.z]}>
+          <planeGeometry args={[viewport.width + 2, viewport.height + 2]} />
+          <meshBasicMaterial
+            color={layer.color}
+            transparent
+            opacity={layer.opacity}
+            depthWrite={false}
+            toneMapped={false}
+          />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+function WhaleDepthVeil() {
+  const viewport = useThree((state) => state.viewport);
+
+  return (
+    <mesh position={[0, 0, -3.35]} renderOrder={-1}>
+      <planeGeometry args={[viewport.width + 2, viewport.height + 2]} />
+      <meshBasicMaterial
+        color="#071421"
+        transparent
+        opacity={0.62}
+        depthWrite={false}
+        toneMapped={false}
+      />
+    </mesh>
+  );
+}
+
+function wallOpening(progress: number, wallIndex: number) {
+  return THREE.MathUtils.clamp(
+    (progress - wallThresholds[wallIndex]) / 0.16,
+    0,
+    1,
+  );
+}
+
+type CreatureMotion = {
+  initialized: boolean;
+  x: number;
+  y: number;
+  z: number;
+  vx: number;
+  vy: number;
+  vz: number;
+};
+
+type PairingEvent = {
+  parents: [ExhibitionContribution, ExhibitionContribution];
+  startedAt: number;
+  midpoint: [number, number, number];
+  sequence: number;
+  babyCreated: boolean;
+};
+
+type BabyCreature = {
+  contribution: ExhibitionContribution;
+  spawnPosition: [number, number, number];
+};
+
+type FloatingCreatureProps = {
+  contribution: ExhibitionContribution;
+  progress: number;
+  actorRegistry?: MutableRefObject<Map<number, MutableRefObject<CreatureMotion>>>;
+  pairingRef?: MutableRefObject<PairingEvent | null>;
+  juvenile?: boolean;
+  spawnPosition?: [number, number, number];
+  onSelect?: (contribution: ExhibitionContribution) => void;
+};
+
+function FloatingCreature({
+  contribution,
+  progress,
+  actorRegistry,
+  pairingRef,
+  juvenile = false,
+  spawnPosition,
+  onSelect,
+}: FloatingCreatureProps) {
+  const canvas = useThree((state) => state.gl.domElement);
   const swimRef = useRef<THREE.Group>(null);
   const directionRef = useRef<THREE.Group>(null);
+  const movementDirection = useRef(new THREE.Vector3());
+  const targetOrientation = useRef(new THREE.Quaternion());
+  const pitchOrientation = useRef(new THREE.Quaternion());
+  const yawAxis = useRef(new THREE.Vector3(0, 1, 0));
+  const pitchAxis = useRef(new THREE.Vector3(0, 0, 1));
+  const floorOffsetRef = useRef<number | null>(null);
+  const isBottomDweller = contribution.creatureForm === "crab" || contribution.creatureForm === "clam";
+  const isWhale = contribution.creatureForm === "whale";
+  const formSpeed = collectiveFormSpeed[contribution.creatureForm];
   const placement = useMemo(() => ({
     xUnit: -0.84 + seededUnit(contribution.id * 3) * 1.68,
     yUnit: -0.84 + seededUnit(contribution.id * 5) * 1.68,
-    z: -1 + seededUnit(contribution.id * 7) * 2,
-    scale: 0.31 + seededUnit(contribution.id * 11) * 0.22,
-    speed: 0.32 + seededUnit(contribution.id * 13) * 0.34,
+    z: isWhale ? whaleDepth - seededUnit(contribution.id * 7) * 0.4 : -1 + seededUnit(contribution.id * 7) * 2,
+    depthSpeed: isWhale ? 0 : (0.07 + seededUnit(contribution.id * 11) * 0.17) * formSpeed,
+    depthDirection: seededUnit(contribution.id * 23) > 0.5 ? 1 : -1,
+    scale: 0.4,
+    speed: isWhale ? 0.34 + seededUnit(contribution.id * 13) * 0.12 : (0.24 + seededUnit(contribution.id * 13) * 0.5) * formSpeed,
     phase: seededUnit(contribution.id * 17) * Math.PI * 2,
-    heading: seededUnit(contribution.id * 19) * Math.PI * 2,
-  }), [contribution.id]);
-  const motion = useRef({
+    heading: isWhale
+      ? (seededUnit(contribution.id * 19) > 0.5 ? 0 : Math.PI)
+      : seededUnit(contribution.id * 19) * Math.PI * 2,
+  }), [contribution.id, formSpeed, isWhale]);
+  const motion = useRef<CreatureMotion>({
     initialized: false,
     x: 0,
     y: 0,
+    z: placement.z,
     vx: Math.cos(placement.heading) * placement.speed,
-    vy: Math.sin(placement.heading) * placement.speed,
+    vy: isBottomDweller || isWhale ? 0 : Math.sin(placement.heading) * placement.speed,
+    vz: placement.depthDirection * placement.depthSpeed,
   });
+  const spawnCompartment = Math.abs(contribution.id) % 5;
+  const previousProgress = useRef(progress);
+
+  const aimTowardVelocity = (vx: number, vy: number, vz: number) => {
+    const horizontalSpeed = Math.hypot(vx, vz);
+    const yaw = Math.atan2(-vz, vx);
+    const pitch = THREE.MathUtils.clamp(
+      Math.atan2(vy, Math.max(0.001, horizontalSpeed)),
+      -0.68,
+      0.68,
+    );
+    targetOrientation.current.setFromAxisAngle(yawAxis.current, yaw);
+    pitchOrientation.current.setFromAxisAngle(pitchAxis.current, pitch);
+    targetOrientation.current.multiply(pitchOrientation.current);
+  };
+
+  useEffect(() => {
+    if (juvenile || !actorRegistry) return;
+    const registry = actorRegistry.current;
+    registry.set(contribution.id, motion);
+    return () => {
+      registry.delete(contribution.id);
+    };
+  }, [actorRegistry, contribution.id, juvenile]);
 
   useFrame(({ clock, viewport }, delta) => {
     if (!swimRef.current || !directionRef.current) return;
@@ -38,65 +218,406 @@ function FloatingCreature({ contribution }: { contribution: ExhibitionContributi
     const state = motion.current;
     const maxX = Math.max(1.6, viewport.width / 2 - 0.9);
     const maxY = Math.max(1.25, viewport.height / 2 - 0.72);
+    const whaleTravelEdge = viewport.width / 2 + whaleOffscreenMargin;
+    const aquariumFloorY = -viewport.height / 2;
+    const backDepth = -1.45;
+    const frontDepth = 1.65;
+    if (isBottomDweller && floorOffsetRef.current === null) {
+      const bounds = new THREE.Box3().setFromObject(directionRef.current);
+      floorOffsetRef.current = Number.isFinite(bounds.min.y) ? -bounds.min.y + 0.04 : 0.42;
+    }
+    const floorY = aquariumFloorY + (floorOffsetRef.current ?? 0.42);
+    const spawnMinX = compartmentBounds[spawnCompartment] * maxX;
+    const spawnMaxX = compartmentBounds[spawnCompartment + 1] * maxX;
+    const spawnCenterX = (spawnMinX + spawnMaxX) / 2;
     const turnZone = 0.48;
 
-    if (!state.initialized) {
-      state.x = placement.xUnit * maxX;
-      state.y = placement.yUnit * maxY;
+    if (!state.initialized || progress < previousProgress.current - 0.025) {
+      state.x = isWhale
+        ? placement.xUnit * whaleTravelEdge
+        : spawnPosition?.[0] ?? spawnCenterX + placement.xUnit * (spawnMaxX - spawnMinX) * 0.34;
+      state.y = isBottomDweller
+        ? floorY
+        : spawnPosition?.[1] ?? placement.yUnit * maxY * (isWhale ? 0.72 : 1);
+      state.z = spawnPosition?.[2] ?? placement.z;
       state.initialized = true;
     }
+    previousProgress.current = progress;
 
-    if (state.x > maxX - turnZone && state.vx > 0) state.vx = -Math.abs(state.vx);
-    if (state.x < -maxX + turnZone && state.vx < 0) state.vx = Math.abs(state.vx);
-    if (state.y > maxY - turnZone && state.vy > 0) state.vy = -Math.max(0.12, Math.abs(state.vy));
-    if (state.y < -maxY + turnZone && state.vy < 0) state.vy = Math.max(0.12, Math.abs(state.vy));
+    if (!isWhale && state.x > maxX - turnZone && state.vx > 0) state.vx = -Math.abs(state.vx);
+    if (!isWhale && state.x < -maxX + turnZone && state.vx < 0) state.vx = Math.abs(state.vx);
+    if (!isBottomDweller && !isWhale) {
+      if (state.y > maxY - turnZone && state.vy > 0) state.vy = -Math.max(0.12, Math.abs(state.vy));
+      if (state.y < -maxY + turnZone && state.vy < 0) state.vy = Math.max(0.12, Math.abs(state.vy));
+    }
 
-    const turn = Math.sin(elapsed * 0.34 + placement.phase) * 0.12 * delta;
+    const turn = isBottomDweller || isWhale ? 0 : Math.sin(elapsed * 0.34 + placement.phase) * 0.12 * delta;
     const previousVx = state.vx;
     state.vx = previousVx * Math.cos(turn) - state.vy * Math.sin(turn);
-    state.vy = previousVx * Math.sin(turn) + state.vy * Math.cos(turn);
+    state.vy = isBottomDweller || isWhale ? 0 : previousVx * Math.sin(turn) + state.vy * Math.cos(turn);
     const currentSpeed = Math.hypot(state.vx, state.vy) || placement.speed;
     state.vx = (state.vx / currentSpeed) * placement.speed;
     state.vy = (state.vy / currentSpeed) * placement.speed;
 
-    state.x += state.vx * delta;
-    state.y += state.vy * delta;
-    state.x = THREE.MathUtils.clamp(state.x, -maxX, maxX);
+    movementDirection.current.set(state.vx, state.vy, state.vz).normalize();
+    aimTowardVelocity(state.vx, state.vy, state.vz);
+    const facingError = directionRef.current.quaternion.angleTo(targetOrientation.current);
+    const forwardMotion = THREE.MathUtils.smoothstep(Math.PI / 2 - facingError, 0, Math.PI / 2);
+    const proposedX = state.x + state.vx * delta * forwardMotion;
+    const walls = compartmentBounds.slice(1, -1).map((boundary) => boundary * maxX);
+    const currentCompartment = walls.findIndex((wallX) => state.x < wallX);
+    const currentIndex = currentCompartment === -1 ? 4 : currentCompartment;
+    let blocked = false;
+
+    if (!isWhale && state.vx > 0 && currentIndex < 4 && proposedX >= walls[currentIndex]) {
+      const opening = wallOpening(progress, currentIndex);
+      const holeCenterY = (1 - (wallHolePositions[currentIndex] / 50)) * maxY;
+      const holeHalfHeight = maxY * 0.62 * opening;
+      blocked = opening <= 0 || Math.abs(state.y - holeCenterY) > holeHalfHeight;
+      if (blocked) state.x = walls[currentIndex] - 0.04;
+    } else if (!isWhale && state.vx < 0 && currentIndex > 0 && proposedX <= walls[currentIndex - 1]) {
+      const wallIndex = currentIndex - 1;
+      const opening = wallOpening(progress, wallIndex);
+      const holeCenterY = (1 - (wallHolePositions[wallIndex] / 50)) * maxY;
+      const holeHalfHeight = maxY * 0.62 * opening;
+      blocked = opening <= 0 || Math.abs(state.y - holeCenterY) > holeHalfHeight;
+      if (blocked) state.x = walls[wallIndex] + 0.04;
+    }
+
+    if (blocked) {
+      state.vx *= -1;
+    } else {
+      state.x = proposedX;
+    }
+    if (isWhale) {
+      if (state.x > whaleTravelEdge) state.x = -whaleTravelEdge;
+      if (state.x < -whaleTravelEdge) state.x = whaleTravelEdge;
+      state.y += Math.sin(elapsed * 0.17 + placement.phase) * 0.018 * delta;
+    } else {
+      state.y = isBottomDweller ? floorY : state.y + state.vy * delta * forwardMotion;
+    }
+    state.z += state.vz * delta * forwardMotion;
+    if (!isWhale) {
+      if (state.z >= frontDepth) {
+        state.z = frontDepth;
+        state.vz = -Math.abs(state.vz);
+      } else if (state.z <= backDepth) {
+        state.z = backDepth;
+        state.vz = Math.abs(state.vz);
+      }
+    }
+    if (!isWhale) state.x = THREE.MathUtils.clamp(state.x, -maxX, maxX);
     state.y = THREE.MathUtils.clamp(state.y, -maxY, maxY);
+
+    const pairing = pairingRef?.current;
+    const participantIndex = pairing?.parents.findIndex((parent) => parent.id === contribution.id) ?? -1;
+    if (pairing && participantIndex >= 0) {
+      const age = elapsed - pairing.startedAt;
+      const side = participantIndex === 0 ? -1 : 1;
+      let targetX = pairing.midpoint[0] + side * 0.34;
+      let targetY = pairing.midpoint[1];
+      let targetZ = pairing.midpoint[2];
+
+      if (age >= 4) {
+        const orbitAge = age - 4;
+        const radius = age < 7 ? 0.34 : 0.34 + (age - 7) * 0.24;
+        // Begin the orbit on the same side as the approach target so neither
+        // creature snaps across its partner when the dance starts.
+        const angle = orbitAge * 1.75 + (participantIndex === 0 ? Math.PI : 0);
+        targetX = pairing.midpoint[0] + Math.cos(angle) * radius;
+        targetZ = pairing.midpoint[2] + Math.sin(angle) * radius * 0.72;
+        if (!isBottomDweller) targetY = pairing.midpoint[1] + Math.sin(angle * 0.7) * 0.16;
+      }
+
+      movementDirection.current.set(
+        targetX - state.x,
+        isBottomDweller ? 0 : targetY - state.y,
+        targetZ - state.z,
+      );
+      if (movementDirection.current.lengthSq() > 0.000001) {
+        movementDirection.current.normalize();
+      } else {
+        movementDirection.current.set(state.vx, state.vy, state.vz).normalize();
+      }
+      aimTowardVelocity(
+        movementDirection.current.x,
+        movementDirection.current.y,
+        movementDirection.current.z,
+      );
+      const pairingFacingError = directionRef.current.quaternion.angleTo(targetOrientation.current);
+      const pairingForwardMotion = THREE.MathUtils.smoothstep(
+        Math.PI / 2 - pairingFacingError,
+        0,
+        Math.PI / 2,
+      );
+      const follow = (1 - Math.exp(-(age < 4 ? 1.35 : 3.2) * delta)) * pairingForwardMotion;
+      state.x = THREE.MathUtils.lerp(state.x, targetX, follow);
+      state.y = isBottomDweller ? floorY : THREE.MathUtils.lerp(state.y, targetY, follow);
+      state.z = THREE.MathUtils.lerp(state.z, targetZ, follow);
+      const targetVx = movementDirection.current.x * placement.speed;
+      const targetVy = movementDirection.current.y * placement.speed;
+      const targetVz = movementDirection.current.z * placement.speed;
+      state.vx = THREE.MathUtils.damp(state.vx, targetVx, 7, delta);
+      state.vy = isBottomDweller ? 0 : THREE.MathUtils.damp(state.vy, targetVy, 7, delta);
+      state.vz = THREE.MathUtils.damp(state.vz, targetVz, 7, delta);
+    }
 
     swimRef.current.position.x = state.x;
     swimRef.current.position.y = state.y;
-    directionRef.current.rotation.y = THREE.MathUtils.damp(
-      directionRef.current.rotation.y,
-      state.vx >= 0 ? 0 : Math.PI,
-      3.4,
-      delta,
-    );
-    const slope = Math.atan2(state.vy, Math.max(0.08, Math.abs(state.vx)));
-    const directedSlope = slope * (state.vx >= 0 ? 1 : -1);
-    swimRef.current.rotation.z = THREE.MathUtils.damp(
-      swimRef.current.rotation.z,
-      THREE.MathUtils.clamp(directedSlope, -1.08, 1.08),
-      2.8,
-      delta,
+    swimRef.current.position.z = state.z;
+    const depthProgress = THREE.MathUtils.inverseLerp(backDepth, frontDepth, state.z);
+    const depthScale = THREE.MathUtils.lerp(0.72, 1.24, THREE.MathUtils.smoothstep(depthProgress, 0, 1));
+    swimRef.current.scale.setScalar(depthScale);
+    movementDirection.current.set(state.vx, state.vy, state.vz).normalize();
+    aimTowardVelocity(state.vx, state.vy, state.vz);
+    directionRef.current.quaternion.slerp(
+      targetOrientation.current,
+      1 - Math.exp(-2.5 * delta),
     );
   });
 
   const startsFacingLeft = Math.cos(placement.heading) < 0;
+  const formScale = collectiveFormScale[contribution.creatureForm];
+  const individualScale = creatureSizeScale(contribution.publicId) * (juvenile ? 0.48 : 1);
+  const handleClick = (event: ThreeEvent<MouseEvent>) => {
+    if (!onSelect || juvenile) return;
+    event.stopPropagation();
+    onSelect(contribution);
+  };
 
   return (
     <group
       ref={swimRef}
       position={[0, 0, placement.z]}
+      onClick={handleClick}
+      onPointerEnter={(event) => {
+        if (!onSelect || juvenile) return;
+        event.stopPropagation();
+        canvas.style.cursor = "pointer";
+      }}
+      onPointerLeave={() => {
+        if (!onSelect || juvenile) return;
+        canvas.style.cursor = "default";
+      }}
     >
       <group ref={directionRef} rotation={[0, startsFacingLeft ? Math.PI : 0, 0]}>
-        <CreatureModel pieces={contribution.parts} scale={placement.scale} />
+        <AquaticCreatureModel
+          form={contribution.creatureForm}
+          pieces={contribution.parts}
+          baseSeed={contribution.publicId}
+          colorPalette={contribution.creaturePalette}
+          scale={placement.scale * formScale * individualScale}
+          animated
+          grounded={isBottomDweller}
+        />
       </group>
     </group>
   );
 }
 
-export function CollectiveCreatureField({ contributions }: { contributions: ExhibitionContribution[] }) {
+function PairingDirector({
+  contributions,
+  actorRegistry,
+  pairingRef,
+  onBaby,
+}: {
+  contributions: ExhibitionContribution[];
+  actorRegistry: MutableRefObject<Map<number, MutableRefObject<CreatureMotion>>>;
+  pairingRef: MutableRefObject<PairingEvent | null>;
+  onBaby: (event: PairingEvent) => void;
+}) {
+  const lastPairAt = useRef(0);
+  const sequence = useRef(0);
+  const eligiblePairs = useMemo(() => {
+    const byForm = new Map<AquaticForm, ExhibitionContribution[]>();
+    contributions.forEach((contribution) => {
+      if (contribution.creatureForm === "whale") return;
+      const group = byForm.get(contribution.creatureForm) ?? [];
+      group.push(contribution);
+      byForm.set(contribution.creatureForm, group);
+    });
+    return [...byForm.values()].filter((group) => group.length >= 2);
+  }, [contributions]);
+
+  useFrame(({ clock }) => {
+    const elapsed = clock.elapsedTime;
+    const activePairing = pairingRef.current;
+
+    if (activePairing) {
+      const age = elapsed - activePairing.startedAt;
+      if (age >= 6.6 && !activePairing.babyCreated) {
+        activePairing.babyCreated = true;
+        onBaby(activePairing);
+      }
+      if (age >= 8.5) {
+        pairingRef.current = null;
+        lastPairAt.current = elapsed;
+      }
+      return;
+    }
+
+    if (elapsed - lastPairAt.current < 12 || eligiblePairs.length === 0) return;
+    let chanceEncounter: {
+      first: ExhibitionContribution;
+      second: ExhibitionContribution;
+      firstMotion: CreatureMotion;
+      secondMotion: CreatureMotion;
+    } | null = null;
+
+    for (const group of eligiblePairs) {
+      for (let firstIndex = 0; firstIndex < group.length - 1; firstIndex += 1) {
+        for (let secondIndex = firstIndex + 1; secondIndex < group.length; secondIndex += 1) {
+          const first = group[firstIndex];
+          const second = group[secondIndex];
+          const firstMotion = actorRegistry.current.get(first.id)?.current;
+          const secondMotion = actorRegistry.current.get(second.id)?.current;
+          if (!firstMotion?.initialized || !secondMotion?.initialized) continue;
+
+          const distance = Math.hypot(
+            firstMotion.x - secondMotion.x,
+            firstMotion.y - secondMotion.y,
+            firstMotion.z - secondMotion.z,
+          );
+          if (distance <= pairingDistance) {
+            chanceEncounter = { first, second, firstMotion, secondMotion };
+            break;
+          }
+        }
+        if (chanceEncounter) break;
+      }
+      if (chanceEncounter) break;
+    }
+
+    if (!chanceEncounter) return;
+    const { first, second, firstMotion, secondMotion } = chanceEncounter;
+
+    pairingRef.current = {
+      parents: [first, second],
+      startedAt: elapsed,
+      midpoint: [
+        (firstMotion.x + secondMotion.x) / 2,
+        (firstMotion.y + secondMotion.y) / 2,
+        (firstMotion.z + secondMotion.z) / 2,
+      ],
+      sequence: sequence.current,
+      babyCreated: false,
+    };
+    sequence.current += 1;
+  });
+
+  return null;
+}
+
+function PairingHeart({ pairingRef }: { pairingRef: MutableRefObject<PairingEvent | null> }) {
+  const heartRef = useRef<THREE.Mesh>(null);
+  const materialRef = useRef<THREE.MeshBasicMaterial>(null);
+  const activeSequence = useRef<number | null>(null);
+  const appearedAt = useRef(0);
+  const origin = useRef<[number, number, number]>([0, 0, 0]);
+  const shape = useMemo(() => {
+    const heart = new THREE.Shape();
+    heart.moveTo(0, -0.3);
+    heart.bezierCurveTo(-0.08, -0.2, -0.45, 0.02, -0.45, 0.3);
+    heart.bezierCurveTo(-0.45, 0.62, -0.08, 0.72, 0, 0.46);
+    heart.bezierCurveTo(0.08, 0.72, 0.45, 0.62, 0.45, 0.3);
+    heart.bezierCurveTo(0.45, 0.02, 0.08, -0.2, 0, -0.3);
+    return heart;
+  }, []);
+
+  useFrame(({ clock }) => {
+    const heart = heartRef.current;
+    const material = materialRef.current;
+    if (!heart || !material) return;
+
+    const pairing = pairingRef.current;
+    if (pairing && pairing.sequence !== activeSequence.current) {
+      activeSequence.current = pairing.sequence;
+      appearedAt.current = clock.elapsedTime;
+      origin.current = pairing.midpoint;
+      heart.visible = true;
+    }
+
+    const age = clock.elapsedTime - appearedAt.current;
+    if (activeSequence.current === null || age >= 2.4) {
+      heart.visible = false;
+      return;
+    }
+
+    const rise = THREE.MathUtils.smoothstep(age, 0, 2.4);
+    const pop = Math.min(1, age / 0.22);
+    const dissolve = 1 - THREE.MathUtils.smoothstep(age, 0.8, 2.4);
+    heart.position.set(
+      origin.current[0] + Math.sin(age * 4.2) * 0.08 * rise,
+      origin.current[1] + rise * 1.35,
+      3,
+    );
+    heart.scale.setScalar((0.42 + Math.sin(age * 7) * 0.035) * pop);
+    material.opacity = dissolve;
+  });
+
+  return (
+    <mesh ref={heartRef} visible={false} renderOrder={4}>
+      <shapeGeometry args={[shape, 20]} />
+      <meshBasicMaterial
+        ref={materialRef}
+        color="#ef3340"
+        transparent
+        depthTest={false}
+        depthWrite={false}
+        toneMapped={false}
+      />
+    </mesh>
+  );
+}
+
+function createBaby(event: PairingEvent): BabyCreature {
+  const [first, second] = event.parents;
+  const inheritedParts = first.parts.map((part, index) => {
+    if (index % 2 === 0) return part;
+    return second.parts.find((candidate) => candidate.partId === part.partId) ?? second.parts[index % second.parts.length] ?? part;
+  });
+  const id = 1_000_000 + event.sequence;
+  const publicId = `offspring-${first.publicId}-${second.publicId}-${event.sequence}`;
+
+  return {
+    contribution: {
+      id,
+      publicId,
+      creatureForm: first.creatureForm,
+      creaturePalette: creatureColorPalette(publicId),
+      parts: inheritedParts,
+      narrative: [],
+      createdAt: new Date().toISOString(),
+    },
+    spawnPosition: event.midpoint,
+  };
+}
+
+export function CollectiveCreatureField({
+  contributions,
+  progress = 1,
+  onSelectContribution,
+}: {
+  contributions: ExhibitionContribution[];
+  progress?: number;
+  onSelectContribution?: (contribution: ExhibitionContribution) => void;
+}) {
+  const [babies, setBabies] = useState<BabyCreature[]>([]);
+  const actorRegistry = useRef(new Map<number, MutableRefObject<CreatureMotion>>());
+  const pairingRef = useRef<PairingEvent | null>(null);
+  const adults = useMemo(() => contributions.slice(-32), [contributions]);
+  const whales = useMemo(
+    () => adults.filter((contribution) => contribution.creatureForm === "whale"),
+    [adults],
+  );
+  const tankAdults = useMemo(
+    () => adults.filter((contribution) => contribution.creatureForm !== "whale"),
+    [adults],
+  );
+  const handleBaby = useCallback((event: PairingEvent) => {
+    setBabies((current) => [...current, createBaby(event)].slice(-8));
+  }, []);
+
   return (
     <Canvas
       orthographic
@@ -108,9 +629,44 @@ export function CollectiveCreatureField({ contributions }: { contributions: Exhi
       <directionalLight position={[2, 5, 8]} intensity={2.4} color="#FFF4DF" />
       <pointLight position={[-5, 1, 5]} intensity={2.2} color="#58D6FF" />
       <pointLight position={[5, -2, 5]} intensity={1.8} color="#FF7557" />
-      {contributions.slice(-32).map((contribution) => (
-        <FloatingCreature key={contribution.id} contribution={contribution} />
+      {whales.map((contribution) => (
+        <FloatingCreature
+          key={contribution.id}
+          contribution={contribution}
+          progress={progress}
+          onSelect={onSelectContribution}
+        />
       ))}
+      <WhaleDepthVeil />
+      <AquariumDioramaPlants layer="back" />
+      <PairingDirector
+        contributions={tankAdults}
+        actorRegistry={actorRegistry}
+        pairingRef={pairingRef}
+        onBaby={handleBaby}
+      />
+      <PairingHeart pairingRef={pairingRef} />
+      {tankAdults.map((contribution) => (
+        <FloatingCreature
+          key={contribution.id}
+          contribution={contribution}
+          progress={progress}
+          actorRegistry={actorRegistry}
+          pairingRef={pairingRef}
+          onSelect={onSelectContribution}
+        />
+      ))}
+      {babies.map((baby) => (
+        <FloatingCreature
+          key={baby.contribution.id}
+          contribution={baby.contribution}
+          progress={progress}
+          juvenile
+          spawnPosition={baby.spawnPosition}
+        />
+      ))}
+      <DepthHazeLayers />
+      <AquariumDioramaPlants layer="front" />
       <AdaptiveDpr pixelated />
     </Canvas>
   );
