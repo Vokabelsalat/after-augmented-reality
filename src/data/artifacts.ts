@@ -412,6 +412,7 @@ const exhibitionSources: ArtifactSource[] = [
     visualFamily: "memory",
     particleForm: "torus",
     color: "#356B4B",
+    alternativeColor: "#245137",
     theme: "memory",
     shortText:
       "Finding Frida is a documentary VR experience where past and present intertwine in an exploration of art, family and the power of human creativity. Photorealistic 3D scans, dreamlike projections and animated artwork blend with a soundscape of reworked foley and an original musical score. Voice-over drawn from interviews with Frida Hansen and contemporary historical sources seeks authenticity within a dreamlike world while shedding new light on a forgotten female artist. Central to the work is the value of role models, and how VR allows resonance to travel back and forth through time.",
@@ -432,6 +433,7 @@ const exhibitionSources: ArtifactSource[] = [
     visualFamily: "memory",
     particleForm: "triad",
     color: "#6C3F61",
+    alternativeColor: "#5A2F4F",
     theme: "memory",
     shortText:
       "Historically Yours is an interactive podcast broadcasting from the Underworld. Visitors send a question or grievance to three fictional hosts inspired by Cleopatra, Marie Antoinette and Henrietta Swan Leavitt. AI turns each contribution into a conversation spoken by persuasive synthetic voices, asking who gets to represent the past and why approximations are so easy to believe.",
@@ -451,6 +453,7 @@ const exhibitionSources: ArtifactSource[] = [
     visualFamily: "memory",
     particleForm: "tree",
     color: "#597D8C",
+    alternativeColor: "#365E6D",
     theme: "memory",
     shortText:
       "From Ingrid to Bergen is an interactive documentary about grief, memory, theatre and the technologies used to maintain relationships with what is no longer there. Personal archives, photographs, paintings, videos and texts from nineteen years form a shifting map of loss and reconstruction.",
@@ -470,6 +473,7 @@ const exhibitionSources: ArtifactSource[] = [
     visualFamily: "machine",
     particleForm: "cuboid",
     color: "#79A83B",
+    alternativeColor: "#4D751C",
     theme: "interface",
     shortText:
       "Your Update Has Failed traces the digital evolution of efforts to change or suppress LGBTQIA+ identity. Across rooms shaped by 1997, 2003, 2016 and 2026, questionnaires become software, wellness platforms, moderation tools and AI classification. The language changes, but queer life persists through every attempted correction.",
@@ -489,6 +493,7 @@ const exhibitionSources: ArtifactSource[] = [
     visualFamily: "machine",
     particleForm: "nest",
     color: "#D5A62E",
+    alternativeColor: "#8A6500",
     theme: "worldmaking",
     shortText:
       "The Grand Hotel Bald Cockatoo is an immersive hotel of dreams managed by a fortune-telling cockatoo. Inside a nest-like installation, recombining dream fragments, generated images and separated voices surround visitors before an interactive device prints a fortune to take away.",
@@ -508,6 +513,7 @@ const exhibitionSources: ArtifactSource[] = [
     visualFamily: "machine",
     particleForm: "prism",
     color: "#C4473D",
+    alternativeColor: "#A52E27",
     theme: "interface",
     shortText:
       "Bybanen Slop Surfer is a playable descent into AI slop: Bergen flattened, exaggerated and reassembled through algorithmic culture. The familiar city is subjected to simplification, repetition, imitation and endless recombination until it becomes a cheerful synthetic approximation of itself.",
@@ -527,6 +533,7 @@ const exhibitionSources: ArtifactSource[] = [
     visualFamily: "machine",
     particleForm: "book",
     color: "#ffffff",
+    alternativeColor: "#000000",
     theme: "interface",
     shortText:
       "An unlikely marriage of print and digital, Between Page and Screen chronicles a love affair between two characters, P and S. The book has no words, only inscrutable black and white geometric patterns that, when coupled with a webcam, conjure the written word. Reflected on screen, the reader sees themself with open book in hand, language springing alive and shape-shifting with each turn of the page. The story unfolds through a playful and cryptic exchange of letters between P and S as they struggle to define their relationship. Rich with innuendo, anagrams, etymological and sonic affinities between words, Between Page and Screen revels in language and the act of reading.",
@@ -547,6 +554,7 @@ const exhibitionSources: ArtifactSource[] = [
     visualFamily: "body",
     particleForm: "skateboard",
     color: "#8B5E3C",
+    alternativeColor: "#6B4027",
     theme: "embodiment",
     shortText: "Description forthcoming.",
     narrativeWords: ["move", "balance", "glide", "arrive"],
@@ -565,6 +573,7 @@ const exhibitionSources: ArtifactSource[] = [
     visualFamily: "body",
     particleForm: "brain",
     color: "#555555",
+    alternativeColor: "#333333",
     theme: "embodiment",
     shortText:
       "Emperor is an interactive narrative experience that invites us to travel inside the brain of a father suffering from aphasia. Alongside his daughter, we journey into the father’s mental space, imagined as a hand-drawn monochrome landscape, as she seeks to learn more about his inner self, now obscured by illness.",
@@ -584,6 +593,7 @@ const exhibitionSources: ArtifactSource[] = [
     visualFamily: "machine",
     particleForm: "hotel",
     color: "#51477F",
+    alternativeColor: "#40356D",
     theme: "worldmaking",
     shortText:
       "The Grand Hotel Galactic Center is a VR place of wonder and despair: looping clouds, flickering stars and glitzy exteriors conceal neglected infrastructure. Built with text-to-VR environments and gaussian splats, it turns the promise of spectacle into a repeated performance whose cracks gradually show.",
@@ -603,6 +613,7 @@ const exhibitionSources: ArtifactSource[] = [
     visualFamily: "body",
     particleForm: "pillar",
     color: "#B44772",
+    alternativeColor: "#8E2F57",
     theme: "agency",
     shortText:
       "Her Name Was Gisberta is a VR/2D documentary that portrays the life and death of Gisberta Salce, a Brazilian trans woman murdered by 14 young men in Porto in 2006. Drawing on virtual-reality perspective-taking, the project was created as a tool for education, social intervention and activism against transphobia.",
@@ -623,6 +634,7 @@ const exhibitionSources: ArtifactSource[] = [
     visualFamily: "body",
     particleForm: "butterfly",
     color: "#28374F",
+    alternativeColor: "#28374F",
     theme: "agency",
     shortText:
       "Missing 10 Hours is a narrative VR experience created with survivors of substance abuse. Visitors become a bystander whose choices influence the story, navigating whether to help a young woman named Mara or become complicit in the actions of a perpetrator. Its multiplayer structure amplifies the impact of each decision across a night-time party that moves from excessive drinking and invasions of privacy to police intervention and a final revelation.",
@@ -642,6 +654,7 @@ const exhibitionSources: ArtifactSource[] = [
     visualFamily: "machine",
     particleForm: "dodecahedron",
     color: "#2D7F88",
+    alternativeColor: "#185F68",
     theme: "worldmaking",
     shortText:
       "Through mind-bending animation, Goliath: Playing with Reality explores the limits of reality and the true story of a man diagnosed with schizophrenia. Echo guides visitors through the realities of Goliath, who spent years isolated in psychiatric institutions before finding connection in multiplayer games. Heartfelt dialogue, mesmerising visuals and symbolic interactions reveal his story across multiple worlds.",
@@ -661,6 +674,7 @@ const exhibitionSources: ArtifactSource[] = [
     visualFamily: "memory",
     particleForm: "crystal",
     color: "#8CB6C7",
+    alternativeColor: "#3D7288",
     theme: "memory",
     shortText:
       "The Land of Crystals reconstructs Edvard Munch’s demolished house and studios at Ekely from archival photographs and historical images. Munch’s writing is spoken by an intentionally speculative AI-generated voice, placing the film between historical absence, technological imagination and the parts of the past that cannot be recovered.",
@@ -682,6 +696,7 @@ const exhibitionSources: ArtifactSource[] = [
     visualFamily: "memory",
     particleForm: "hourglass",
     color: "#C19D65",
+    alternativeColor: "#77572F",
     theme: "memory",
     shortText:
       "The Grand Hotel Sand Fountain is a collaborative AR work that extends the imaginary universes of Joseph Cornell and Robert Coover. Personal ephemera, generated imagery, human narration and synthetic speech form three entangled stories about memory, loss and haunted objects coming to life.",
@@ -702,6 +717,7 @@ const exhibitionSources: ArtifactSource[] = [
     visualFamily: "machine",
     particleForm: "spiral",
     color: "#E45D3E",
+    alternativeColor: "#B43822",
     theme: "interface",
     shortText:
       "Fiery Sparks of Light is an AR experience presenting poems by Margaret Atwood, Nicole Brossard, Canisia Lubrin and Sarah Tolmie. QR codes in a printed book summon the poets as volumetric holograms while audiovisual effects amplify writing about patriarchy, objectification, stereotyping and oppression.",

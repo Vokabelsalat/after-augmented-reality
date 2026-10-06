@@ -78,6 +78,8 @@ export type ExhibitionArtifact = {
   theme: ThemeId;
   particleForm: ParticleFormId;
   color: string;
+  /** Foreground color used when the constellation is shown on white. */
+  alternativeColor: string;
   shortText: string;
   narrativeWords: string[];
   creaturePart: CreaturePart;

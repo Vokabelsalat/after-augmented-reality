@@ -8,22 +8,22 @@ export function IntroScreen() {
   const dispatch = useAppDispatch();
 
   return (
-    <main className="biome-field biome-screen film-grain relative min-h-dvh overflow-hidden bg-[var(--abyss)] px-5 text-[var(--foam)]">
+    <main className="biome-field biome-screen film-grain relative h-dvh overflow-hidden bg-[var(--abyss)] px-5 text-[var(--foam)]">
       <BiomeBackdrop progress={0.26} quiet />
-      <div className="safe-top relative z-10 mx-auto flex min-h-dvh w-full max-w-5xl flex-col">
+      <div className="safe-top relative z-10 mx-auto flex h-dvh w-full max-w-5xl flex-col">
 
-        <section className="grid flex-1 items-center gap-6 py-8 md:grid-cols-[1.1fr_.9fr]" aria-labelledby="intro-title">
+        <section className="grid min-h-0 flex-1 items-center gap-4 py-4 md:grid-cols-[1.1fr_.9fr] md:gap-6 md:py-8" aria-labelledby="intro-title">
           <div className="relative z-10">
-            <h1 id="intro-title" className="font-display max-w-3xl text-[clamp(4.2rem,14vw,9rem)] leading-[0.73] tracking-[-0.075em]">
+            <h1 id="intro-title" className="font-display max-w-3xl text-[clamp(3.2rem,13vw,9rem)] leading-[0.73] tracking-[-0.075em]">
               The Fishbowl
               <span className="block translate-x-[8vw] italic text-[var(--phosphor)] md:translate-x-20">Leaks</span>
             </h1>
-            <p className="mt-8 max-w-md text-lg leading-7 text-white/74">
+            <p className="mt-5 max-w-md text-base leading-6 text-white/74 md:mt-8 md:text-lg md:leading-7">
               This aquarium is trying to classify the exhibition. Scan the markers, gather fragments of a story, and grow a creature it cannot fully contain.
             </p>
           </div>
 
-          <div className="porthole mx-auto aspect-square w-[min(72vw,25rem)]" aria-hidden="true">
+          <div className="porthole mx-auto aspect-square w-[min(48vw,25rem)] max-md:max-h-[28dvh] max-md:max-w-[28dvh]" aria-hidden="true">
             <div className="porthole-glass">
               <span className="radar-range radar-range-outer" />
               <span className="radar-range radar-range-middle" />
@@ -52,9 +52,10 @@ export function IntroScreen() {
           <button
             type="button"
             onClick={() => dispatch(startJourney())}
-            className="flex min-h-16 w-full items-center justify-between bg-[var(--phosphor)] px-6 text-base text-[#031015] transition-transform active:scale-[0.99] md:w-80"
+            className="flex min-h-16 w-full items-center justify-between border border-[var(--phosphor)] bg-[var(--phosphor)] px-6 text-base text-[#031015] shadow-[0_0_2rem_rgba(184,255,69,0.2)] transition-transform active:scale-[0.99] md:w-80"
           >
             <span>Scan an artwork marker</span>
+            <span aria-hidden="true">→</span>
           </button>
         </div>
       </div>

@@ -28,23 +28,23 @@ describe("artifact target image configuration", () => {
     expect(new Set(artifacts.map(({ theme }) => theme))).toEqual(
       new Set(["memory", "interface", "worldmaking", "embodiment", "agency"]),
     );
-    expect(artifacts.map(({ particleForm, color }) => [particleForm, color])).toEqual([
-      ["torus", "#356B4B"],
-      ["triad", "#6C3F61"],
-      ["tree", "#597D8C"],
-      ["cuboid", "#79A83B"],
-      ["nest", "#D5A62E"],
-      ["prism", "#C4473D"],
-      ["book", "#ffffff"],
-      ["skateboard", "#8B5E3C"],
-      ["brain", "#555555"],
-      ["hotel", "#51477F"],
-      ["pillar", "#B44772"],
-      ["butterfly", "#28374F"],
-      ["dodecahedron", "#2D7F88"],
-      ["crystal", "#8CB6C7"],
-      ["hourglass", "#C19D65"],
-      ["spiral", "#E45D3E"],
+    expect(artifacts.map(({ particleForm, color, alternativeColor }) => [particleForm, color, alternativeColor])).toEqual([
+      ["torus", "#356B4B", "#245137"],
+      ["triad", "#6C3F61", "#5A2F4F"],
+      ["tree", "#597D8C", "#365E6D"],
+      ["cuboid", "#79A83B", "#4D751C"],
+      ["nest", "#D5A62E", "#8A6500"],
+      ["prism", "#C4473D", "#A52E27"],
+      ["book", "#ffffff", "#000000"],
+      ["skateboard", "#8B5E3C", "#6B4027"],
+      ["brain", "#555555", "#333333"],
+      ["hotel", "#51477F", "#40356D"],
+      ["pillar", "#B44772", "#8E2F57"],
+      ["butterfly", "#28374F", "#28374F"],
+      ["dodecahedron", "#2D7F88", "#185F68"],
+      ["crystal", "#8CB6C7", "#3D7288"],
+      ["hourglass", "#C19D65", "#77572F"],
+      ["spiral", "#E45D3E", "#B43822"],
     ]);
   });
 

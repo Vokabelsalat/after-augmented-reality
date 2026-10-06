@@ -50,7 +50,11 @@ export type MindARAdapterOptions = {
 export type ARParticleTarget = Pick<
   ExhibitionArtifact,
   "id" | "targetIndex" | "particleForm" | "color"
->;
+> & {
+  // Compiled MindAR target indices that all resolve to this artifact, e.g. its
+  // dark and white target images.
+  anchorIndices: number[];
+};
 
 export type ARAdapterErrorCode =
   | "unsupported"
@@ -144,42 +148,44 @@ export class MindARAdapter {
       mindar.renderer.domElement.style.pointerEvents = "none";
 
       this.options.targets.forEach((target) => {
-        const anchor = mindar.addAnchor(target.targetIndex);
         const nativeParticle = this.createNativeParticle(THREE, target);
         this.particles.set(target.targetIndex, nativeParticle);
         mindar.scene.add(nativeParticle.group);
 
-        anchor.onTargetFound = () => {
-          if (this.stopped || this.visibleTargets.has(target.targetIndex)) return;
-          this.visibleTargets.add(target.targetIndex);
-          const detection = this.options.onTargetFound(target.targetIndex);
+        target.anchorIndices.forEach((anchorIndex) => {
+          const anchor = mindar.addAnchor(anchorIndex);
+          anchor.onTargetFound = () => {
+            if (this.stopped || this.visibleTargets.has(target.targetIndex)) return;
+            this.visibleTargets.add(target.targetIndex);
+            const detection = this.options.onTargetFound(target.targetIndex);
 
-          if (
-            detection !== "ignore" &&
-            !this.activeTargets.has(target.targetIndex)
-          ) {
-            this.activeTargets.add(target.targetIndex);
-            this.resetNativeParticle(nativeParticle);
-            nativeParticle.startedAt =
-              performance.now() -
-              (detection === "revisit" ? this.clusterRevealDelay() : 0);
-          }
-        };
-        anchor.onTargetLost = () => {
-          if (this.stopped || !this.visibleTargets.has(target.targetIndex)) return;
-          this.visibleTargets.delete(target.targetIndex);
-          this.options.onTargetLost(target.targetIndex);
-        };
-        anchor.onTargetUpdate = () => {
-          if (
-            !anchor.group.visible ||
-            !this.activeTargets.has(target.targetIndex)
-          ) {
-            return;
-          }
-          nativeParticle.group.matrix.copy(anchor.group.matrix);
-          nativeParticle.group.matrixWorldNeedsUpdate = true;
-        };
+            if (
+              detection !== "ignore" &&
+              !this.activeTargets.has(target.targetIndex)
+            ) {
+              this.activeTargets.add(target.targetIndex);
+              this.resetNativeParticle(nativeParticle);
+              nativeParticle.startedAt =
+                performance.now() -
+                (detection === "revisit" ? this.clusterRevealDelay() : 0);
+            }
+          };
+          anchor.onTargetLost = () => {
+            if (this.stopped || !this.visibleTargets.has(target.targetIndex)) return;
+            this.visibleTargets.delete(target.targetIndex);
+            this.options.onTargetLost(target.targetIndex);
+          };
+          anchor.onTargetUpdate = () => {
+            if (
+              !anchor.group.visible ||
+              !this.activeTargets.has(target.targetIndex)
+            ) {
+              return;
+            }
+            nativeParticle.group.matrix.copy(anchor.group.matrix);
+            nativeParticle.group.matrixWorldNeedsUpdate = true;
+          };
+        });
       });
 
       await mindar.start();

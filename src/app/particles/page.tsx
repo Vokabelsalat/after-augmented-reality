@@ -5,6 +5,7 @@ import {
   type ParticlePreviewArtifact,
 } from "@/components/particles/ParticleConstellationGallery";
 import { artifacts } from "@/data/artifacts";
+import { ScrollNotice } from "@/components/ui/ScrollNotice";
 
 export const metadata: Metadata = {
   title: "Particle Constellations — The Fishbowl Leaks",
@@ -12,11 +13,12 @@ export const metadata: Metadata = {
 };
 
 const previewArtifacts: ParticlePreviewArtifact[] = artifacts.map(
-  ({ id, exhibitionId, title, color, particleForm }) => ({
+  ({ id, exhibitionId, title, color, alternativeColor, particleForm }) => ({
     id,
     exhibitionId,
     title,
     color,
+    alternativeColor,
     particleForm,
   }),
 );
@@ -24,6 +26,7 @@ const previewArtifacts: ParticlePreviewArtifact[] = artifacts.map(
 export default function ParticleConstellationsPage() {
   return (
     <main className="min-h-dvh bg-[var(--abyss)] text-[var(--foam)]">
+      <ScrollNotice label="All particle constellations continue below" />
       <header className="mx-auto flex max-w-[100rem] flex-col gap-8 px-5 py-8 sm:px-8 sm:py-10 lg:flex-row lg:items-end lg:justify-between lg:px-12">
         <div className="max-w-3xl">
           <h1 className="font-display text-4xl leading-none sm:text-6xl">
@@ -35,9 +38,10 @@ export default function ParticleConstellationsPage() {
         </div>
         <Link
           href="/"
-          className="w-fit border-b border-white/50 pb-1 text-base text-[var(--foam)] transition-colors hover:border-white"
+          className="flex min-h-12 w-fit items-center gap-4 border border-white/40 px-5 text-base text-[var(--foam)] transition-colors hover:border-white"
         >
           Return to the exhibition
+          <span aria-hidden="true">→</span>
         </Link>
       </header>
 

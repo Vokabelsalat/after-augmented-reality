@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { ExhibitionArtifact } from "@/types/exhibition";
+import { ScrollNotice } from "@/components/ui/ScrollNotice";
 
 type ArtifactContentProps = {
   artifact: ExhibitionArtifact;
@@ -11,22 +12,28 @@ type ArtifactContentProps = {
 
 export function ArtifactContent({ artifact, onContinue, mini = false }: ArtifactContentProps) {
   const [expanded, setExpanded] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
 
   return (
     <article
       className="resolve-in tank-panel safe-bottom absolute inset-x-0 bottom-0 z-20 px-5 pb-4 pt-3"
       aria-labelledby="artifact-title"
     >
+      <ScrollNotice
+        containerRef={contentRef}
+        label="More artwork details below"
+      />
+
       <button
         type="button"
         onClick={() => setExpanded((value) => !value)}
-        className="mx-auto mb-4 block min-h-6 w-20"
-        aria-label={expanded ? "Collapse artwork details" : "Expand artwork details"}
+        className="mx-auto mb-4 flex min-h-11 items-center gap-3 border border-white/30 bg-[var(--abyss)] px-4 text-sm text-white transition-colors hover:border-white/65"
       >
-        <span className="mx-auto block h-px w-14 bg-white/45" />
+        <span>{expanded ? "Show less" : "Read the full artwork details"}</span>
+        <span aria-hidden="true">{expanded ? "↓" : "↑"}</span>
       </button>
 
-      <div className={`mx-auto w-full max-w-xl overflow-y-auto overscroll-contain ${expanded ? "max-h-[70dvh]" : mini ? "max-h-[42dvh]" : "max-h-[56dvh]"}`}>
+      <div ref={contentRef} className={`mx-auto w-full max-w-xl overflow-y-auto overscroll-contain ${expanded ? "max-h-[62dvh]" : mini ? "max-h-[36dvh]" : "max-h-[48dvh]"}`}>
         <h2 id="artifact-title" className="font-display max-w-lg text-[clamp(2rem,9vw,3.3rem)] leading-[0.94] tracking-[-0.055em]">
           {artifact.title}
         </h2>
@@ -49,9 +56,10 @@ export function ArtifactContent({ artifact, onContinue, mini = false }: Artifact
       <button
         type="button"
         onClick={onContinue}
-        className="mx-auto mt-5 flex min-h-14 w-full max-w-xl items-center justify-between border-t border-white/20 pt-4 text-base text-white"
+        className="mx-auto mt-5 flex min-h-14 w-full max-w-xl items-center justify-between bg-[var(--phosphor)] px-6 text-base text-[#031015] shadow-[0_0_2rem_rgba(184,255,69,0.16)] transition-transform active:scale-[0.99]"
       >
         <span>{mini ? "Return to the tank" : "Continue through the exhibition"}</span>
+        <span aria-hidden="true">→</span>
       </button>
     </article>
   );

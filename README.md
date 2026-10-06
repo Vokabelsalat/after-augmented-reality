@@ -99,13 +99,15 @@ Save the downloaded file as:
 public/targets/exhibition.mind
 ```
 
-The checked-in `exhibition.mind` bundle contains all 16 targets, compiled from the particle constellation images in `public/targets/` (`1-finding-frida.png` through `16-fiery-sparks-of-light.png`, in exhibition ID order). `npm run targets:export` regenerates those images from the current particle formations, and `npm run targets:compile` recompiles the bundle from them with MindAR's offline compiler (about two minutes), so the web compiler is optional. Recompile whenever the images change.
+The checked-in `exhibition.mind` bundle contains 32 targets compiled from the 800 × 600 px particle constellation images in `public/targets/`. Indices `0` through `15` are the dark images (`1-finding-frida.png` through `16-fiery-sparks-of-light.png`, in exhibition ID order), and indices `16` through `31` are the matching `-white.png` images in the same order. `npm run targets:export` regenerates both sets, using each artifact's `alternativeColor` for the white versions. `npm run targets:compile` recompiles the bundle with MindAR's offline compiler, so the web compiler is optional. Recompile whenever the compiled images change.
 
-Run `npm run targets:verify` after compiling. Each compiled target keeps a downscaled copy of its source image, and the script matches it against the PNGs to confirm that target index `N` resolves to the artifact with `targetIndex` `N`. It also prints how many tracking feature points MindAR found per target.
+`ARScanner` gives every artifact two anchors, `targetIndex` and `targetIndex + 16`, so a dark and a white print of the same work reveal the same artifact.
+
+Run `npm run targets:verify` after compiling. Each compiled target keeps a downscaled copy of its source image, and the script matches it against the PNGs to confirm that every target index resolves to the expected image. It also prints how many tracking feature points MindAR found per target.
 
 ### 3. Check the configuration mapping
 
-`src/data/artifacts.ts` is the runtime source of truth and follows the CSV row order. `targetIndex` must match the image order used by the compiler. MindAR emits a number, the adapter forwards it, and `artifactByTargetIndex` resolves the exhibition content. The curatorial themes are **Memory**, **Interface**, **Worldmaking**, **Embodiment**, and **Agency**. Until final artwork images are available, the 16 configured works reuse three poster-image families while each keeps the artwork-specific `color` and simplified `particleForm` defined in `public/exhibition.csv`.
+`src/data/artifacts.ts` is the runtime source of truth and follows the CSV row order. `targetIndex` must match the image order used by the compiler. MindAR emits a number, the adapter forwards it, and `artifactByTargetIndex` resolves the exhibition content. The curatorial themes are **Memory**, **Interface**, **Worldmaking**, **Embodiment**, and **Agency**. Until final artwork images are available, the 16 configured works reuse three poster-image families while each keeps the artwork-specific `color`, white-background `alternative_color`, and simplified `particleForm` defined in `public/exhibition.csv`.
 
 ### 4. Serve over HTTPS on a phone
 

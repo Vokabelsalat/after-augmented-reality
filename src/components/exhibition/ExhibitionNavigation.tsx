@@ -39,7 +39,7 @@ export function ExhibitionNavigation() {
       <button
         type="button"
         onClick={() => dispatch(setExperiencePhase("journey"))}
-        className="pointer-events-auto flex items-center gap-2 border border-white/25 bg-[var(--abyss)] text-sm text-white pr-2 transition-colors hover:bg-black"
+        className="pointer-events-auto flex items-center gap-2 border border-white/45 bg-[var(--abyss)] pr-3 text-sm text-white shadow-[0_0_1.5rem_rgba(0,0,0,0.35)] transition-colors hover:border-white"
         aria-label={`Open ${activeVisualizationCopy.personalTitle}, ${count} parts collected`}
       >
         <div key={previewKey} className="specimen-preview-update size-14 overflow-hidden bg-white/[0.035]" aria-hidden="true">

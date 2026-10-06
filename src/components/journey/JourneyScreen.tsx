@@ -16,6 +16,7 @@ import { PathVisualization } from "@/components/visualization/PathVisualization"
 import { activeVisualizationCopy, visualizationDesign } from "@/config/visualization";
 import { BiomeBackdrop } from "@/components/visualization/BiomeBackdrop";
 import { aquaticFormLabels } from "@/lib/creature/aquaticForms";
+import { ScrollNotice } from "@/components/ui/ScrollNotice";
 
 export function JourneyScreen() {
   const dispatch = useAppDispatch();
@@ -29,8 +30,9 @@ export function JourneyScreen() {
   const readyToRelease = discoveries.length >= 3;
 
   return (
-    <main className="biome-field biome-screen film-grain safe-top safe-bottom relative flex min-h-dvh flex-col overflow-x-hidden bg-[var(--abyss)] px-5">
+    <main className="biome-field biome-screen film-grain safe-top relative flex min-h-dvh flex-col overflow-x-hidden bg-[var(--abyss)] px-5 pb-28">
       <BiomeBackdrop progress={Math.min(0.82, 0.24 + discoveries.length * 0.1)} quiet />
+      <ScrollNotice label="Your journey continues below" />
       <header className="flex items-start justify-between">
         <div>
           <p className="text-sm text-white/50">Provisional specimen record</p>
@@ -41,7 +43,7 @@ export function JourneyScreen() {
         <button
           type="button"
           onClick={() => dispatch(setExperiencePhase("scanning"))}
-          className="min-h-11 border border-white/25 px-5 text-sm text-white/75"
+          className="min-h-11 border border-white/45 bg-[var(--abyss)] px-5 text-sm text-white transition-colors hover:border-white"
         >
           Return
         </button>
@@ -93,17 +95,20 @@ export function JourneyScreen() {
         </ol>
       </div>
 
-      <button
-        type="button"
-        onClick={() => {
-          dispatch(finishJourney());
-          router.push("/journey");
-        }}
-        className="mx-auto mt-7 flex min-h-14 w-full max-w-xl items-center justify-between bg-[var(--phosphor)] px-6 text-base text-[#031015] disabled:cursor-not-allowed disabled:opacity-35"
-        disabled={!readyToRelease}
-      >
-        <span>{readyToRelease ? "Generate my ending" : `${3 - discoveries.length} more ${3 - discoveries.length === 1 ? "encounter" : "encounters"} before release`}</span>
-      </button>
+      <div className="safe-bottom fixed inset-x-0 bottom-0 z-40 border-t border-white/20 bg-[var(--abyss)] px-5 pt-3">
+        <button
+          type="button"
+          onClick={() => {
+            dispatch(finishJourney());
+            router.push("/journey");
+          }}
+          className="mx-auto flex min-h-14 w-full max-w-xl items-center justify-between border border-[var(--phosphor)] bg-[var(--phosphor)] px-6 text-base text-[#031015] shadow-[0_0_2rem_rgba(184,255,69,0.18)] disabled:cursor-not-allowed disabled:border-white/20 disabled:bg-[var(--abyss)] disabled:text-white/50 disabled:shadow-none"
+          disabled={!readyToRelease}
+        >
+          <span>{readyToRelease ? "Generate my ending" : `${3 - discoveries.length} more ${3 - discoveries.length === 1 ? "encounter" : "encounters"} before release`}</span>
+          <span aria-hidden="true">→</span>
+        </button>
+      </div>
     </main>
   );
 }

@@ -9,7 +9,10 @@ export type Constellation = {
   sizes: Float32Array;
   halo: [number, number, number];
   core: [number, number, number];
+  compositeOperation: "lighter" | "source-over";
 };
+
+export type ConstellationSurface = "dark" | "light";
 
 /** Projected bounds at scale 1, used to centre and fill the frame. */
 export type ConstellationFraming = {
@@ -50,6 +53,17 @@ function mixWithWhite(
   ];
 }
 
+function mixWithBlack(
+  [red, green, blue]: [number, number, number],
+  amount: number,
+): [number, number, number] {
+  return [
+    Math.round(red * (1 - amount)),
+    Math.round(green * (1 - amount)),
+    Math.round(blue * (1 - amount)),
+  ];
+}
+
 function hash(index: number) {
   const value = Math.sin(index * 12.9898 + 78.233) * 43758.5453;
   return value - Math.floor(value);
@@ -58,6 +72,7 @@ function hash(index: number) {
 export function prepareConstellation(
   positions: Float32Array,
   color: string,
+  surface: ConstellationSurface = "dark",
 ): Constellation {
   const rgb = colorChannels(color);
   const luminance = (0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2]) / 255;
@@ -71,8 +86,11 @@ export function prepareConstellation(
   return {
     positions,
     sizes,
-    halo: mixWithWhite(rgb, Math.max(0, minimumHaloLuminance - luminance)),
-    core: mixWithWhite(rgb, coreWhiteMix),
+    halo: surface === "dark"
+      ? mixWithWhite(rgb, Math.max(0, minimumHaloLuminance - luminance))
+      : rgb,
+    core: surface === "dark" ? mixWithWhite(rgb, coreWhiteMix) : mixWithBlack(rgb, 0.28),
+    compositeOperation: surface === "dark" ? "lighter" : "source-over",
   };
 }
 
@@ -135,9 +153,9 @@ export function paintConstellation(
     (height * frameFill) / framing.height,
   );
   const radiusScale = (Math.min(width, height) / referenceSize) * baseRadius;
-  const { positions, sizes, halo, core } = constellation;
+  const { positions, sizes, halo, core, compositeOperation } = constellation;
 
-  context.globalCompositeOperation = "lighter";
+  context.globalCompositeOperation = compositeOperation;
   for (let offset = 0; offset < positions.length; offset += 3) {
     const { x, y, depth, perspective } = project(positions, offset, orientation);
     const screenX = width / 2 + (x - framing.centerX) * scale;

@@ -1,6 +1,6 @@
 // Checks that public/targets/exhibition.mind was compiled from the exported
-// constellation PNGs in exhibitionId order, so target index N resolves to the
-// artifact with targetIndex N. Each compiled target keeps a downscaled
+// constellation PNGs in the compile order: dark targets in exhibitionId order,
+// then the -white targets in the same order. Each compiled target keeps a downscaled
 // grayscale copy of its image, which is correlated against every PNG.
 import { readFileSync } from "node:fs";
 import { decode } from "@msgpack/msgpack";
@@ -27,35 +27,40 @@ async function grayscale(file, width, height) {
   );
 }
 
-let mismatches = bundle.dataList.length === artifacts.length ? 0 : 1;
+const ordered = [...artifacts].sort((a, b) => a.targetIndex - b.targetIndex);
+const sources = ["", "-white"].flatMap((suffix) =>
+  ordered.map((artifact) => ({
+    artifact,
+    file: `public/targets/${artifact.exhibitionId}-${artifact.id}${suffix}.png`,
+  })),
+);
+
+let mismatches = bundle.dataList.length === sources.length ? 0 : 1;
 if (mismatches) {
-  console.error(`Bundle has ${bundle.dataList.length} targets, artifacts.ts has ${artifacts.length}.`);
+  console.error(`Bundle has ${bundle.dataList.length} targets, expected ${sources.length}.`);
 }
 
 const { width, height } = bundle.dataList[0].trackingData[0];
 const references = await Promise.all(
-  artifacts.map(async (artifact) => ({
-    artifact,
-    pixels: normalize(
-      await grayscale(`public/targets/${artifact.exhibitionId}-${artifact.id}.png`, width, height),
-    ),
+  sources.map(async (source) => ({
+    source,
+    pixels: normalize(await grayscale(source.file, width, height)),
   })),
 );
 
 bundle.dataList.forEach((target, index) => {
   const compiled = normalize(Float64Array.from(target.trackingData[0].data));
   const [best] = references
-    .map(({ artifact, pixels }) => ({
-      artifact,
+    .map(({ source, pixels }) => ({
+      source,
       score: compiled.reduce((sum, value, offset) => sum + value * pixels[offset], 0),
     }))
     .sort((a, b) => b.score - a.score);
-  const expected = artifacts.find(({ targetIndex }) => targetIndex === index);
-  const ok = best.artifact === expected;
+  const ok = best.source === sources[index];
   if (!ok) mismatches += 1;
   const trackingPoints = target.trackingData.map(({ points }) => points.length).join("/");
   console.log(
-    `${ok ? "ok      " : "MISMATCH"} target ${index} → ${best.artifact.exhibitionId} ${best.artifact.title} (${best.score.toFixed(3)}), tracking points ${trackingPoints}`,
+    `${ok ? "ok      " : "MISMATCH"} target ${index} → ${best.source.file} (${best.score.toFixed(3)}), tracking points ${trackingPoints}`,
   );
 });
 

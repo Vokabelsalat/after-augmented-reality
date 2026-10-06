@@ -14,6 +14,7 @@ import { PathVisualization } from "@/components/visualization/PathVisualization"
 import { activeVisualizationCopy } from "@/config/visualization";
 import dynamic from "next/dynamic";
 import { BiomeBackdrop } from "@/components/visualization/BiomeBackdrop";
+import { ScrollNotice } from "@/components/ui/ScrollNotice";
 
 const GeneratedNarrative = dynamic(() =>
   import("@/components/journey/GeneratedNarrative").then(
@@ -43,11 +44,12 @@ export function JourneyFinal() {
   return (
     <main className="biome-field biome-screen film-grain safe-top safe-bottom relative min-h-dvh overflow-x-hidden bg-[var(--abyss)] px-5">
       <BiomeBackdrop progress={0.88} />
+      <ScrollNotice label="Your ending and release controls are below" />
       <header className="relative z-10 flex items-center justify-between">
         <Link href="/" className="font-display text-2xl tracking-[-0.04em]">
           The Fishbowl Leaks
         </Link>
-        <p className="text-[9px] tracking-[0.24em] text-white/42">
+        <p className="text-sm text-white/60">
           Release chamber
         </p>
       </header>
@@ -92,16 +94,18 @@ export function JourneyFinal() {
           <Link
             href="/"
             onClick={() => dispatch(setExperiencePhase("scanning"))}
-            className="flex min-h-12 items-center justify-between text-sm text-white/72"
+            className="flex min-h-14 items-center justify-between border border-white/35 px-5 text-sm text-white transition-colors hover:border-white"
           >
             <span>Continue this journey</span>
+            <span aria-hidden="true">→</span>
           </Link>
           <Link
             href="/"
             onClick={() => dispatch(resetJourney())}
-            className="mt-2 flex min-h-12 items-center justify-between text-sm text-white"
+            className="mt-3 flex min-h-14 items-center justify-between bg-white px-5 text-sm text-[#031015] transition-opacity hover:opacity-85"
           >
             <span>Start again</span>
+            <span aria-hidden="true">→</span>
           </Link>
         </div>
       </section>

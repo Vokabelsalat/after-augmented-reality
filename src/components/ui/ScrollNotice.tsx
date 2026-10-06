@@ -1,0 +1,76 @@
+"use client";
+
+import type { RefObject } from "react";
+import { useCallback, useEffect, useState } from "react";
+
+type ScrollNoticeProps = {
+  containerRef?: RefObject<HTMLElement | null>;
+  label?: string;
+};
+
+export function ScrollNotice({
+  containerRef,
+  label = "More below — scroll to continue",
+}: ScrollNoticeProps) {
+  const [visible, setVisible] = useState(false);
+
+  const update = useCallback(() => {
+    const target = containerRef?.current;
+    if (target) {
+      const remaining = target.scrollHeight - target.clientHeight - target.scrollTop;
+      setVisible(target.scrollHeight > target.clientHeight + 8 && remaining > 16);
+      return;
+    }
+
+    const root = document.scrollingElement;
+    if (!root) return;
+    const remaining = root.scrollHeight - window.innerHeight - window.scrollY;
+    setVisible(root.scrollHeight > window.innerHeight + 8 && remaining > 16);
+  }, [containerRef]);
+
+  useEffect(() => {
+    const target = containerRef?.current;
+    const scrollTarget: HTMLElement | Window = target ?? window;
+    const resizeTarget = target ?? document.documentElement;
+    const observer = new ResizeObserver(update);
+    const mutationObserver = new MutationObserver(update);
+
+    update();
+    scrollTarget.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    observer.observe(resizeTarget);
+    mutationObserver.observe(resizeTarget, { childList: true, subtree: true });
+
+    return () => {
+      scrollTarget.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+      observer.disconnect();
+      mutationObserver.disconnect();
+    };
+  }, [containerRef, update]);
+
+  function moveForward() {
+    const target = containerRef?.current;
+    const amount = (target?.clientHeight ?? window.innerHeight) * 0.72;
+    if (target) {
+      target.scrollBy({ top: amount, behavior: "smooth" });
+    } else {
+      window.scrollBy({ top: amount, behavior: "smooth" });
+    }
+  }
+
+  if (!visible) return null;
+
+  return (
+    <div className="safe-top pointer-events-none fixed inset-x-0 top-0 z-[80] flex justify-center px-4" role="status">
+      <button
+        type="button"
+        onClick={moveForward}
+        className="pointer-events-auto flex min-h-11 items-center gap-3 bg-[var(--phosphor)] px-5 text-sm text-[#031015] shadow-[0_0_2rem_rgba(184,255,69,0.22)] transition-transform active:scale-[0.98]"
+      >
+        <span>{label}</span>
+        <span aria-hidden="true">↓</span>
+      </button>
+    </div>
+  );
+}

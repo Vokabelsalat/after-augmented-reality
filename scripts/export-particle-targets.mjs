@@ -1,6 +1,5 @@
-// Renders every artifact's particle constellation to
-// public/targets/<exhibitionId>-<id>.png with the same painter as
-// ParticleConstellationGallery's initial frame.
+// Renders every artifact's particle constellation to a dark target and a
+// matching -white.png target with the same painter as the gallery.
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -18,19 +17,23 @@ import { artifacts } from "../src/data/artifacts.ts";
 const outputDirectory = join(dirname(fileURLToPath(import.meta.url)), "../public/targets");
 const width = 400;
 const height = 300;
-const pixelRatio = 4;
-const background = "#031015";
+const pixelRatio = 2;
+const variants = [
+  { suffix: "", background: "#031015", colorKey: "color", surface: "dark" },
+  { suffix: "-white", background: "#FFFFFF", colorKey: "alternativeColor", surface: "light" },
+];
 
-function renderFormation(artifact) {
+function renderFormation(artifact, variant) {
   const canvas = createCanvas(width * pixelRatio, height * pixelRatio);
   const context = canvas.getContext("2d");
   context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
-  context.fillStyle = background;
+  context.fillStyle = variant.background;
   context.fillRect(0, 0, width, height);
 
   const constellation = prepareConstellation(
     createArtifactFormationPositions(artifact, constellationParticleCount),
-    artifact.color,
+    artifact[variant.colorKey],
+    variant.surface,
   );
   paintConstellation(
     context,
@@ -46,7 +49,12 @@ function renderFormation(artifact) {
 
 mkdirSync(outputDirectory, { recursive: true });
 for (const artifact of artifacts) {
-  const file = join(outputDirectory, `${artifact.exhibitionId}-${artifact.id}.png`);
-  writeFileSync(file, renderFormation(artifact));
-  console.log(`${artifact.particleForm.padEnd(13)} ${file}`);
+  for (const variant of variants) {
+    const file = join(
+      outputDirectory,
+      `${artifact.exhibitionId}-${artifact.id}${variant.suffix}.png`,
+    );
+    writeFileSync(file, renderFormation(artifact, variant));
+    console.log(`${artifact.particleForm.padEnd(13)} ${file}`);
+  }
 }

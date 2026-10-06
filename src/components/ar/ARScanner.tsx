@@ -152,6 +152,8 @@ function ARScannerComponent(
             targetIndex,
             particleForm,
             color,
+            // exhibition.mind holds the dark targets, then the white ones.
+            anchorIndices: [targetIndex, targetIndex + artifacts.length],
           }),
         ),
         onTargetFound: (targetIndex) => onTargetFoundRef.current(targetIndex),
@@ -248,7 +250,7 @@ function ARScannerComponent(
                 <button
                   type="button"
                   onClick={onUseSimulator}
-                  className="mt-3 min-h-11 px-5 text-xs text-white/55 underline decoration-white/20 underline-offset-4"
+                  className="mt-3 min-h-11 w-full border border-white/35 px-5 text-sm text-white/75 transition-colors hover:border-white hover:text-white"
                 >
                   Explore without a camera
                 </button>
