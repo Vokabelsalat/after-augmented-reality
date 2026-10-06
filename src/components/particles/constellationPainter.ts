@@ -36,6 +36,9 @@ const baseRadius = 2;
 // Colors darker than this are lifted towards white so they read on the abyss.
 const minimumHaloLuminance = 0.5;
 const coreWhiteMix = 0.7;
+// On white the roles swap: a dark halo disc carries a light core dot.
+const lightHaloBlackMix = 0.28;
+const lightCoreWhiteMix = 0.6;
 
 function colorChannels(color: string): [number, number, number] {
   const value = Number.parseInt(color.slice(1), 16);
@@ -88,8 +91,10 @@ export function prepareConstellation(
     sizes,
     halo: surface === "dark"
       ? mixWithWhite(rgb, Math.max(0, minimumHaloLuminance - luminance))
-      : rgb,
-    core: surface === "dark" ? mixWithWhite(rgb, coreWhiteMix) : mixWithBlack(rgb, 0.28),
+      : mixWithBlack(rgb, lightHaloBlackMix),
+    core: surface === "dark"
+      ? mixWithWhite(rgb, coreWhiteMix)
+      : mixWithWhite(rgb, lightCoreWhiteMix),
     compositeOperation: surface === "dark" ? "lighter" : "source-over",
   };
 }
