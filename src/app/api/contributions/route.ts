@@ -20,8 +20,9 @@ const responseHeaders = {
   "Cache-Control": "no-store",
 };
 
-function parseSubmission(value: unknown): ContributionSubmission | null {
-  if (!value || typeof value !== "object") return null;
+// Returns the parsed submission, or a reason why it was rejected.
+function parseSubmission(value: unknown): ContributionSubmission | string {
+  if (!value || typeof value !== "object") return "The body is not an object.";
   const candidate = value as Partial<ContributionSubmission>;
   if (
     typeof candidate.sessionId !== "string" ||
@@ -33,7 +34,7 @@ function parseSubmission(value: unknown): ContributionSubmission | null {
     candidate.discoveries.length === 0 ||
     candidate.discoveries.length > artifacts.length
   ) {
-    return null;
+    return "The session ID, completion time or discovery list is missing or malformed.";
   }
 
   const seen = new Set<string>();
@@ -46,27 +47,36 @@ function parseSubmission(value: unknown): ContributionSubmission | null {
     }))
     .sort((a, b) => a.sequence - b.sequence);
 
-  const valid = discoveries.every((item, index) => {
+  for (const [index, item] of discoveries.entries()) {
+    const artifact = artifactById.get(item.artifactId);
+    if (!artifact) return `Unknown artifact "${item.artifactId}".`;
+    if (seen.has(item.artifactId)) return `Artifact "${item.artifactId}" appears twice.`;
+    if (item.sequence !== index + 1) {
+      return `Discovery sequence ${item.sequence} should be ${index + 1}.`;
+    }
+    if (!Number.isFinite(item.discoveredAt) || item.discoveredAt <= 0) {
+      return `Artifact "${item.artifactId}" has no valid discovery time.`;
+    }
     if (
-      !artifactById.has(item.artifactId) ||
-      seen.has(item.artifactId) ||
-      item.sequence !== index + 1 ||
-      !Number.isFinite(item.discoveredAt) ||
-      item.discoveredAt <= 0 ||
-      (item.choiceId !== undefined && !artifactById.get(item.artifactId)?.choice.options.some((option) => option.id === item.choiceId)) ||
-      (index > 0 && item.discoveredAt < discoveries[index - 1].discoveredAt)
+      item.choiceId !== undefined &&
+      !artifact.choice.options.some((option) => option.id === item.choiceId)
     ) {
-      return false;
+      return `Choice "${item.choiceId}" does not exist for artifact "${item.artifactId}".`;
+    }
+    if (index > 0 && item.discoveredAt < discoveries[index - 1].discoveredAt) {
+      return `Artifact "${item.artifactId}" was discovered before the previous one.`;
     }
     seen.add(item.artifactId);
-    return true;
-  });
+  }
 
   const firstDiscoveredAt = discoveries[0]?.discoveredAt ?? 0;
   const lastDiscoveredAt = discoveries.at(-1)?.discoveredAt ?? 0;
-  const validCompletion =
-    candidate.completedAt >= lastDiscoveredAt &&
-    candidate.completedAt - firstDiscoveredAt <= 24 * 60 * 60_000;
+  if (candidate.completedAt < lastDiscoveredAt) {
+    return "The journey was completed before its last discovery.";
+  }
+  if (candidate.completedAt - firstDiscoveredAt > 24 * 60 * 60_000) {
+    return "The journey took longer than 24 hours from the first scan to completion.";
+  }
 
   const creatureForm = isAquaticForm(candidate.creatureForm)
     ? candidate.creatureForm
@@ -75,9 +85,7 @@ function parseSubmission(value: unknown): ContributionSubmission | null {
     ? candidate.creaturePalette
     : creatureColorPalette(candidate.sessionId);
 
-  return valid && validCompletion
-    ? { sessionId: candidate.sessionId, creatureForm, creaturePalette, completedAt: candidate.completedAt, discoveries }
-    : null;
+  return { sessionId: candidate.sessionId, creatureForm, creaturePalette, completedAt: candidate.completedAt, discoveries };
 }
 
 export async function GET(request: Request) {
@@ -104,9 +112,10 @@ export async function POST(request: Request) {
   }
 
   const submission = parseSubmission(body);
-  if (!submission) {
+  if (typeof submission === "string") {
+    console.warn(`Rejected contribution: ${submission}`);
     return Response.json(
-      { error: "The shared journey is incomplete or invalid." },
+      { error: `The shared journey is incomplete or invalid. ${submission}` },
       { status: 422 },
     );
   }
