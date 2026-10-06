@@ -197,104 +197,50 @@ function sampleSkateboard(progress: number, random: () => number): Point3 {
   ];
 }
 
-const HOTEL_HALF_WIDTH = 0.62;
-const HOTEL_HALF_DEPTH = 0.32;
-const HOTEL_BASE = -0.9;
-const HOTEL_ROOF = 0.44;
-const HOTEL_CENTER_HALF_WIDTH = 0.26;
-const HOTEL_CENTER_ROOF = 0.68;
+const GALAXY_ARMS = 2;
+const GALAXY_WINDING = Math.PI * 2.3;
+const GALAXY_TILT = 0.42;
 
-// Lit window centres on the front and back facades, leaving a few dark.
-const hotelWindows = (() => {
-  const windows: [number, number][] = [];
-  for (let column = 0; column < 6; column += 1) {
-    const x = -0.5 + column * 0.2;
-    const top = Math.abs(x) < HOTEL_CENTER_HALF_WIDTH - 0.05 ? HOTEL_CENTER_ROOF : HOTEL_ROOF;
-    for (let row = 0; ; row += 1) {
-      const y = -0.62 + row * 0.2;
-      if (y > top - 0.12) break;
-      if ((column * 7 + row * 3) % 6 !== 0) windows.push([x, y]);
-    }
-  }
-  return windows;
-})();
+// Roughly normal noise in [-1, 1], denser towards zero.
+function centeredNoise(random: () => number) {
+  return (random() + random() + random()) / 1.5 - 1;
+}
 
-const hotelEdges: [Point3, Point3][] = (() => {
-  const box = (halfWidth: number, bottom: number, top: number): [Point3, Point3][] => {
-    const corners = [
-      [-halfWidth, -HOTEL_HALF_DEPTH],
-      [halfWidth, -HOTEL_HALF_DEPTH],
-      [halfWidth, HOTEL_HALF_DEPTH],
-      [-halfWidth, HOTEL_HALF_DEPTH],
-    ];
-    return corners.flatMap(([x, z], index) => {
-      const [nextX, nextZ] = corners[(index + 1) % 4];
-      return [
-        [[x, bottom, z], [nextX, bottom, nextZ]],
-        [[x, top, z], [nextX, top, nextZ]],
-        [[x, bottom, z], [x, top, z]],
-      ] as [Point3, Point3][];
-    });
-  };
-  return [
-    ...box(HOTEL_HALF_WIDTH, HOTEL_BASE, HOTEL_ROOF),
-    ...box(HOTEL_CENTER_HALF_WIDTH, HOTEL_ROOF, HOTEL_CENTER_ROOF),
-    // Entrance canopy and its posts.
-    [[-0.18, -0.7, -0.48], [0.18, -0.7, -0.48]],
-    [[-0.18, -0.7, -0.48], [-0.18, HOTEL_BASE, -0.48]],
-    [[0.18, -0.7, -0.48], [0.18, HOTEL_BASE, -0.48]],
-  ];
-})();
+// A spiral galaxy: a bright core bulge, two arms winding outwards along a
+// logarithmic spiral that widen and thin out, and a faint scattered disc.
+// The disc faces the viewer, tilted back just enough to read as a plane.
+function sampleGalaxy(progress: number, random: () => number): Point3 {
+  let x: number;
+  let y: number;
+  let thickness: number;
 
-// A domed grand hotel: lit window grid, framed volumes, entrance canopy and
-// an orbit ring around the dome for the galactic setting.
-function sampleHotel(progress: number, random: () => number): Point3 {
-  if (progress < 0.46) {
-    const [x, y] = hotelWindows[Math.floor(random() * hotelWindows.length)];
-    const side = random() < 0.85 ? -1 : 1;
-    return [
-      x + (random() - 0.5) * 0.08,
-      y + (random() - 0.5) * 0.1,
-      side * HOTEL_HALF_DEPTH,
-    ];
-  }
-
-  if (progress < 0.5) {
-    const side = random() < 0.5 ? -1 : 1;
-    return [
-      side * HOTEL_HALF_WIDTH,
-      -0.62 + Math.floor(random() * 5) * 0.2 + (random() - 0.5) * 0.1,
-      (Math.floor(random() * 3) - 1) * 0.2 + (random() - 0.5) * 0.08,
-    ];
-  }
-
-  if (progress < 0.78) {
-    const [start, end] = hotelEdges[Math.floor(random() * hotelEdges.length)];
-    return sampleSegment(start, end, random(), random, 0.025);
-  }
-
-  if (progress < 0.88) {
-    if (random() < 0.15) {
-      return sampleSegment([0, 0.88, 0], [0, 1.08, 0], random(), random, 0.03);
-    }
+  if (progress < 0.16) {
     const angle = random() * Math.PI * 2;
-    const lift = Math.acos(random());
-    const radius = 0.22;
-    return [
-      Math.cos(angle) * Math.sin(lift) * radius,
-      HOTEL_CENTER_ROOF + Math.cos(lift) * radius,
-      Math.sin(angle) * Math.sin(lift) * radius,
-    ];
+    const radius = 0.24 * Math.pow(random(), 1.6);
+    x = Math.cos(angle) * radius;
+    y = Math.sin(angle) * radius;
+    thickness = centeredNoise(random) * 0.12 * (1 - radius / 0.24);
+  } else if (progress < 0.82) {
+    const arm = Math.floor(random() * GALAXY_ARMS);
+    const along = Math.pow(random(), 0.8);
+    const radius = 0.16 * Math.exp(along * Math.log(1.02 / 0.16));
+    const angle = (arm / GALAXY_ARMS) * Math.PI * 2 + along * GALAXY_WINDING;
+    const spread = 0.025 + along * 0.09;
+    x = Math.cos(angle) * radius + centeredNoise(random) * spread;
+    y = Math.sin(angle) * radius + centeredNoise(random) * spread;
+    thickness = centeredNoise(random) * 0.03;
+  } else {
+    const angle = random() * Math.PI * 2;
+    const radius = 0.2 + Math.pow(random(), 0.7) * 0.9;
+    x = Math.cos(angle) * radius;
+    y = Math.sin(angle) * radius;
+    thickness = centeredNoise(random) * 0.04;
   }
 
-  const angle = random() * Math.PI * 2;
-  const tilt = 0.28;
-  const ringX = Math.cos(angle) * 0.5;
-  const ringZ = Math.sin(angle) * 0.36;
   return [
-    ringX,
-    0.8 - ringZ * Math.sin(tilt) + (random() - 0.5) * 0.02,
-    ringZ * Math.cos(tilt),
+    x,
+    y * Math.cos(GALAXY_TILT) - thickness * Math.sin(GALAXY_TILT),
+    y * Math.sin(GALAXY_TILT) + thickness * Math.cos(GALAXY_TILT),
   ];
 }
 
@@ -512,8 +458,8 @@ function formationPosition(
       );
     }
 
-    case "hotel":
-      return sampleHotel(progress, random);
+    case "galaxy":
+      return sampleGalaxy(progress, random);
 
     case "pillar": {
       // A T: a stem topped by a wide crossbar, both as box surfaces.

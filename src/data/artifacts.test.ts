@@ -5,16 +5,16 @@ import { artifacts } from "@/data/artifacts";
 
 describe("artifact target image configuration", () => {
   it("maps the full exhibition in CSV order to unique target indices", () => {
-    expect(artifacts).toHaveLength(16);
+    expect(artifacts).toHaveLength(15);
     expect(artifacts.map(({ exhibitionId }) => exhibitionId)).toEqual(
-      Array.from({ length: 16 }, (_, index) => index + 1),
+      Array.from({ length: 15 }, (_, index) => index + 1),
     );
     expect(artifacts.map(({ targetIndex }) => targetIndex)).toEqual(
-      Array.from({ length: 16 }, (_, index) => index),
+      Array.from({ length: 15 }, (_, index) => index),
     );
     expect(artifacts[0].title).toBe("Finding Frida");
-    expect(artifacts[12].title).toBe("Goliath");
-    expect(artifacts[15].title).toBe("Fiery Sparks of Light");
+    expect(artifacts[11].title).toBe("Goliath");
+    expect(artifacts[14].title).toBe("Fiery Sparks of Light");
   });
 
   it("keeps the three poster families while assigning artwork-specific particles", () => {
@@ -38,9 +38,8 @@ describe("artifact target image configuration", () => {
       ["book", "#ffffff", "#000000"],
       ["skateboard", "#8B5E3C", "#6B4027"],
       ["brain", "#555555", "#333333"],
-      ["hotel", "#51477F", "#40356D"],
+      ["galaxy", "#51477F", "#40356D"],
       ["pillar", "#B44772", "#8E2F57"],
-      ["butterfly", "#28374F", "#28374F"],
       ["dodecahedron", "#2D7F88", "#185F68"],
       ["crystal", "#8CB6C7", "#3D7288"],
       ["hourglass", "#C19D65", "#77572F"],
@@ -49,7 +48,7 @@ describe("artifact target image configuration", () => {
   });
 
   it("gives every artifact a distinct creature part", () => {
-    expect(new Set(artifacts.map(({ creaturePart }) => creaturePart.id)).size).toBe(16);
+    expect(new Set(artifacts.map(({ creaturePart }) => creaturePart.id)).size).toBe(15);
     expect(
       artifacts.find(({ id }) => id === "grand-hotel-bald-cockatoo")?.creaturePart,
     ).toMatchObject({ id: "cockatoo-beak", label: "Cockatoo beak" });
@@ -67,10 +66,10 @@ describe("artifact target image configuration", () => {
 });
 
 describe("compiled MindAR bundle", () => {
-  it("contains one target per artifact", () => {
+  it("contains a dark and a white target per artifact", () => {
     const bundle = decode(readFileSync("public/targets/exhibition.mind")) as {
       dataList: unknown[];
     };
-    expect(bundle.dataList).toHaveLength(artifacts.length);
+    expect(bundle.dataList).toHaveLength(artifacts.length * 2);
   });
 });

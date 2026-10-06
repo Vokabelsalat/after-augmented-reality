@@ -65,7 +65,6 @@ const fishLooks: Record<string, Omit<FishLook, "profile"> & { profile: keyof typ
   emperor: { profile: "memory", body: "#8E83A8", head: "#655C83", belly: "#DAD4DF", fin: "#C2A1D6", marking: "#35314B", pattern: "stripe" },
   "grand-hotel-galactic-center": { profile: "embodiment", body: "#274E93", head: "#1E3570", belly: "#E5C945", fin: "#E0B72B", marking: "#101E4E", pattern: "bands" },
   "her-name-was-gisberta": { profile: "worldmaking", body: "#D34A79", head: "#A92E59", belly: "#F3B7A3", fin: "#ED7C3D", marking: "#682342", pattern: "spots" },
-  "missing-10-hours": { profile: "agency", body: "#C35B4F", head: "#8F3939", belly: "#E9C5A7", fin: "#E2A044", marking: "#582735", pattern: "stripe" },
   goliath: { profile: "worldmaking", body: "#69884A", head: "#405E3B", belly: "#D6CF83", fin: "#D7A62C", marking: "#26372B", pattern: "bands" },
   "land-of-crystals": { profile: "memory", body: "#6E9EAE", head: "#456F82", belly: "#DCE9E8", fin: "#A8CED7", marking: "#345361", pattern: "spots" },
   "grand-hotel-sand-fountain": { profile: "worldmaking", body: "#A98254", head: "#795D40", belly: "#E8D3AA", fin: "#CDAA6D", marking: "#57412E", pattern: "bands" },

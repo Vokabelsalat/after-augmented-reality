@@ -15,7 +15,7 @@ export const particleFormIds = [
   "book",
   "skateboard",
   "brain",
-  "hotel",
+  "galaxy",
   "pillar",
   "butterfly",
   "dodecahedron",

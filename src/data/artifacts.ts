@@ -285,29 +285,6 @@ const aquariumLayers: Record<string, AquariumLayer> = {
       ],
     },
   },
-  "missing-10-hours": {
-    marineType: "bystander current",
-    classification: "Decision-sensitive tide",
-    visualTraits: ["forked current", "distress pulse"],
-    stateEffects: { agency: 2, coherence: -1, voice: 1 },
-    storylet:
-      "The current split around a person in danger. Refusing to choose was also a direction.",
-    choice: {
-      prompt: "The current is pulling someone out of sight.",
-      options: [
-        {
-          id: "reach",
-          label: "Reach toward them",
-          effects: { agency: 2, voice: 1 },
-        },
-        {
-          id: "call",
-          label: "Call others closer",
-          effects: { voice: 2, agency: 1 },
-        },
-      ],
-    },
-  },
   goliath: {
     marineType: "networked deep-sea giant",
     classification: "Plural-reality social organism",
@@ -591,7 +568,7 @@ const exhibitionSources: ArtifactSource[] = [
     title: "The Grand Hotel Galactic Center",
     artist: "Scott Robert Rettberg",
     visualFamily: "machine",
-    particleForm: "hotel",
+    particleForm: "galaxy",
     color: "#51477F",
     alternativeColor: "#40356D",
     theme: "worldmaking",
@@ -626,29 +603,9 @@ const exhibitionSources: ArtifactSource[] = [
     },
   },
   {
-    id: "missing-10-hours",
+    id: "goliath",
     exhibitionId: 12,
     targetIndex: 11,
-    title: "Missing 10 Hours",
-    artist: "Fanni Fazakas",
-    visualFamily: "body",
-    particleForm: "butterfly",
-    color: "#28374F",
-    alternativeColor: "#28374F",
-    theme: "agency",
-    shortText:
-      "Missing 10 Hours is a narrative VR experience created with survivors of substance abuse. Visitors become a bystander whose choices influence the story, navigating whether to help a young woman named Mara or become complicit in the actions of a perpetrator. Its multiplayer structure amplifies the impact of each decision across a night-time party that moves from excessive drinking and invasions of privacy to police intervention and a final revelation.",
-    narrativeWords: ["choose", "choice", "intervene", "answer"],
-    creaturePart: {
-      id: "helping-arms",
-      label: "Helping feelers",
-      description: "Long sensory fins that make the choice to reach out.",
-    },
-  },
-  {
-    id: "goliath",
-    exhibitionId: 13,
-    targetIndex: 12,
     title: "Goliath",
     artist: "Anagram",
     visualFamily: "machine",
@@ -667,8 +624,8 @@ const exhibitionSources: ArtifactSource[] = [
   },
   {
     id: "land-of-crystals",
-    exhibitionId: 14,
-    targetIndex: 13,
+    exhibitionId: 13,
+    targetIndex: 12,
     title: "The Land of Crystals",
     artist: "The Land of Crystals",
     visualFamily: "memory",
@@ -688,8 +645,8 @@ const exhibitionSources: ArtifactSource[] = [
   },
   {
     id: "grand-hotel-sand-fountain",
-    exhibitionId: 15,
-    targetIndex: 14,
+    exhibitionId: 14,
+    targetIndex: 13,
     title: "The Grand Hotel Sand Fountain",
     artist:
       "Scott Rettberg, Caitlin Fisher, Roderick Coover, Julian Pillis, Colin Robinson",
@@ -710,8 +667,8 @@ const exhibitionSources: ArtifactSource[] = [
   },
   {
     id: "fiery-sparks-of-light",
-    exhibitionId: 16,
-    targetIndex: 15,
+    exhibitionId: 15,
+    targetIndex: 14,
     title: "Fiery Sparks of Light",
     artist: "Caitlin Fisher",
     visualFamily: "machine",

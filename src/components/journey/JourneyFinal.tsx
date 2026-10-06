@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { artifacts, artifactById } from "@/data/artifacts";
 import { generateJourneyNarrative } from "@/lib/narrative/generateJourneyNarrative";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { finishJourney, resetJourney, setExperiencePhase } from "@/store/journeySlice";
+import { clearJourney } from "@/store/persistence";
 import { selectDiscoveries } from "@/store/selectors";
 import { selectJourney } from "@/store/selectors";
 import { ShareContribution } from "@/components/journey/ShareContribution";
@@ -35,11 +36,27 @@ export function JourneyFinal() {
     return artifact ? [artifact] : [];
   });
 
+  // Finish only when the ending opens. Leaving it clears completedAt again
+  // (continue or start again), which must not re-finish the journey.
+  const finishedOnOpen = useRef(false);
   useEffect(() => {
+    if (finishedOnOpen.current) return;
+    finishedOnOpen.current = true;
     if (!journey.completedAt) {
       dispatch(finishJourney());
     }
   }, [dispatch, journey.completedAt]);
+
+  const startAgain = () => {
+    dispatch(resetJourney());
+    try {
+      clearJourney(window.localStorage);
+    } catch {
+      // Storage can be unavailable; the reload still starts from the intro.
+    }
+    // A full reload also resets the camera, AR tracking and any screen state.
+    window.location.replace("/");
+  };
 
   return (
     <main className="biome-field biome-screen film-grain safe-top safe-bottom relative min-h-dvh overflow-x-hidden bg-[var(--abyss)] px-5">
@@ -99,14 +116,14 @@ export function JourneyFinal() {
             <span>Continue this journey</span>
             <span aria-hidden="true">→</span>
           </Link>
-          <Link
-            href="/"
-            onClick={() => dispatch(resetJourney())}
-            className="mt-3 flex min-h-14 items-center justify-between bg-white px-5 text-sm text-[#031015] transition-opacity hover:opacity-85"
+          <button
+            type="button"
+            onClick={startAgain}
+            className="mt-3 flex min-h-14 w-full items-center justify-between bg-white px-5 text-sm text-[#031015] transition-opacity hover:opacity-85"
           >
             <span>Start again</span>
             <span aria-hidden="true">→</span>
-          </Link>
+          </button>
         </div>
       </section>
     </main>
