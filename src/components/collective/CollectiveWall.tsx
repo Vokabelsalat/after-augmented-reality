@@ -2,16 +2,21 @@
 
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { CollectiveVisualizationField } from "@/components/collective/CollectiveVisualizationField";
+import type { CreatureArrival } from "@/components/collective/CollectiveCreatureField";
 import { CollectiveHeatmap } from "@/components/collective/CollectiveHeatmap";
 import { SpecimenDialog } from "@/components/collective/SpecimenDialog";
 import { PathVisualization } from "@/components/visualization/PathVisualization";
 import { BiomeBackdrop } from "@/components/visualization/BiomeBackdrop";
+import { creatureFitMargin } from "@/components/creature/CreatureCanvas";
 import { activeVisualizationCopy } from "@/config/visualization";
 import { artifacts } from "@/data/artifacts";
 import { aggregateContributionDwellTimes } from "@/lib/contributions/heatmap";
 import type { CollectiveHeatDatum, ExhibitionContribution } from "@/types/contribution";
 
 const ARRIVAL_DURATION_MS = 17_000;
+// Matches the 80% keyframe of arrival-graph, where the overlay creature hands over to the tank.
+const ARRIVAL_RELEASE_MS = ARRIVAL_DURATION_MS * 0.8;
+const ARRIVAL_FIT_SCALE = 1.25;
 const MINUTES_IN_DAY = 24 * 60 - 1;
 const osloClock = new Intl.DateTimeFormat("en-GB", {
   timeZone: "Europe/Oslo",
@@ -56,6 +61,9 @@ export function CollectiveWall() {
   const queueRef = useRef<ExhibitionContribution[]>([]);
   const cycleDateRef = useRef<string | null>(null);
   const syntheticCountRef = useRef<number | null>(null);
+  const arrivalCreatureRef = useRef<HTMLDivElement>(null);
+  const [releasedArrival, setReleasedArrival] = useState<CreatureArrival | null>(null);
+  const [takenOverId, setTakenOverId] = useState<number | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -142,12 +150,24 @@ export function CollectiveWall() {
 
   useEffect(() => {
     if (!active) return;
+    const release = window.setTimeout(() => {
+      const rect = arrivalCreatureRef.current?.getBoundingClientRect();
+      setReleasedArrival({
+        id: active.id,
+        rect: rect && { left: rect.left, top: rect.top, width: rect.width, height: rect.height },
+        fill: creatureFitMargin * ARRIVAL_FIT_SCALE,
+        onTakeover: () => setTakenOverId(active.id),
+      });
+    }, ARRIVAL_RELEASE_MS);
     const timeout = window.setTimeout(() => {
       const next = queueRef.current.shift() ?? null;
       activeRef.current = next;
       setActive(next);
     }, ARRIVAL_DURATION_MS);
-    return () => window.clearTimeout(timeout);
+    return () => {
+      window.clearTimeout(release);
+      window.clearTimeout(timeout);
+    };
   }, [active]);
 
   const visibleContributions = useMemo(
@@ -156,8 +176,10 @@ export function CollectiveWall() {
   );
   const visibleActive = liveTime && active && minuteOfDay(active.createdAt) <= clockMinutes ? active : null;
   const habitatCreatures = useMemo(
-    () => visibleContributions.filter((contribution) => contribution.id !== visibleActive?.id),
-    [visibleActive?.id, visibleContributions],
+    () => visibleContributions.filter(
+      (contribution) => contribution.id !== visibleActive?.id || contribution.id === releasedArrival?.id,
+    ),
+    [releasedArrival?.id, visibleActive?.id, visibleContributions],
   );
   const recentContributions = useMemo(
     () => visibleContributions.slice(-5).reverse(),
@@ -214,6 +236,7 @@ export function CollectiveWall() {
           <CollectiveVisualizationField
             contributions={habitatCreatures}
             progress={dayProgress}
+            arrival={releasedArrival}
             onSelectContribution={setSelectedContribution}
           />
         </div>
@@ -305,14 +328,16 @@ export function CollectiveWall() {
       {view === "collective" && visibleActive && (
         <section key={visibleActive.id} className="collective-arrival absolute inset-0 z-20 grid place-items-center" aria-label={`A new visitor ${activeVisualizationCopy.singular} has arrived`}>
           <div className="collective-arrival-glow absolute inset-0" aria-hidden="true" />
-          <div className="collective-arrival-creature absolute inset-y-0 left-0 w-[68vw]">
-            <PathVisualization
-              artifactIds={visibleActive.parts.map((part) => part.artifactId)}
-              contribution={visibleActive}
-              fitToView
-              fitScale={1.25}
-              label={`New ${activeVisualizationCopy.singular} with ${visibleActive.parts.length} parts`}
-            />
+          <div ref={arrivalCreatureRef} className="collective-arrival-creature absolute inset-y-0 left-0 w-[68vw]">
+            <div className="size-full transition-opacity duration-300" style={{ opacity: takenOverId === visibleActive.id ? 0 : 1 }}>
+              <PathVisualization
+                artifactIds={visibleActive.parts.map((part) => part.artifactId)}
+                contribution={visibleActive}
+                fitToView
+                fitScale={ARRIVAL_FIT_SCALE}
+                label={`New ${activeVisualizationCopy.singular} with ${visibleActive.parts.length} parts`}
+              />
+            </div>
           </div>
           <div className="collective-story relative z-10 ml-auto mr-[6vw] w-[min(34vw,36rem)]">
             <p className="mb-3 text-base text-[var(--phosphor)]">A new specimen has entered the tank</p>

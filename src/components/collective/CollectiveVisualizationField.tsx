@@ -4,7 +4,7 @@ import { AdaptiveDpr } from "@react-three/drei";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { useMemo, useRef, type CSSProperties } from "react";
 import * as THREE from "three";
-import { CollectiveCreatureField } from "@/components/collective/CollectiveCreatureField";
+import { CollectiveCreatureField, type CreatureArrival } from "@/components/collective/CollectiveCreatureField";
 import { AbstractCreatureModel } from "@/components/visualization/AbstractCreatureCanvas";
 import { NetworkGlyph } from "@/components/visualization/NetworkGlyph";
 import { visualizationDesign } from "@/config/visualization";
@@ -103,10 +103,12 @@ function CollectiveNetworkField({ contributions, progress }: { contributions: Ex
 export function CollectiveVisualizationField({
   contributions,
   progress = 1,
+  arrival,
   onSelectContribution,
 }: {
   contributions: ExhibitionContribution[];
   progress?: number;
+  arrival?: CreatureArrival | null;
   onSelectContribution?: (contribution: ExhibitionContribution) => void;
 }) {
   if (visualizationDesign === "constellation") {
@@ -119,6 +121,7 @@ export function CollectiveVisualizationField({
     <CollectiveCreatureField
       contributions={contributions}
       progress={progress}
+      arrival={arrival}
       onSelectContribution={onSelectContribution}
     />
   );

@@ -30,6 +30,7 @@ type PreparedArtifact = ParticlePreviewArtifact & {
 };
 
 const dragRadiansPerPixel = 0.01;
+const autoRotateRadiansPerSecond = 0.35;
 const maxPitch = Math.PI / 2;
 const exportWidth = 400;
 const exportHeight = 300;
@@ -117,6 +118,8 @@ export function ParticleConstellationGallery({
   const [surface, setSurface] = useState<PreviewSurface>("dark");
   const canvasByArtifact = useRef(new Map<string, HTMLCanvasElement>());
   const orientationByArtifact = useRef(new Map<string, Orientation>());
+  // Models the visitor has rotated by hand no longer spin on their own.
+  const manuallyRotated = useRef(new Set<string>());
   const dragRef = useRef<{ id: string; pointerId: number; x: number; y: number } | null>(
     null,
   );
@@ -155,11 +158,52 @@ export function ParticleConstellationGallery({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [preparedArtifacts]);
 
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    // Only spin canvases that are on screen.
+    const visible = new Set<Element>();
+    const intersectionObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) visible.add(entry.target);
+        else visible.delete(entry.target);
+      });
+    });
+    canvasByArtifact.current.forEach((canvas) => intersectionObserver.observe(canvas));
+
+    let frame = 0;
+    let previous = performance.now();
+    const tick = (now: number) => {
+      const deltaSeconds = Math.min((now - previous) / 1000, 0.1);
+      previous = now;
+      preparedArtifacts.forEach((artifact) => {
+        const canvas = canvasByArtifact.current.get(artifact.id);
+        if (!canvas || !visible.has(canvas) || manuallyRotated.current.has(artifact.id)) {
+          return;
+        }
+        const { yaw, pitch } = orientationFor(artifact.id);
+        orientationByArtifact.current.set(artifact.id, {
+          yaw: yaw + deltaSeconds * autoRotateRadiansPerSecond,
+          pitch,
+        });
+        drawFormation(canvas, artifact, orientationFor(artifact.id));
+      });
+      frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+
+    return () => {
+      cancelAnimationFrame(frame);
+      intersectionObserver.disconnect();
+    };
+  }, [preparedArtifacts]);
+
   const handlePointerDown = (
     event: React.PointerEvent<HTMLCanvasElement>,
     artifact: PreparedArtifact,
   ) => {
     event.currentTarget.setPointerCapture(event.pointerId);
+    manuallyRotated.current.add(artifact.id);
     dragRef.current = {
       id: artifact.id,
       pointerId: event.pointerId,

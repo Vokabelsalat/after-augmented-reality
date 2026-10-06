@@ -129,6 +129,26 @@ type PairingEvent = {
   babyCreated: boolean;
 };
 
+export type CreatureArrival = {
+  id: number;
+  /** Screen rect of the arrival overlay's creature canvas at the moment of hand-over. */
+  rect?: { left: number; top: number; width: number; height: number };
+  /** Share of the overlay canvas the fitted creature fills (see FitCreatureCamera). */
+  fill: number;
+  onTakeover?: () => void;
+};
+
+type ArrivalMotion = {
+  startedAt: number;
+  fromX: number;
+  fromY: number;
+  fromScale: number;
+};
+
+const arrivalSinkSeconds = 4.2;
+const arrivalSettleSeconds = 1.8;
+const arrivalDepth = 1;
+
 type BabyCreature = {
   contribution: ExhibitionContribution;
   spawnPosition: [number, number, number];
@@ -141,6 +161,7 @@ type FloatingCreatureProps = {
   pairingRef?: MutableRefObject<PairingEvent | null>;
   juvenile?: boolean;
   spawnPosition?: [number, number, number];
+  arrival?: CreatureArrival;
   onSelect?: (contribution: ExhibitionContribution) => void;
 };
 
@@ -151,6 +172,7 @@ function FloatingCreature({
   pairingRef,
   juvenile = false,
   spawnPosition,
+  arrival,
   onSelect,
 }: FloatingCreatureProps) {
   const canvas = useThree((state) => state.gl.domElement);
@@ -162,6 +184,8 @@ function FloatingCreature({
   const yawAxis = useRef(new THREE.Vector3(0, 1, 0));
   const pitchAxis = useRef(new THREE.Vector3(0, 0, 1));
   const floorOffsetRef = useRef<number | null>(null);
+  const arrivalPending = useRef(Boolean(arrival));
+  const arrivalMotion = useRef<ArrivalMotion | null>(null);
   const isBottomDweller = contribution.creatureForm === "crab" || contribution.creatureForm === "clam";
   const isWhale = contribution.creatureForm === "whale";
   const formSpeed = collectiveFormSpeed[contribution.creatureForm];
@@ -223,10 +247,21 @@ function FloatingCreature({
     const backDepth = -1.45;
     const frontDepth = 1.65;
     if (isBottomDweller && floorOffsetRef.current === null) {
+      // Measure how far the model reaches below its origin at unit depth scale,
+      // so the lowest point can be placed exactly on the aquarium floor.
+      swimRef.current.updateWorldMatrix(true, true);
       const bounds = new THREE.Box3().setFromObject(directionRef.current);
-      floorOffsetRef.current = Number.isFinite(bounds.min.y) ? -bounds.min.y + 0.04 : 0.42;
+      const worldScale = swimRef.current.getWorldScale(new THREE.Vector3()).y || 1;
+      const originY = swimRef.current.getWorldPosition(new THREE.Vector3()).y;
+      if (!bounds.isEmpty()) floorOffsetRef.current = (originY - bounds.min.y) / worldScale;
     }
-    const floorY = aquariumFloorY + (floorOffsetRef.current ?? 0.42);
+    const depthScaleAt = (z: number) => THREE.MathUtils.lerp(
+      0.72,
+      1.24,
+      THREE.MathUtils.smoothstep(THREE.MathUtils.inverseLerp(backDepth, frontDepth, z), 0, 1),
+    );
+    const floorYAt = (z: number) => aquariumFloorY + (floorOffsetRef.current ?? 0.3) * depthScaleAt(z);
+    const floorY = floorYAt(state.z);
     const spawnMinX = compartmentBounds[spawnCompartment] * maxX;
     const spawnMaxX = compartmentBounds[spawnCompartment + 1] * maxX;
     const spawnCenterX = (spawnMinX + spawnMaxX) / 2;
@@ -241,8 +276,63 @@ function FloatingCreature({
         : spawnPosition?.[1] ?? placement.yUnit * maxY * (isWhale ? 0.72 : 1);
       state.z = spawnPosition?.[2] ?? placement.z;
       state.initialized = true;
+
+      if (arrivalPending.current) {
+        // Take over from the arrival overlay at the exact size and position the
+        // creature had there, then shrink and sink it to its first spot in the tank.
+        arrivalPending.current = false;
+        swimRef.current.position.set(0, 0, 0);
+        swimRef.current.scale.setScalar(1);
+        // The overlay shows the creature unturned; it turns toward its heading once it swims.
+        directionRef.current.quaternion.identity();
+        swimRef.current.updateWorldMatrix(true, true);
+        const bounds = new THREE.Box3().setFromObject(directionRef.current);
+        const canvasRect = canvas.getBoundingClientRect();
+        const overlay = arrival?.rect;
+        const naturalScale = depthScaleAt(isWhale ? state.z : arrivalDepth);
+        let fromX = state.x;
+        let fromY = state.y;
+        let fromScale = naturalScale * 0.3;
+        if (overlay && !bounds.isEmpty() && canvasRect.width > 0) {
+          const size = bounds.getSize(new THREE.Vector3());
+          const center = bounds.getCenter(new THREE.Vector3());
+          const pixelsPerUnit = canvasRect.width / viewport.width;
+          const fittedWidth = Math.min(overlay.width, overlay.height * (size.x / Math.max(size.y, 0.001))) * arrival.fill;
+          fromScale = fittedWidth / (Math.max(size.x, 0.001) * pixelsPerUnit);
+          const centerX = ((overlay.left + overlay.width / 2 - canvasRect.left) / canvasRect.width - 0.5) * viewport.width;
+          const centerY = (0.5 - (overlay.top + overlay.height / 2 - canvasRect.top) / canvasRect.height) * viewport.height;
+          fromX = centerX - center.x * fromScale;
+          fromY = centerY - center.y * fromScale;
+        }
+        if (!isWhale) {
+          state.z = arrivalDepth;
+          state.x = THREE.MathUtils.clamp(fromX, -maxX, maxX);
+          state.y = isBottomDweller
+            ? floorYAt(state.z)
+            : THREE.MathUtils.clamp(fromY - 1.2, -maxY * 0.85, maxY * 0.85);
+        }
+        arrivalMotion.current = { startedAt: elapsed, fromX, fromY, fromScale };
+        arrival?.onTakeover?.();
+      }
     }
     previousProgress.current = progress;
+
+    const arrivalAge = arrivalMotion.current ? elapsed - arrivalMotion.current.startedAt : Infinity;
+    if (arrivalMotion.current && arrivalAge < arrivalSinkSeconds) {
+      const { fromX, fromY, fromScale } = arrivalMotion.current;
+      const t = arrivalAge / arrivalSinkSeconds;
+      const ease = t < 0.5 ? 4 * t ** 3 : 1 - (-2 * t + 2) ** 3 / 2;
+      // Interpolate scale geometrically so the shrink reads as an even recession.
+      const scale = fromScale * (depthScaleAt(state.z) / fromScale) ** ease;
+      swimRef.current.position.set(
+        THREE.MathUtils.lerp(fromX, state.x, ease),
+        THREE.MathUtils.lerp(fromY, state.y, ease),
+        state.z,
+      );
+      swimRef.current.scale.setScalar(scale);
+      return;
+    }
+    const settle = THREE.MathUtils.smoothstep(arrivalAge - arrivalSinkSeconds, 0, arrivalSettleSeconds);
 
     if (!isWhale && state.x > maxX - turnZone && state.vx > 0) state.vx = -Math.abs(state.vx);
     if (!isWhale && state.x < -maxX + turnZone && state.vx < 0) state.vx = Math.abs(state.vx);
@@ -262,7 +352,7 @@ function FloatingCreature({
     movementDirection.current.set(state.vx, state.vy, state.vz).normalize();
     aimTowardVelocity(state.vx, state.vy, state.vz);
     const facingError = directionRef.current.quaternion.angleTo(targetOrientation.current);
-    const forwardMotion = THREE.MathUtils.smoothstep(Math.PI / 2 - facingError, 0, Math.PI / 2);
+    const forwardMotion = THREE.MathUtils.smoothstep(Math.PI / 2 - facingError, 0, Math.PI / 2) * settle;
     const proposedX = state.x + state.vx * delta * forwardMotion;
     const walls = compartmentBounds.slice(1, -1).map((boundary) => boundary * maxX);
     const currentCompartment = walls.findIndex((wallX) => state.x < wallX);
@@ -307,7 +397,7 @@ function FloatingCreature({
       }
     }
     if (!isWhale) state.x = THREE.MathUtils.clamp(state.x, -maxX, maxX);
-    state.y = THREE.MathUtils.clamp(state.y, -maxY, maxY);
+    if (!isBottomDweller) state.y = THREE.MathUtils.clamp(state.y, -maxY, maxY);
 
     const pairing = pairingRef?.current;
     const participantIndex = pairing?.parents.findIndex((parent) => parent.id === contribution.id) ?? -1;
@@ -362,11 +452,11 @@ function FloatingCreature({
       state.vz = THREE.MathUtils.damp(state.vz, targetVz, 7, delta);
     }
 
+    if (isBottomDweller) state.y = floorYAt(state.z);
     swimRef.current.position.x = state.x;
     swimRef.current.position.y = state.y;
     swimRef.current.position.z = state.z;
-    const depthProgress = THREE.MathUtils.inverseLerp(backDepth, frontDepth, state.z);
-    const depthScale = THREE.MathUtils.lerp(0.72, 1.24, THREE.MathUtils.smoothstep(depthProgress, 0, 1));
+    const depthScale = depthScaleAt(state.z);
     swimRef.current.scale.setScalar(depthScale);
     movementDirection.current.set(state.vx, state.vy, state.vz).normalize();
     aimTowardVelocity(state.vx, state.vy, state.vz);
@@ -596,10 +686,12 @@ function createBaby(event: PairingEvent): BabyCreature {
 export function CollectiveCreatureField({
   contributions,
   progress = 1,
+  arrival,
   onSelectContribution,
 }: {
   contributions: ExhibitionContribution[];
   progress?: number;
+  arrival?: CreatureArrival | null;
   onSelectContribution?: (contribution: ExhibitionContribution) => void;
 }) {
   const [babies, setBabies] = useState<BabyCreature[]>([]);
@@ -634,6 +726,7 @@ export function CollectiveCreatureField({
           key={contribution.id}
           contribution={contribution}
           progress={progress}
+          arrival={arrival?.id === contribution.id ? arrival : undefined}
           onSelect={onSelectContribution}
         />
       ))}
@@ -653,6 +746,7 @@ export function CollectiveCreatureField({
           progress={progress}
           actorRegistry={actorRegistry}
           pairingRef={pairingRef}
+          arrival={arrival?.id === contribution.id ? arrival : undefined}
           onSelect={onSelectContribution}
         />
       ))}

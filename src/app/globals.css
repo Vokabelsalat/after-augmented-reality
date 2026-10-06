@@ -831,20 +831,28 @@ a:focus-visible {
 
 @keyframes arrival-stage {
   0% { opacity: 0; }
-  8%, 82% { opacity: 1; }
+  8%, 90% { opacity: 1; }
   100% { opacity: 0; }
 }
 
+/* At 80% the tank takes over the creature at the overlay's current size and position (see ARRIVAL_RELEASE_MS). */
 @keyframes arrival-graph {
-  0% { opacity: 0; transform: scale(0.12) rotate(-16deg); filter: blur(18px); }
-  11%, 80% { opacity: 1; transform: scale(1) rotate(0deg); filter: blur(0); }
-  92%, 100% { opacity: 0.5; transform: scale(0.18) rotate(10deg); filter: blur(2px); }
+  0% { opacity: 0; transform: translateY(0) scale(0.12) rotate(-16deg); filter: blur(18px); }
+  11% { opacity: 1; transform: translateY(0) scale(1) rotate(0deg); filter: blur(0); }
+  64% { transform: translateY(0) scale(1) rotate(0deg); filter: blur(0); animation-timing-function: cubic-bezier(0.45, 0, 0.25, 1); }
+  78%, 100% { transform: translateY(-12vh) scale(0.55) rotate(0deg); filter: blur(0); }
 }
 
 @keyframes arrival-story {
   0%, 12% { opacity: 0; transform: translateY(28px); filter: blur(8px); }
-  20%, 78% { opacity: 1; transform: translateY(0); filter: blur(0); }
-  88%, 100% { opacity: 0; transform: translateY(-18px); filter: blur(8px); }
+  20%, 60% { opacity: 1; transform: translateY(0); filter: blur(0); }
+  70%, 100% { opacity: 0; transform: translateY(-18px); filter: blur(8px); }
+}
+
+/* The dimming lifts before the hand-over so the tank creature is lit like the overlay one. */
+@keyframes arrival-glow {
+  0%, 64% { opacity: 1; }
+  78%, 100% { opacity: 0; }
 }
 
 .collective-arrival {
@@ -863,6 +871,7 @@ a:focus-visible {
 .collective-arrival-glow {
   background: radial-gradient(circle at 32% 50%, rgba(255, 255, 255, 0.11), transparent 38%);
   backdrop-filter: blur(2px) brightness(0.58);
+  animation: arrival-glow 17s ease-in-out both;
 }
 
 .collective-plan-stage {

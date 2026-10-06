@@ -10,6 +10,9 @@ import { aquaticFormLabels, type AquaticForm } from "@/lib/creature/aquaticForms
 import type { CreaturePartId } from "@/types/exhibition";
 import type { CreatureColorPalette } from "@/lib/creature/colorPalettes";
 
+/** Share of the canvas a fitted creature fills before `fitScale` is applied. */
+export const creatureFitMargin = 0.82;
+
 function FitCreatureCamera({
   objectRef,
   fitKey,
@@ -45,7 +48,7 @@ function FitCreatureCamera({
     fittedCamera.zoom = Math.min(
       size.width / Math.max(dimensions.x, 0.001),
       size.height / Math.max(dimensions.y, 0.001),
-    ) * 0.82 * scale;
+    ) * creatureFitMargin * scale;
     fittedCamera.updateProjectionMatrix();
     fittedCamera.updateMatrixWorld();
     set({ camera: fittedCamera });
