@@ -1,6 +1,6 @@
 import type * as THREEType from "three";
 import { createArtifactFormationPositions } from "@/components/particles/particleGeometry";
-import { revealTiming } from "@/lib/animation/revealMachine";
+import { revealAssemblesConstellation, revealTiming } from "@/lib/animation/revealMachine";
 import type { ExhibitionArtifact } from "@/types/exhibition";
 
 const AR_PARTICLE_COUNT = 2000;
@@ -339,6 +339,11 @@ export class MindARAdapter {
   }
 
   private clusterRevealDelay() {
+    // After the on-screen assembly, the tracked constellation takes over on the
+    // target while the creature evolves; otherwise it follows the whole reveal.
+    if (revealAssemblesConstellation) {
+      return revealTiming.assembling * this.revealTimeScale;
+    }
     return (
       (revealTiming.attached +
         revealTiming.release +

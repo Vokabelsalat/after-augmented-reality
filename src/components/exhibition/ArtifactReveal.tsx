@@ -2,7 +2,7 @@
 
 import { useCallback } from "react";
 import { artifactById } from "@/data/artifacts";
-import { useRevealMachine } from "@/lib/animation/revealMachine";
+import { revealAssemblesConstellation, useRevealMachine } from "@/lib/animation/revealMachine";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   artifactCollected,
@@ -12,6 +12,7 @@ import {
 import { selectActiveArtifactId } from "@/store/selectors";
 import { ArtifactContent } from "@/components/exhibition/ArtifactContent";
 import type { ExhibitionArtifact } from "@/types/exhibition";
+import { ConstellationAssembly } from "@/components/particles/ConstellationAssembly";
 import { ParticleNarrative } from "@/components/particles/ParticleNarrative";
 import { PathVisualization } from "@/components/visualization/PathVisualization";
 import { activeVisualizationCopy, visualizationDesign } from "@/config/visualization";
@@ -40,6 +41,7 @@ function ArtifactRevealSequence({
     artifact.id,
     handleContentReady,
     isRevisit,
+    revealAssemblesConstellation,
   );
 
   const contentVisible = phase === "content-reveal" || phase === "complete";
@@ -51,6 +53,15 @@ function ArtifactRevealSequence({
     <section className="pointer-events-none absolute inset-0 z-40 overflow-hidden" aria-live="polite">
       {!isRevisit && visualizationDesign === "constellation" && phase !== "complete" && (
         <ParticleNarrative artifact={artifact} phase={phase} mode="ar-release" quality="high" />
+      )}
+      {creatureVisible && (phase === "assembling" || phase === "attached") && (
+        // Centred on the creature stage below (top 7vh, height 58vh).
+        <ConstellationAssembly
+          artifact={artifact}
+          collapsing={phase === "attached"}
+          centerY={0.14}
+          fit={0.58}
+        />
       )}
       {creatureVisible && (
         <div
@@ -76,6 +87,7 @@ function ArtifactRevealSequence({
       )}
       {!contentVisible && (
         <p key={phase} className="creature-reveal-status absolute inset-x-6 bottom-[10vh] text-center text-sm text-white/80">
+          {phase === "assembling" && "Signal located"}
           {phase === "attached" && (visualizationDesign === "constellation" ? "Signal located" : "Your creature recognizes something new")}
           {phase === "release" && (visualizationDesign === "constellation" ? "Releasing language" : `${artifact.marineType} is joining it`)}
           {phase === "formation" && (visualizationDesign === "constellation" ? "Classification unstable" : `${artifact.creaturePart.label} is taking shape`)}

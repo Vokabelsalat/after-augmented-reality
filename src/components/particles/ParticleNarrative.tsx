@@ -28,6 +28,7 @@ type ParticleNarrativeProps = {
 
 const phaseIndex: Record<RevealPhase, number> = {
   idle: 0,
+  assembling: 0,
   attached: 0,
   release: 1,
   formation: 2,
@@ -37,6 +38,7 @@ const phaseIndex: Record<RevealPhase, number> = {
 
 const phaseDuration: Record<RevealPhase, number> = {
   idle: 1,
+  assembling: revealTiming.assembling,
   attached: revealTiming.attached,
   release: revealTiming.release,
   formation: revealTiming.formation,

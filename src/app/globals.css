@@ -930,8 +930,14 @@ a:focus-visible {
   transition: filter 700ms ease, opacity 700ms ease;
 }
 
+.creature-reveal-stage[data-phase="assembling"] .creature-reveal-model,
+.creature-reveal-stage[data-phase="assembling"] .creature-reveal-halo {
+  opacity: 0;
+  pointer-events: none;
+}
+
 .creature-reveal-stage[data-phase="attached"] .creature-reveal-model {
-  animation: creature-arrive 1.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: creature-arrive 900ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 
 .creature-reveal-stage[data-phase="release"] .creature-reveal-model,
@@ -1004,8 +1010,9 @@ a:focus-visible {
 }
 
 @keyframes creature-arrive {
-  from { opacity: 0; filter: blur(12px) brightness(0.72); }
-  to { opacity: 1; filter: blur(0) brightness(1); }
+  from { opacity: 0; transform: scale(0.35); filter: blur(6px) brightness(1.6); }
+  45% { opacity: 1; }
+  to { opacity: 1; transform: scale(1); filter: blur(0) brightness(1); }
 }
 
 @keyframes creature-grow {
