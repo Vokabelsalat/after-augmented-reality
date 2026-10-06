@@ -2,7 +2,11 @@
 // It only has type imports so scripts/export-particle-targets.mjs can load it
 // directly in Node.
 
-export type Orientation = { yaw: number; pitch: number };
+/**
+ * How a constellation is turned for its target: yaw around the vertical axis,
+ * pitch around the horizontal one, then roll within the image plane.
+ */
+export type Orientation = { yaw: number; pitch: number; roll?: number };
 
 export type Constellation = {
   positions: Float32Array;
@@ -30,7 +34,7 @@ type Context2D = Pick<
 >;
 
 export const constellationParticleCount = 1500;
-export const initialOrientation: Orientation = { yaw: 0.5, pitch: -0.16 };
+export const initialOrientation: Orientation = { yaw: 0.5, pitch: -0.16, roll: 0 };
 
 const frameFill = 0.84;
 const referenceSize = 300;
@@ -128,7 +132,8 @@ export function prepareConstellation(
   };
 }
 
-function project(
+/** Projects one formation particle the way every target image draws it. */
+export function projectConstellationPoint(
   positions: Float32Array,
   offset: number,
   orientation: Orientation,
@@ -143,9 +148,10 @@ function project(
   const depth =
     y * Math.sin(orientation.pitch) + rotatedZ * Math.cos(orientation.pitch);
   const perspective = 2.8 / (2.8 + depth);
+  const roll = orientation.roll ?? 0;
   return {
-    x: rotatedX * perspective,
-    y: rotatedY * perspective,
+    x: (rotatedX * Math.cos(roll) - rotatedY * Math.sin(roll)) * perspective,
+    y: (rotatedX * Math.sin(roll) + rotatedY * Math.cos(roll)) * perspective,
     depth,
     perspective,
   };
@@ -160,7 +166,7 @@ export function frameConstellation(
   let minY = Infinity;
   let maxY = -Infinity;
   for (let offset = 0; offset < positions.length; offset += 3) {
-    const { x, y } = project(positions, offset, orientation);
+    const { x, y } = projectConstellationPoint(positions, offset, orientation);
     minX = Math.min(minX, x);
     maxX = Math.max(maxX, x);
     minY = Math.min(minY, y);
@@ -191,7 +197,7 @@ export function paintConstellation(
 
   context.globalCompositeOperation = compositeOperation;
   for (let offset = 0; offset < positions.length; offset += 3) {
-    const { x, y, depth, perspective } = project(positions, offset, orientation);
+    const { x, y, depth, perspective } = projectConstellationPoint(positions, offset, orientation);
     const screenX = width / 2 + (x - framing.centerX) * scale;
     const screenY = height / 2 - (y - framing.centerY) * scale;
     const radius = radiusScale * sizes[offset / 3] * perspective;

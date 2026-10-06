@@ -11,6 +11,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
+    "targets:build": "npm run targets:export && npm run targets:compile && npm run targets:verify && npm run targets:print",
     "targets:export": "node scripts/export-particle-targets.mjs",
     "targets:compile": "node scripts/compile-mind-targets.mjs",
     "targets:verify": "node scripts/verify-mind-targets.mjs",

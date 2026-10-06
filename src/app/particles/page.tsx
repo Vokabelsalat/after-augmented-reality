@@ -4,7 +4,9 @@ import {
   ParticleConstellationGallery,
   type ParticlePreviewArtifact,
 } from "@/components/particles/ParticleConstellationGallery";
+import { initialOrientation } from "@/components/particles/constellationPainter";
 import { artifacts } from "@/data/artifacts";
+import { constellationOrientations } from "@/data/constellationOrientations";
 import { ScrollNotice } from "@/components/ui/ScrollNotice";
 
 export const metadata: Metadata = {
@@ -20,6 +22,7 @@ const previewArtifacts: ParticlePreviewArtifact[] = artifacts.map(
     color,
     alternativeColor,
     particleForm,
+    orientation: constellationOrientations[id] ?? initialOrientation,
   }),
 );
 

@@ -9,6 +9,7 @@ import {
   prepareConstellation,
 } from "../src/components/particles/constellationPainter.ts";
 import { createArtifactFormationPositions } from "../src/components/particles/particleGeometry.ts";
+import { constellationOrientations } from "../src/data/constellationOrientations.ts";
 
 /** Width to height of every target. */
 export const TARGET_ASPECT = 4 / 3;
@@ -24,6 +25,8 @@ export function drawConstellationTarget(context, artifact, width, height, x = 0,
     artifact.alternativeColor,
     "light",
   );
+  // Turned as saved in the constellation gallery (/particles).
+  const orientation = constellationOrientations[artifact.id] ?? initialOrientation;
   context.save();
   context.translate(x, y);
   context.fillStyle = "#FFFFFF";
@@ -33,8 +36,8 @@ export function drawConstellationTarget(context, artifact, width, height, x = 0,
     width,
     height,
     constellation,
-    initialOrientation,
-    frameConstellation(constellation, initialOrientation),
+    orientation,
+    frameConstellation(constellation, orientation),
   );
   context.restore();
 }

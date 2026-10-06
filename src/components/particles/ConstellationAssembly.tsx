@@ -7,7 +7,9 @@ import {
   constellationParticleCount,
   initialOrientation,
   prepareConstellation,
+  projectConstellationPoint,
 } from "@/components/particles/constellationPainter";
+import { constellationOrientations } from "@/data/constellationOrientations";
 import { createArtifactFormationPositions, seededRandom } from "@/components/particles/particleGeometry";
 import { revealTiming } from "@/lib/animation/revealMachine";
 import type { ExhibitionArtifact } from "@/types/exhibition";
@@ -78,11 +80,11 @@ function toColor([red, green, blue]: [number, number, number]) {
   return new THREE.Color(red / 255, green / 255, blue / 255);
 }
 
-// Formation positions turned like the printed target and normalised so the
-// larger projected half extent is 1.
+// Formation positions projected like the printed target and normalised so
+// the larger projected half extent is 1.
 function targetPositions(artifact: ExhibitionArtifact, count: number) {
   const formation = createArtifactFormationPositions(artifact, count);
-  const { yaw, pitch } = initialOrientation;
+  const orientation = constellationOrientations[artifact.id] ?? initialOrientation;
   const projected = new Float32Array(count * 3);
   let minX = Infinity;
   let maxX = -Infinity;
@@ -90,12 +92,7 @@ function targetPositions(artifact: ExhibitionArtifact, count: number) {
   let maxY = -Infinity;
 
   for (let offset = 0; offset < formation.length; offset += 3) {
-    const x = formation[offset];
-    const y = formation[offset + 1] - 0.32;
-    const z = formation[offset + 2] - 0.35;
-    const rotatedX = x * Math.cos(yaw) + z * Math.sin(yaw);
-    const rotatedZ = -x * Math.sin(yaw) + z * Math.cos(yaw);
-    const rotatedY = y * Math.cos(pitch) - rotatedZ * Math.sin(pitch);
+    const { x: rotatedX, y: rotatedY } = projectConstellationPoint(formation, offset, orientation);
     projected[offset] = rotatedX;
     projected[offset + 1] = rotatedY;
     minX = Math.min(minX, rotatedX);
