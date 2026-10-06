@@ -43,12 +43,21 @@ const aquariumLayers: Record<string, AquariumLayer> = {
     classification: "Phototrophic memory colony",
     visualTraits: ["photograph scales", "woven roots"],
     stateEffects: { memory: 2, openness: 1, coherence: -1 },
-    storylet: "A photograph sank into the substrate. By morning, it had grown roots.",
+    storylet:
+      "A photograph sank into the substrate. By morning, it had grown roots.",
     choice: {
       prompt: "The archive is beginning to grow.",
       options: [
-        { id: "tend", label: "Tend the roots", effects: { memory: 2, openness: 1 } },
-        { id: "leave", label: "Let them wander", effects: { openness: 2, coherence: -1 } },
+        {
+          id: "tend",
+          label: "Tend the roots",
+          effects: { memory: 2, openness: 1 },
+        },
+        {
+          id: "leave",
+          label: "Let them wander",
+          effects: { openness: 2, coherence: -1 },
+        },
       ],
     },
   },
@@ -57,12 +66,17 @@ const aquariumLayers: Record<string, AquariumLayer> = {
     classification: "Speculative voice cluster",
     visualTraits: ["transcript tentacles", "borrowed voices"],
     stateEffects: { voice: 2, coherence: -1, memory: 1 },
-    storylet: "Three voices drifted up from the underworld. None would confirm its identity.",
+    storylet:
+      "Three voices drifted up from the underworld. None would confirm its identity.",
     choice: {
       prompt: "A voice is coming from inside the jellyfish.",
       options: [
         { id: "listen", label: "Listen", effects: { voice: 2, memory: 1 } },
-        { id: "question", label: "Question it", effects: { agency: 2, coherence: -1 } },
+        {
+          id: "question",
+          label: "Question it",
+          effects: { agency: 2, coherence: -1 },
+        },
       ],
     },
   },
@@ -71,12 +85,21 @@ const aquariumLayers: Record<string, AquariumLayer> = {
     classification: "Long-duration remembrance tide",
     visualTraits: ["forest current", "vanishing photographs"],
     stateEffects: { memory: 2, openness: 1, coherence: -1 },
-    storylet: "A current crossed nineteen years without deciding where the past ended.",
+    storylet:
+      "A current crossed nineteen years without deciding where the past ended.",
     choice: {
       prompt: "Something disappeared from the archive.",
       options: [
-        { id: "reconstruct", label: "Reconstruct it", effects: { memory: 2, coherence: 1 } },
-        { id: "gap", label: "Leave the gap", effects: { openness: 2, coherence: -2 } },
+        {
+          id: "reconstruct",
+          label: "Reconstruct it",
+          effects: { memory: 2, coherence: 1 },
+        },
+        {
+          id: "gap",
+          label: "Leave the gap",
+          effects: { openness: 2, coherence: -2 },
+        },
       ],
     },
   },
@@ -85,12 +108,21 @@ const aquariumLayers: Record<string, AquariumLayer> = {
     classification: "Persistent system anomaly",
     visualTraits: ["failed progress bar", "glitch skin"],
     stateEffects: { agency: 2, openness: 2, coherence: -2 },
-    storylet: "The tank attempted an update. The organism survived every correction.",
+    storylet:
+      "The tank attempted an update. The organism survived every correction.",
     choice: {
       prompt: "The aquarium detected an irregular organism.",
       options: [
-        { id: "correct", label: "Correct it", effects: { coherence: 2, openness: -2 } },
-        { id: "change", label: "Let it change", effects: { agency: 2, openness: 2, coherence: -1 } },
+        {
+          id: "correct",
+          label: "Correct it",
+          effects: { coherence: 2, openness: -2 },
+        },
+        {
+          id: "change",
+          label: "Let it change",
+          effects: { agency: 2, openness: 2, coherence: -1 },
+        },
       ],
     },
   },
@@ -99,12 +131,21 @@ const aquariumLayers: Record<string, AquariumLayer> = {
     classification: "Oneiric recombination species",
     visualTraits: ["printed fortunes", "dream plumage"],
     stateEffects: { openness: 2, coherence: -2, voice: 1 },
-    storylet: "A hotel nested inside the tank and printed a fortune for the tide.",
+    storylet:
+      "A hotel nested inside the tank and printed a fortune for the tide.",
     choice: {
       prompt: "The manager offers a future in two pieces.",
       options: [
-        { id: "keep", label: "Keep the fortune", effects: { memory: 2, coherence: 1 } },
-        { id: "shuffle", label: "Shuffle it", effects: { openness: 2, coherence: -2 } },
+        {
+          id: "keep",
+          label: "Keep the fortune",
+          effects: { memory: 2, coherence: 1 },
+        },
+        {
+          id: "shuffle",
+          label: "Shuffle it",
+          effects: { openness: 2, coherence: -2 },
+        },
       ],
     },
   },
@@ -113,12 +154,21 @@ const aquariumLayers: Record<string, AquariumLayer> = {
     classification: "Unresolved surface animal",
     visualTraits: ["glass fins", "folded interface"],
     stateEffects: { openness: 1, coherence: -1, agency: 1 },
-    storylet: "The surface folded. For a moment, the glass forgot which side was inside.",
+    storylet:
+      "The surface folded. For a moment, the glass forgot which side was inside.",
     choice: {
       prompt: "The surface asks to be touched.",
       options: [
-        { id: "press", label: "Press closer", effects: { agency: 1, coherence: 1 } },
-        { id: "fold", label: "Fold the surface", effects: { openness: 2, coherence: -1 } },
+        {
+          id: "press",
+          label: "Press closer",
+          effects: { agency: 1, coherence: 1 },
+        },
+        {
+          id: "fold",
+          label: "Fold the surface",
+          effects: { openness: 2, coherence: -1 },
+        },
       ],
     },
   },
@@ -131,8 +181,16 @@ const aquariumLayers: Record<string, AquariumLayer> = {
     choice: {
       prompt: "A letter is floating between page and screen.",
       options: [
-        { id: "read", label: "Read it aloud", effects: { voice: 2, coherence: 1 } },
-        { id: "reply", label: "Rearrange the reply", effects: { agency: 1, coherence: -2 } },
+        {
+          id: "read",
+          label: "Read it aloud",
+          effects: { voice: 2, coherence: 1 },
+        },
+        {
+          id: "reply",
+          label: "Rearrange the reply",
+          effects: { agency: 1, coherence: -2 },
+        },
       ],
     },
   },
@@ -145,8 +203,16 @@ const aquariumLayers: Record<string, AquariumLayer> = {
     choice: {
       prompt: "The city has been flattened into a cheerful current.",
       options: [
-        { id: "ride", label: "Ride the copy", effects: { openness: 2, agency: 1 } },
-        { id: "interrupt", label: "Interrupt the loop", effects: { agency: 2, coherence: -1 } },
+        {
+          id: "ride",
+          label: "Ride the copy",
+          effects: { openness: 2, agency: 1 },
+        },
+        {
+          id: "interrupt",
+          label: "Interrupt the loop",
+          effects: { agency: 2, coherence: -1 },
+        },
       ],
     },
   },
@@ -155,12 +221,21 @@ const aquariumLayers: Record<string, AquariumLayer> = {
     classification: "Partially legible interior current",
     visualTraits: ["hand-drawn terrain", "quiet waveform"],
     stateEffects: { memory: 1, voice: -1, openness: 1 },
-    storylet: "A word descended beyond reach. A hand-drawn light followed it down.",
+    storylet:
+      "A word descended beyond reach. A hand-drawn light followed it down.",
     choice: {
       prompt: "A word is present, but will not surface.",
       options: [
-        { id: "wait", label: "Wait with it", effects: { memory: 1, openness: 2 } },
-        { id: "gesture", label: "Answer with a gesture", effects: { agency: 1, voice: 1 } },
+        {
+          id: "wait",
+          label: "Wait with it",
+          effects: { memory: 1, openness: 2 },
+        },
+        {
+          id: "gesture",
+          label: "Answer with a gesture",
+          effects: { agency: 1, voice: 1 },
+        },
       ],
     },
   },
@@ -169,12 +244,21 @@ const aquariumLayers: Record<string, AquariumLayer> = {
     classification: "Interstellar hospitality form",
     visualTraits: ["orbit rings", "distant signals"],
     stateEffects: { openness: 2, voice: 1, coherence: -1 },
-    storylet: "A corridor opened onto another sea. The vacancy sign began to orbit.",
+    storylet:
+      "A corridor opened onto another sea. The vacancy sign began to orbit.",
     choice: {
       prompt: "A distant room is transmitting through the water.",
       options: [
-        { id: "enter", label: "Enter the room", effects: { openness: 2, agency: 1 } },
-        { id: "signal", label: "Return the signal", effects: { voice: 2, memory: 1 } },
+        {
+          id: "enter",
+          label: "Enter the room",
+          effects: { openness: 2, agency: 1 },
+        },
+        {
+          id: "signal",
+          label: "Return the signal",
+          effects: { voice: 2, memory: 1 },
+        },
       ],
     },
   },
@@ -183,12 +267,21 @@ const aquariumLayers: Record<string, AquariumLayer> = {
     classification: "Uncontained act of witness",
     visualTraits: ["central light", "resistant tide"],
     stateEffects: { memory: 2, agency: 2, voice: 1 },
-    storylet: "The water held a name carefully. The system called this an error in forgetting.",
+    storylet:
+      "The water held a name carefully. The system called this an error in forgetting.",
     choice: {
       prompt: "A name remains lit beneath the surface.",
       options: [
-        { id: "witness", label: "Stay and witness", effects: { memory: 2, voice: 1 } },
-        { id: "carry", label: "Carry it onward", effects: { agency: 2, openness: 1 } },
+        {
+          id: "witness",
+          label: "Stay and witness",
+          effects: { memory: 2, voice: 1 },
+        },
+        {
+          id: "carry",
+          label: "Carry it onward",
+          effects: { agency: 2, openness: 1 },
+        },
       ],
     },
   },
@@ -197,12 +290,21 @@ const aquariumLayers: Record<string, AquariumLayer> = {
     classification: "Decision-sensitive tide",
     visualTraits: ["forked current", "distress pulse"],
     stateEffects: { agency: 2, coherence: -1, voice: 1 },
-    storylet: "The current split around a person in danger. Refusing to choose was also a direction.",
+    storylet:
+      "The current split around a person in danger. Refusing to choose was also a direction.",
     choice: {
       prompt: "The current is pulling someone out of sight.",
       options: [
-        { id: "reach", label: "Reach toward them", effects: { agency: 2, voice: 1 } },
-        { id: "call", label: "Call others closer", effects: { voice: 2, agency: 1 } },
+        {
+          id: "reach",
+          label: "Reach toward them",
+          effects: { agency: 2, voice: 1 },
+        },
+        {
+          id: "call",
+          label: "Call others closer",
+          effects: { voice: 2, agency: 1 },
+        },
       ],
     },
   },
@@ -211,12 +313,21 @@ const aquariumLayers: Record<string, AquariumLayer> = {
     classification: "Plural-reality social organism",
     visualTraits: ["multiplayer nodes", "reality comb"],
     stateEffects: { openness: 2, voice: 2, coherence: -1 },
-    storylet: "A solitary giant found a network. The dark filled with other players.",
+    storylet:
+      "A solitary giant found a network. The dark filled with other players.",
     choice: {
       prompt: "A signal is waiting beyond the isolated trench.",
       options: [
-        { id: "connect", label: "Join the network", effects: { voice: 2, openness: 1 } },
-        { id: "explore", label: "Enter another reality", effects: { openness: 2, coherence: -1 } },
+        {
+          id: "connect",
+          label: "Join the network",
+          effects: { voice: 2, openness: 1 },
+        },
+        {
+          id: "explore",
+          label: "Enter another reality",
+          effects: { openness: 2, coherence: -1 },
+        },
       ],
     },
   },
@@ -225,12 +336,21 @@ const aquariumLayers: Record<string, AquariumLayer> = {
     classification: "Synthetic remembrance mineral",
     visualTraits: ["faceted archive", "borrowed voice"],
     stateEffects: { memory: 2, voice: 1, coherence: -1 },
-    storylet: "A lost studio returned as crystal, carrying a voice that never survived.",
+    storylet:
+      "A lost studio returned as crystal, carrying a voice that never survived.",
     choice: {
       prompt: "The crystal is holding a fragment of the past.",
       options: [
-        { id: "preserve", label: "Preserve it", effects: { memory: 2, coherence: 1 } },
-        { id: "refract", label: "Refract it", effects: { openness: 2, coherence: -1 } },
+        {
+          id: "preserve",
+          label: "Preserve it",
+          effects: { memory: 2, coherence: 1 },
+        },
+        {
+          id: "refract",
+          label: "Refract it",
+          effects: { openness: 2, coherence: -1 },
+        },
       ],
     },
   },
@@ -239,12 +359,21 @@ const aquariumLayers: Record<string, AquariumLayer> = {
     classification: "Recombinant memory fountain",
     visualTraits: ["falling sand", "haunted fragments"],
     stateEffects: { memory: 2, openness: 2, coherence: -1 },
-    storylet: "Sand carried three stories through the hotel, rearranging them as it fell.",
+    storylet:
+      "Sand carried three stories through the hotel, rearranging them as it fell.",
     choice: {
       prompt: "The fountain is releasing a memory.",
       options: [
-        { id: "hold", label: "Hold the fragment", effects: { memory: 2, coherence: 1 } },
-        { id: "release", label: "Let it recombine", effects: { openness: 2, coherence: -1 } },
+        {
+          id: "hold",
+          label: "Hold the fragment",
+          effects: { memory: 2, coherence: 1 },
+        },
+        {
+          id: "release",
+          label: "Let it recombine",
+          effects: { openness: 2, coherence: -1 },
+        },
       ],
     },
   },
@@ -253,12 +382,21 @@ const aquariumLayers: Record<string, AquariumLayer> = {
     classification: "Volumetric language bloom",
     visualTraits: ["poem sparks", "hologram wake"],
     stateEffects: { voice: 2, agency: 1, openness: 1 },
-    storylet: "Four voices entered the water as sparks and made language visible.",
+    storylet:
+      "Four voices entered the water as sparks and made language visible.",
     choice: {
       prompt: "A spoken line is beginning to glow.",
       options: [
-        { id: "kindle", label: "Kindle the words", effects: { voice: 2, agency: 1 } },
-        { id: "share", label: "Share the light", effects: { openness: 2, voice: 1 } },
+        {
+          id: "kindle",
+          label: "Kindle the words",
+          effects: { voice: 2, agency: 1 },
+        },
+        {
+          id: "share",
+          label: "Share the light",
+          effects: { openness: 2, voice: 1 },
+        },
       ],
     },
   },
@@ -267,6 +405,7 @@ const aquariumLayers: Record<string, AquariumLayer> = {
 const exhibitionSources: ArtifactSource[] = [
   {
     id: "finding-frida",
+    exhibitionId: 1,
     targetIndex: 0,
     title: "Finding Frida",
     artist: "Hilde K. Kjøs",
@@ -280,11 +419,13 @@ const exhibitionSources: ArtifactSource[] = [
     creaturePart: {
       id: "memory-crown",
       label: "Memory scales",
-      description: "Iridescent scales for carrying images between past and present.",
+      description:
+        "Iridescent scales for carrying images between past and present.",
     },
   },
   {
     id: "historically-yours",
+    exhibitionId: 2,
     targetIndex: 1,
     title: "Historically Yours",
     artist: "Lina Harder",
@@ -303,6 +444,7 @@ const exhibitionSources: ArtifactSource[] = [
   },
   {
     id: "from-ingrid-to-bergen",
+    exhibitionId: 3,
     targetIndex: 2,
     title: "From Ingrid to Bergen",
     artist: "Pedro Velho",
@@ -321,6 +463,7 @@ const exhibitionSources: ArtifactSource[] = [
   },
   {
     id: "your-update-has-failed",
+    exhibitionId: 4,
     targetIndex: 3,
     title: "Your Update Has Failed",
     artist: "Sérgio Galvão Roxo",
@@ -339,6 +482,7 @@ const exhibitionSources: ArtifactSource[] = [
   },
   {
     id: "grand-hotel-bald-cockatoo",
+    exhibitionId: 5,
     targetIndex: 4,
     title: "The Grand Hotel Bald Cockatoo",
     artist: "Scott Rettberg, Caitlin Fisher, Roderick Coover",
@@ -357,6 +501,7 @@ const exhibitionSources: ArtifactSource[] = [
   },
   {
     id: "glass-like-fabric",
+    exhibitionId: 6,
     targetIndex: 5,
     title: "Glass Like Fabric",
     artist: "Jason Nelson",
@@ -375,12 +520,13 @@ const exhibitionSources: ArtifactSource[] = [
   },
   {
     id: "between-page-and-screen",
+    exhibitionId: 7,
     targetIndex: 6,
     title: "Between Page and Screen",
     artist: "Amaranth Borsuk, Brad Bouse",
     visualFamily: "machine",
     particleForm: "book",
-    color: "#202020",
+    color: "#ffffff",
     theme: "interface",
     shortText:
       "An unlikely marriage of print and digital, Between Page and Screen chronicles a love affair between two characters, P and S. The book has no words, only inscrutable black and white geometric patterns that, when coupled with a webcam, conjure the written word. Reflected on screen, the reader sees themself with open book in hand, language springing alive and shape-shifting with each turn of the page. The story unfolds through a playful and cryptic exchange of letters between P and S as they struggle to define their relationship. Rich with innuendo, anagrams, etymological and sonic affinities between words, Between Page and Screen revels in language and the act of reading.",
@@ -388,11 +534,13 @@ const exhibitionSources: ArtifactSource[] = [
     creaturePart: {
       id: "page-fins",
       label: "Page fin",
-      description: "A folded dorsal fin poised between print, screen and motion.",
+      description:
+        "A folded dorsal fin poised between print, screen and motion.",
     },
   },
   {
     id: "bybanen-slop-surfer",
+    exhibitionId: 8,
     targetIndex: 7,
     title: "Bybanen Slop Surfer",
     artist: "Colin Richard Robinson",
@@ -410,11 +558,12 @@ const exhibitionSources: ArtifactSource[] = [
   },
   {
     id: "emperor",
+    exhibitionId: 9,
     targetIndex: 8,
     title: "Emperor",
     artist: "Marion Burger, Ilan Cohen",
     visualFamily: "body",
-    particleForm: "sphere",
+    particleForm: "brain",
     color: "#555555",
     theme: "embodiment",
     shortText:
@@ -428,11 +577,12 @@ const exhibitionSources: ArtifactSource[] = [
   },
   {
     id: "grand-hotel-galactic-center",
+    exhibitionId: 10,
     targetIndex: 9,
     title: "The Grand Hotel Galactic Center",
     artist: "Scott Robert Rettberg",
     visualFamily: "machine",
-    particleForm: "tower",
+    particleForm: "hotel",
     color: "#51477F",
     theme: "worldmaking",
     shortText:
@@ -446,6 +596,7 @@ const exhibitionSources: ArtifactSource[] = [
   },
   {
     id: "her-name-was-gisberta",
+    exhibitionId: 11,
     targetIndex: 10,
     title: "Her Name Was Gisberta",
     artist: "Sérgio Galvão Roxo",
@@ -459,16 +610,18 @@ const exhibitionSources: ArtifactSource[] = [
     creaturePart: {
       id: "heart-plume",
       label: "Heart scale",
-      description: "A bright central scale for presence, memory and resistance.",
+      description:
+        "A bright central scale for presence, memory and resistance.",
     },
   },
   {
     id: "missing-10-hours",
+    exhibitionId: 12,
     targetIndex: 11,
     title: "Missing 10 Hours",
     artist: "Fanni Fazakas",
     visualFamily: "body",
-    particleForm: "fork",
+    particleForm: "butterfly",
     color: "#28374F",
     theme: "agency",
     shortText:
@@ -482,6 +635,7 @@ const exhibitionSources: ArtifactSource[] = [
   },
   {
     id: "goliath",
+    exhibitionId: 13,
     targetIndex: 12,
     title: "Goliath",
     artist: "Anagram",
@@ -500,6 +654,7 @@ const exhibitionSources: ArtifactSource[] = [
   },
   {
     id: "land-of-crystals",
+    exhibitionId: 14,
     targetIndex: 13,
     title: "The Land of Crystals",
     artist: "The Land of Crystals",
@@ -513,14 +668,17 @@ const exhibitionSources: ArtifactSource[] = [
     creaturePart: {
       id: "crystal-spines",
       label: "Crystal spines",
-      description: "Faceted spines that refract fragments of places and voices that disappeared.",
+      description:
+        "Faceted spines that refract fragments of places and voices that disappeared.",
     },
   },
   {
     id: "grand-hotel-sand-fountain",
+    exhibitionId: 15,
     targetIndex: 14,
     title: "The Grand Hotel Sand Fountain",
-    artist: "Scott Rettberg, Caitlin Fisher, Roderick Coover, Julian Pillis, Colin Robinson",
+    artist:
+      "Scott Rettberg, Caitlin Fisher, Roderick Coover, Julian Pillis, Colin Robinson",
     visualFamily: "memory",
     particleForm: "hourglass",
     color: "#C19D65",
@@ -531,11 +689,13 @@ const exhibitionSources: ArtifactSource[] = [
     creaturePart: {
       id: "sand-hourglass",
       label: "Sand chamber",
-      description: "A small hourglass chamber that lets memories fall into new arrangements.",
+      description:
+        "A small hourglass chamber that lets memories fall into new arrangements.",
     },
   },
   {
     id: "fiery-sparks-of-light",
+    exhibitionId: 16,
     targetIndex: 15,
     title: "Fiery Sparks of Light",
     artist: "Caitlin Fisher",
@@ -549,7 +709,8 @@ const exhibitionSources: ArtifactSource[] = [
     creaturePart: {
       id: "spark-plume",
       label: "Spark plume",
-      description: "A luminous plume that turns spoken language into a visible trail.",
+      description:
+        "A luminous plume that turns spoken language into a visible trail.",
     },
   },
 ];

@@ -14,10 +14,10 @@ export const particleFormIds = [
   "prism",
   "book",
   "skateboard",
-  "sphere",
-  "tower",
+  "brain",
+  "hotel",
   "pillar",
-  "fork",
+  "butterfly",
   "dodecahedron",
   "crystal",
   "hourglass",
@@ -69,6 +69,8 @@ export type ArtifactChoice = {
 
 export type ExhibitionArtifact = {
   id: string;
+  /** The `ID` column of public/exhibition.csv. */
+  exhibitionId: number;
   targetIndex: number;
   posterImageSrc: `/images/${string}`;
   title: string;

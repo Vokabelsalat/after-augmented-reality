@@ -4,6 +4,9 @@ import { artifacts } from "@/data/artifacts";
 describe("artifact target image configuration", () => {
   it("maps the full exhibition in CSV order to unique target indices", () => {
     expect(artifacts).toHaveLength(16);
+    expect(artifacts.map(({ exhibitionId }) => exhibitionId)).toEqual(
+      Array.from({ length: 16 }, (_, index) => index + 1),
+    );
     expect(artifacts.map(({ targetIndex }) => targetIndex)).toEqual(
       Array.from({ length: 16 }, (_, index) => index),
     );
@@ -30,12 +33,12 @@ describe("artifact target image configuration", () => {
       ["cuboid", "#79A83B"],
       ["nest", "#D5A62E"],
       ["prism", "#C4473D"],
-      ["book", "#202020"],
+      ["book", "#ffffff"],
       ["skateboard", "#8B5E3C"],
-      ["sphere", "#555555"],
-      ["tower", "#51477F"],
+      ["brain", "#555555"],
+      ["hotel", "#51477F"],
       ["pillar", "#B44772"],
-      ["fork", "#28374F"],
+      ["butterfly", "#28374F"],
       ["dodecahedron", "#2D7F88"],
       ["crystal", "#8CB6C7"],
       ["hourglass", "#C19D65"],

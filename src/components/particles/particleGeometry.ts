@@ -50,6 +50,34 @@ const dodecahedronTriangles = (() => {
   return triangles;
 })();
 
+// The 30 outer edges (EdgesGeometry drops the face triangulation seams) and
+// 20 corners, which carry most particles so the solid reads as a wireframe.
+const dodecahedronEdges = (() => {
+  const geometry = new THREE.DodecahedronGeometry(1, 0);
+  const edgesGeometry = new THREE.EdgesGeometry(geometry);
+  const positions = edgesGeometry.getAttribute("position");
+  const edges: [Point3, Point3][] = [];
+
+  for (let index = 0; index < positions.count; index += 2) {
+    edges.push([
+      [positions.getX(index), positions.getY(index), positions.getZ(index)],
+      [positions.getX(index + 1), positions.getY(index + 1), positions.getZ(index + 1)],
+    ]);
+  }
+
+  geometry.dispose();
+  edgesGeometry.dispose();
+  return edges;
+})();
+
+const dodecahedronVertices = (() => {
+  const vertices = new Map<string, Point3>();
+  dodecahedronEdges.flat().forEach((point) => {
+    vertices.set(point.map((value) => value.toFixed(4)).join(","), point);
+  });
+  return [...vertices.values()];
+})();
+
 function sampleSphere(
   index: number,
   count: number,
@@ -97,6 +125,213 @@ function sampleTriangle(
     a[0] * aWeight + b[0] * bWeight + c[0] * cWeight,
     a[1] * aWeight + b[1] * bWeight + c[1] * cWeight,
     a[2] * aWeight + b[2] * bWeight + c[2] * cWeight,
+  ];
+}
+
+const BRAIN_GYRUS_LENGTH = 16;
+
+// Walks a seeded, meandering path across one hemisphere so neighbouring
+// particles trace gyri instead of filling the surface uniformly.
+function sampleBrainGyrus(strand: number, step: number): Point3 {
+  const random = seededRandom(`brain-gyrus:${strand}`);
+  const side = strand % 2 === 0 ? -1 : 1;
+  let polar = THREE.MathUtils.lerp(0.14, 0.82, random()) * Math.PI;
+  let azimuth = random() * Math.PI * 2;
+  let heading = random() * Math.PI * 2;
+
+  for (let walked = 0; walked < step; walked += 1) {
+    heading += (random() - 0.5) * 1.5;
+    polar += Math.cos(heading) * 0.1;
+    azimuth += (Math.sin(heading) * 0.1) / Math.max(Math.sin(polar), 0.3);
+    if (polar < 0.08 * Math.PI || polar > 0.9 * Math.PI) {
+      polar = THREE.MathUtils.clamp(polar, 0.08 * Math.PI, 0.9 * Math.PI);
+      heading = Math.PI - heading;
+    }
+  }
+
+  const x = Math.sin(polar) * Math.cos(azimuth);
+  let y = Math.cos(polar) * 0.74 * (1 - Math.max(0, x) * 0.12);
+  if (y < -0.25) y = -0.25 + (y + 0.25) * 0.45;
+  const z = Math.abs(Math.sin(polar) * Math.sin(azimuth));
+  return [x, y + 0.08, side * (0.06 + z * 0.7)];
+}
+
+// A deck with concave and kicktails, two trucks and four wheels, modelled
+// lying flat and then tipped towards the viewer so the deck surface reads.
+function sampleSkateboard(progress: number, random: () => number): Point3 {
+  const wheelX = 0.66;
+  let point: Point3;
+
+  if (progress < 0.6) {
+    const x = (random() * 2 - 1) * 1.1;
+    const roundedEnd = Math.max(0, (Math.abs(x) - 0.8) / 0.3);
+    const halfWidth = 0.3 * Math.sqrt(Math.max(0, 1 - roundedEnd * roundedEnd));
+    const z = random() < 0.4 ? (random() < 0.5 ? -1 : 1) * halfWidth : (random() * 2 - 1) * halfWidth;
+    const kick = Math.max(0, Math.abs(x) - 0.72);
+    point = [x, kick * kick * 1.6 + z * z * 0.4 + (random() - 0.5) * 0.02, z];
+  } else if (progress < 0.7) {
+    const truck = random() < 0.5 ? -1 : 1;
+    point =
+      random() < 0.7
+        ? sampleSegment([truck * wheelX, -0.16, -0.26], [truck * wheelX, -0.16, 0.26], random(), random, 0.03)
+        : sampleSegment([truck * wheelX, -0.03, 0], [truck * wheelX * 0.94, -0.16, 0], random(), random, 0.07);
+  } else {
+    const wheel = Math.floor(random() * 4);
+    const angle = random() * Math.PI * 2;
+    const rim = random() < 0.75 ? 0.1 : random() * 0.1;
+    point = [
+      (wheel < 2 ? -1 : 1) * wheelX + Math.cos(angle) * rim,
+      -0.2 + Math.sin(angle) * rim,
+      (wheel % 2 ? 1 : -1) * 0.33 + (random() - 0.5) * 0.08,
+    ];
+  }
+
+  const roll = 0.12;
+  const x = point[0] * Math.cos(roll) - point[1] * Math.sin(roll);
+  const y = point[0] * Math.sin(roll) + point[1] * Math.cos(roll) + 0.04;
+  const tip = -0.6;
+  return [
+    x,
+    y * Math.cos(tip) - point[2] * Math.sin(tip),
+    y * Math.sin(tip) + point[2] * Math.cos(tip),
+  ];
+}
+
+const HOTEL_HALF_WIDTH = 0.62;
+const HOTEL_HALF_DEPTH = 0.32;
+const HOTEL_BASE = -0.9;
+const HOTEL_ROOF = 0.44;
+const HOTEL_CENTER_HALF_WIDTH = 0.26;
+const HOTEL_CENTER_ROOF = 0.68;
+
+// Lit window centres on the front and back facades, leaving a few dark.
+const hotelWindows = (() => {
+  const windows: [number, number][] = [];
+  for (let column = 0; column < 6; column += 1) {
+    const x = -0.5 + column * 0.2;
+    const top = Math.abs(x) < HOTEL_CENTER_HALF_WIDTH - 0.05 ? HOTEL_CENTER_ROOF : HOTEL_ROOF;
+    for (let row = 0; ; row += 1) {
+      const y = -0.62 + row * 0.2;
+      if (y > top - 0.12) break;
+      if ((column * 7 + row * 3) % 6 !== 0) windows.push([x, y]);
+    }
+  }
+  return windows;
+})();
+
+const hotelEdges: [Point3, Point3][] = (() => {
+  const box = (halfWidth: number, bottom: number, top: number): [Point3, Point3][] => {
+    const corners = [
+      [-halfWidth, -HOTEL_HALF_DEPTH],
+      [halfWidth, -HOTEL_HALF_DEPTH],
+      [halfWidth, HOTEL_HALF_DEPTH],
+      [-halfWidth, HOTEL_HALF_DEPTH],
+    ];
+    return corners.flatMap(([x, z], index) => {
+      const [nextX, nextZ] = corners[(index + 1) % 4];
+      return [
+        [[x, bottom, z], [nextX, bottom, nextZ]],
+        [[x, top, z], [nextX, top, nextZ]],
+        [[x, bottom, z], [x, top, z]],
+      ] as [Point3, Point3][];
+    });
+  };
+  return [
+    ...box(HOTEL_HALF_WIDTH, HOTEL_BASE, HOTEL_ROOF),
+    ...box(HOTEL_CENTER_HALF_WIDTH, HOTEL_ROOF, HOTEL_CENTER_ROOF),
+    // Entrance canopy and its posts.
+    [[-0.18, -0.7, -0.48], [0.18, -0.7, -0.48]],
+    [[-0.18, -0.7, -0.48], [-0.18, HOTEL_BASE, -0.48]],
+    [[0.18, -0.7, -0.48], [0.18, HOTEL_BASE, -0.48]],
+  ];
+})();
+
+// A domed grand hotel: lit window grid, framed volumes, entrance canopy and
+// an orbit ring around the dome for the galactic setting.
+function sampleHotel(progress: number, random: () => number): Point3 {
+  if (progress < 0.46) {
+    const [x, y] = hotelWindows[Math.floor(random() * hotelWindows.length)];
+    const side = random() < 0.85 ? -1 : 1;
+    return [
+      x + (random() - 0.5) * 0.08,
+      y + (random() - 0.5) * 0.1,
+      side * HOTEL_HALF_DEPTH,
+    ];
+  }
+
+  if (progress < 0.5) {
+    const side = random() < 0.5 ? -1 : 1;
+    return [
+      side * HOTEL_HALF_WIDTH,
+      -0.62 + Math.floor(random() * 5) * 0.2 + (random() - 0.5) * 0.1,
+      (Math.floor(random() * 3) - 1) * 0.2 + (random() - 0.5) * 0.08,
+    ];
+  }
+
+  if (progress < 0.78) {
+    const [start, end] = hotelEdges[Math.floor(random() * hotelEdges.length)];
+    return sampleSegment(start, end, random(), random, 0.025);
+  }
+
+  if (progress < 0.88) {
+    if (random() < 0.15) {
+      return sampleSegment([0, 0.88, 0], [0, 1.08, 0], random(), random, 0.03);
+    }
+    const angle = random() * Math.PI * 2;
+    const lift = Math.acos(random());
+    const radius = 0.22;
+    return [
+      Math.cos(angle) * Math.sin(lift) * radius,
+      HOTEL_CENTER_ROOF + Math.cos(lift) * radius,
+      Math.sin(angle) * Math.sin(lift) * radius,
+    ];
+  }
+
+  const angle = random() * Math.PI * 2;
+  const tilt = 0.28;
+  const ringX = Math.cos(angle) * 0.5;
+  const ringZ = Math.sin(angle) * 0.36;
+  return [
+    ringX,
+    0.8 - ringZ * Math.sin(tilt) + (random() - 0.5) * 0.02,
+    ringZ * Math.cos(tilt),
+  ];
+}
+
+// Upper and lower wing as rotated ellipses: centre, radii and tilt for the
+// right-hand side; the left side mirrors them.
+const butterflyWings = [
+  { center: [0.52, 0.34], radius: [0.56, 0.4], angle: 0.5 },
+  { center: [0.4, -0.34], radius: [0.4, 0.28], angle: -0.65 },
+] as const;
+
+// Four wings with crisp outlines, raised into a shallow V, around a slim
+// body with two curling antennae.
+function sampleButterfly(progress: number, random: () => number): Point3 {
+  if (progress < 0.84) {
+    const side = random() < 0.5 ? -1 : 1;
+    const wing = butterflyWings[random() < 0.62 ? 0 : 1];
+    const angle = random() * Math.PI * 2;
+    const extent = random() < 0.45 ? 1 : Math.sqrt(random());
+    const localX = Math.cos(angle) * wing.radius[0] * extent;
+    const localY = Math.sin(angle) * wing.radius[1] * extent;
+    const x =
+      wing.center[0] + localX * Math.cos(wing.angle) - localY * Math.sin(wing.angle);
+    const y =
+      wing.center[1] + localX * Math.sin(wing.angle) + localY * Math.cos(wing.angle);
+    return [side * x, y, x * 0.32 + (random() - 0.5) * 0.02];
+  }
+
+  if (progress < 0.94) {
+    return sampleSegment([0, -0.62, 0], [0, 0.42, 0], random(), random, 0.08);
+  }
+
+  const side = random() < 0.5 ? -1 : 1;
+  const along = random();
+  return [
+    side * (along * 0.3 + Math.max(0, along - 0.8) * 0.4),
+    0.42 + along * 0.5 - Math.max(0, along - 0.8) * 0.3,
+    along * 0.08,
   ];
 }
 
@@ -172,14 +407,33 @@ function formationPosition(
     }
 
     case "cuboid": {
-      const face = index % 6;
-      const a = random() * 2 - 1;
-      const b = random() * 2 - 1;
-      const half: Point3 = [1.02, 0.72, 0.42];
+      const half: Point3 = [0.95, 0.7, 0.5];
       let point: Point3;
-      if (face < 2) point = [(face ? -1 : 1) * half[0], a * half[1], b * half[2]];
-      else if (face < 4) point = [a * half[0], (face === 3 ? -1 : 1) * half[1], b * half[2]];
-      else point = [a * half[0], b * half[1], (face === 5 ? -1 : 1) * half[2]];
+      if (progress < 0.66) {
+        // One of the 12 edges: pick the axis it runs along and a corner sign
+        // for each of the other two axes.
+        const axis = Math.floor(random() * 3);
+        const signA = random() < 0.5 ? -1 : 1;
+        const signB = random() < 0.5 ? -1 : 1;
+        const along = (random() * 2 - 1) * half[axis];
+        const [first, second] = [0, 1, 2].filter((other) => other !== axis);
+        point = [0, 0, 0];
+        point[axis] = along;
+        point[first] = signA * half[first] + jitter(0.025);
+        point[second] = signB * half[second] + jitter(0.025);
+      } else if (progress < 0.76) {
+        point = half.map(
+          (extent) => (random() < 0.5 ? -1 : 1) * extent + jitter(0.07),
+        ) as Point3;
+      } else {
+        const face = index % 6;
+        const a = random() * 2 - 1;
+        const b = random() * 2 - 1;
+        if (face < 2) point = [(face ? -1 : 1) * half[0], a * half[1], b * half[2]];
+        else if (face < 4) point = [a * half[0], (face === 3 ? -1 : 1) * half[1], b * half[2]];
+        else point = [a * half[0], b * half[1], (face === 5 ? -1 : 1) * half[2]];
+      }
+      // Horizontal glitch bands slide sideways, breaking the edges.
       const glitchBand = Math.floor((point[1] + half[1]) * 7);
       point[0] += glitchBand % 4 === 0 ? (glitchBand % 8 ? 0.13 : -0.13) : 0;
       return point;
@@ -230,93 +484,78 @@ function formationPosition(
       ];
     }
 
-    case "skateboard": {
-      if (progress < 0.76) {
-        const x = (random() - 0.5) * 2.2;
-        const roundedEnd = Math.max(0, (Math.abs(x) - 0.75) / 0.35);
-        const halfWidth = 0.34 * Math.sqrt(Math.max(0, 1 - roundedEnd * roundedEnd));
-        return [
-          x,
-          0.12 + (random() * 2 - 1) * halfWidth,
-          0.04 + Math.max(0, Math.abs(x) - 0.75) * 0.38 + jitter(0.04),
-        ];
-      }
-      const wheel = index % 2 === 0 ? -1 : 1;
-      const angle = random() * Math.PI * 2;
-      return [
-        wheel * 0.72 + Math.cos(angle) * 0.17,
-        -0.34 + Math.sin(angle) * 0.17,
-        jitter(0.28),
-      ];
-    }
+    case "skateboard":
+      return sampleSkateboard(progress, random);
 
-    case "sphere":
-      return sampleSphere(index, count, [0.92, 0.92, 0.7]);
-
-    case "tower": {
-      if (progress > 0.88) {
-        return sampleSegment(
-          [0, 0.68, 0],
-          [0, 1.16, 0],
-          (progress - 0.88) / 0.12,
-          random,
-          0.08,
+    case "brain": {
+      const cortexCount = Math.floor(count * 0.82);
+      if (index < cortexCount) {
+        const point = sampleBrainGyrus(
+          Math.floor(index / BRAIN_GYRUS_LENGTH),
+          index % BRAIN_GYRUS_LENGTH,
         );
+        return [point[0] + jitter(0.03), point[1] + jitter(0.03), point[2] + jitter(0.03)];
       }
-      const y = -1 + random() * 1.72;
-      const level = Math.floor((y + 1) / 0.28);
-      const halfWidth = 0.72 - Math.min(level, 5) * 0.065;
-      const face = index % 4;
-      const depth = (random() - 0.5) * 0.72;
-      if (face < 2) return [(face ? -1 : 1) * halfWidth, y, depth];
-      return [(random() * 2 - 1) * halfWidth, y, (face === 3 ? -1 : 1) * 0.36];
-    }
-
-    case "pillar": {
-      const y = -1.05 + progress * 2.1;
-      const atEnd = Math.abs(y) > 0.78;
-      const halfWidth = atEnd ? 0.62 : 0.32;
-      const face = index % 4;
-      if (face < 2) return [(face ? -1 : 1) * halfWidth, y, jitter(0.52)];
-      return [jitter(halfWidth * 2), y, (face === 3 ? -1 : 1) * 0.26];
-    }
-
-    case "fork": {
-      const trunkCount = Math.max(1, Math.floor(count * 0.42));
-      if (index < trunkCount) {
-        return sampleSegment(
-          [0, -1.05, 0],
-          [0, -0.1, 0],
-          index / trunkCount,
-          random,
-          0.1,
-        );
+      const cerebellumCount = Math.floor(count * 0.12);
+      if (index < cortexCount + cerebellumCount) {
+        const point = sampleSphere(index - cortexCount, cerebellumCount, [0.32, 1, 0.56]);
+        const folium = Math.round(point[1] * 4) / 4;
+        return [point[0] - 0.66, -0.5 + folium * 0.2 + jitter(0.02), point[2]];
       }
-      const branchIndex = (index - trunkCount) % 3;
-      const positionOnBranch =
-        Math.floor((index - trunkCount) / 3) /
-        Math.max(1, Math.ceil((count - trunkCount) / 3) - 1);
-      const ends: Point3[] = [
-        [-0.92, 0.9, -0.08],
-        [0, 1.04, 0.18],
-        [0.92, 0.9, -0.08],
-      ];
       return sampleSegment(
-        [0, -0.12, 0],
-        ends[branchIndex],
-        Math.min(positionOnBranch, 1),
+        [-0.32, -0.42, 0],
+        [-0.22, -1.05, 0],
+        (index - cortexCount - cerebellumCount) /
+          Math.max(1, count - cortexCount - cerebellumCount),
         random,
-        0.1,
+        0.16,
       );
     }
 
+    case "hotel":
+      return sampleHotel(progress, random);
+
+    case "pillar": {
+      // A T: a stem topped by a wide crossbar, both as box surfaces.
+      const inCrossbar = progress >= 0.6;
+      const bottom = inCrossbar ? 0.62 : -1.05;
+      const top = inCrossbar ? 1.05 : 0.62;
+      const halfWidth = inCrossbar ? 0.95 : 0.28;
+      const face = index % (inCrossbar ? 6 : 4);
+      const y = bottom + random() * (top - bottom);
+      if (face < 2) return [(face ? -1 : 1) * halfWidth, y, jitter(0.52)];
+      if (face < 4) return [jitter(halfWidth * 2), y, (face === 3 ? -1 : 1) * 0.26];
+      return [jitter(halfWidth * 2), face === 4 ? top : bottom, jitter(0.52)];
+    }
+
+    case "butterfly":
+      return sampleButterfly(progress, random);
+
     case "dodecahedron": {
-      const triangle =
-        dodecahedronTriangles[
-          Math.floor(random() * dodecahedronTriangles.length)
-        ];
-      const point = sampleTriangle(triangle[0], triangle[1], triangle[2], random);
-      return [point[0] * 0.9, point[1] * 0.9, point[2] * 0.68];
+      const scale = 0.92;
+      let point: Point3;
+      if (progress < 0.68) {
+        const [start, end] =
+          dodecahedronEdges[Math.floor(random() * dodecahedronEdges.length)];
+        point = sampleSegment(start, end, random(), random, 0.025);
+      } else if (progress < 0.8) {
+        const vertex =
+          dodecahedronVertices[Math.floor(random() * dodecahedronVertices.length)];
+        point = [vertex[0] + jitter(0.07), vertex[1] + jitter(0.07), vertex[2] + jitter(0.07)];
+      } else {
+        const triangle =
+          dodecahedronTriangles[
+            Math.floor(random() * dodecahedronTriangles.length)
+          ];
+        point = sampleTriangle(triangle[0], triangle[1], triangle[2], random);
+      }
+      // Turned against the default preview yaw so a face points at the viewer.
+      const turn = -0.5;
+      return [
+        (point[0] * Math.cos(turn) + point[2] * Math.sin(turn)) * scale,
+        point[1] * scale,
+        (-point[0] * Math.sin(turn) + point[2] * Math.cos(turn)) * scale,
+      ];
     }
 
     case "crystal": {
