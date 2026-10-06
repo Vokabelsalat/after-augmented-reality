@@ -13,11 +13,12 @@
 import { readFileSync } from "node:fs";
 import { decode } from "@msgpack/msgpack";
 import * as tf from "@tensorflow/tfjs";
-import { createCanvas, loadImage } from "canvas";
+import { createCanvas } from "canvas";
 import "mind-ar/src/image-target/detector/kernels/cpu/index.js";
 import { CropDetector } from "mind-ar/src/image-target/detector/crop-detector.js";
 import { Matcher } from "mind-ar/src/image-target/matching/matcher.js";
 import { artifacts } from "../src/data/artifacts.ts";
+import { TARGET_ASPECT, drawConstellationTarget } from "./constellation-target.mjs";
 
 const preset = process.argv[2] ?? "typical";
 const framesPerTarget = Number(process.argv[3] ?? 12);
@@ -45,21 +46,24 @@ const random = () => {
 };
 const between = (min, max) => min + random() * (max - min);
 
-const bundle = decode(readFileSync("public/targets/exhibition.mind"));
+const bundle = decode(readFileSync(process.env.MIND_FILE ?? "public/targets/exhibition.mind"));
 const matchingDataList = bundle.dataList.map(({ matchingData }) => matchingData);
 const ordered = [...artifacts].sort((a, b) => a.targetIndex - b.targetIndex);
 
-async function grayscale(file) {
-  const image = await loadImage(file);
-  const canvas = createCanvas(image.width, image.height);
+// The print as the camera sees it: rendered large, like the print files,
+// instead of the small images the bundle is compiled from.
+function printedTarget(artifact) {
+  const width = 1200;
+  const height = Math.round(width / TARGET_ASPECT);
+  const canvas = createCanvas(width, height);
   const context = canvas.getContext("2d");
-  context.drawImage(image, 0, 0);
-  const pixels = context.getImageData(0, 0, image.width, image.height).data;
-  const data = new Float32Array(image.width * image.height);
+  drawConstellationTarget(context, artifact, width, height);
+  const pixels = context.getImageData(0, 0, width, height).data;
+  const data = new Float32Array(width * height);
   for (let index = 0; index < data.length; index += 1) {
     data[index] = (pixels[index * 4] + pixels[index * 4 + 1] + pixels[index * 4 + 2]) / 3;
   }
-  return { data, width: image.width, height: image.height };
+  return { data, width, height };
 }
 
 // Homography taking the four unit-square corners to the given quad.
@@ -210,7 +214,7 @@ function detect(frame) {
 const distances = ["near", "mid", "far"];
 const rows = [];
 for (const artifact of ordered) {
-  const target = await grayscale(`public/targets/${artifact.exhibitionId}-${artifact.id}-white.png`);
+  const target = printedTarget(artifact);
   const stats = { correct: 0, wrong: 0, missed: 0, inliers: [], cropHits: 0, crops: 0, features: [], confusedWith: new Map() };
   const byDistance = Object.fromEntries(distances.map((distance) => [distance, { correct: 0, total: 0 }]));
 

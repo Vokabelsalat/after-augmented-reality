@@ -15,7 +15,7 @@
     "targets:compile": "node scripts/compile-mind-targets.mjs",
     "targets:verify": "node scripts/verify-mind-targets.mjs",
     "targets:assess": "node scripts/assess-mind-targets.mjs",
-    "targets:print": "node scripts/export-print-sheets.mjs"
+    "targets:print": "node scripts/export-print-targets.mjs"
   },
   "dependencies": {
     "@react-three/drei": "10.7.8",

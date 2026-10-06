@@ -99,13 +99,17 @@ Save the downloaded file as:
 public/targets/exhibition.mind
 ```
 
-The exhibition prints the constellations on white. The checked-in `exhibition.mind` bundle contains 15 targets compiled from the 800 × 600 px `-white.png` particle constellation images in `public/targets/`, in exhibition ID order (`1-finding-frida-white.png` through `15-fiery-sparks-of-light-white.png`). `npm run targets:export` regenerates them from each artifact's `alternativeColor`. The constellation gallery still previews the dark version, but dark images are not exported or compiled. `npm run targets:compile` recompiles the bundle with MindAR's offline compiler, so the web compiler is optional. Recompile whenever the compiled images change.
+The exhibition prints the constellations on white. The checked-in `exhibition.mind` bundle contains 15 targets compiled from the 400 × 300 px `-white.png` particle constellation images in `public/targets/`, in exhibition ID order (`1-finding-frida-white.png` through `15-fiery-sparks-of-light-white.png`). `npm run targets:export` regenerates them from each artifact's `alternativeColor`. The constellation gallery still previews the dark version, but dark images are not exported or compiled. `npm run targets:compile` recompiles the bundle with MindAR's offline compiler, so the web compiler is optional. Recompile whenever the compiled images change.
+
+The compile images are deliberately small. MindAR stores every target at several scales from the full image size down to 100 px, so the bundle grows with the image resolution, while the camera only ever sees a print at a few hundred pixels. At 400 × 300 px (`COMPILE_WIDTH` in `scripts/export-particle-targets.mjs`) the bundle is about 4.5 MB instead of 6.5 MB at 800 × 600 px, with the same detection results in `npm run targets:assess`. Do not go below 400 px: MindAR's tracking image needs a short side of at least 256 px.
+
+The compile script also writes Brotli and gzip copies (`exhibition.mind.br`, `exhibition.mind.gz`) and the bundle's content hash to `src/data/targetBundle.ts`. The scanner loads the bundle from `/api/targets?v=<hash>`, which sends the smallest encoding the browser accepts (about 1.4 MB with Brotli) and lets browsers cache it for good under that hash. MindAR's msgpack format is otherwise sent uncompressed: neither Next nor Caddy compresses `application/octet-stream`.
 
 Run `npm run targets:verify` after compiling. Each compiled target keeps a downscaled copy of its source image, and the script matches it against the PNGs to confirm that every target index resolves to the expected image. It also prints how many tracking feature points MindAR found per target.
 
 `npm run targets:assess [typical|hard] [framesPerTarget]` estimates how reliably each target is detected. It renders synthetic 640 × 480 camera frames of every print at near, mid and far distance with random viewing angle, lighting, ink contrast, blur and noise, runs MindAR's own crop detector and matcher on them like the browser does (first matching target index wins), and reports the detection rate, wrong-target detections and a false-positive check with unrelated dot prints. With the current targets, `typical` detects 100% with no confusions; `hard` (dim light, washed-out ink, motion blur, steep angles) detects about 74%, with the misses almost all at the far distance, where the print covers only a quarter to a third of the frame's shorter side. Keep the printed target at least a third of the camera's shorter side in view: roughly, an A4-wide print up to about 0.8 m away, or larger prints for longer distances. Matte paper avoids glare that washes out the ink.
 
-`npm run targets:print` lays out the white targets as A4 test sheets in `public/targets/print-white.pdf`, six per page with each target's title and MindAR index.
+`npm run targets:print [--width-mm=400] [--dpi=300]` exports the print files, drawn with the same painter as the compile images, so prints and bundle show the same picture at any size. It writes one vector PDF per target at the given print width and a matching raster PNG at the given dpi (skip with `--dpi=0`) to `print/`, which is not committed, plus an A4 test sheet with all targets in `public/targets/print-white.pdf`, six per page with each target's title and MindAR index.
 
 ### 3. Check the configuration mapping
 
@@ -166,7 +170,7 @@ MindAR transforms, cameras, and render loops are not shared with the R3F rendere
 1. Add a typed entry to `src/data/artifacts.ts`, including a unique `id`, the next `targetIndex`, its matching `posterImageSrc`, theme, color, content, and narrative words.
 2. Add or adjust its theme definition in `src/data/themes.ts` if necessary.
 3. Recompile **all** reference images into `exhibition.mind` in the same order as the configured indices.
-4. Replace `public/targets/exhibition.mind` and test both the simulator button and the physical target.
+4. Run `npm run targets:compile`, which replaces `public/targets/exhibition.mind`, its compressed copies and its version hash, then test both the simulator button and the physical target.
 
 Artifact content, target mapping, particles, persistence, constellation encoding, and narrative generation all read configuration data; no individual reveal component needs exhibition-specific logic.
 

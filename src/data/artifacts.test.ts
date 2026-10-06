@@ -1,7 +1,10 @@
+import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
+import { gunzipSync, brotliDecompressSync } from "node:zlib";
 import { decode } from "@msgpack/msgpack";
 import { describe, expect, it } from "vitest";
 import { artifacts } from "@/data/artifacts";
+import { targetBundleVersion } from "@/data/targetBundle";
 
 describe("artifact target image configuration", () => {
   it("maps the full exhibition in CSV order to unique target indices", () => {
@@ -71,5 +74,12 @@ describe("compiled MindAR bundle", () => {
       dataList: unknown[];
     };
     expect(bundle.dataList).toHaveLength(artifacts.length);
+  });
+
+  it("is versioned and precompressed from the current bundle", () => {
+    const bundle = readFileSync("public/targets/exhibition.mind");
+    expect(createHash("sha256").update(bundle).digest("hex").slice(0, 12)).toBe(targetBundleVersion);
+    expect(brotliDecompressSync(readFileSync("public/targets/exhibition.mind.br")).equals(bundle)).toBe(true);
+    expect(gunzipSync(readFileSync("public/targets/exhibition.mind.gz")).equals(bundle)).toBe(true);
   });
 });

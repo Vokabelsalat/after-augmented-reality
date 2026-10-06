@@ -15,6 +15,7 @@ import type {
   TargetDetectionResult,
 } from "@/components/ar/MindARAdapter";
 import { artifacts } from "@/data/artifacts";
+import { targetBundleVersion } from "@/data/targetBundle";
 import { BiomeBackdrop } from "@/components/visualization/BiomeBackdrop";
 
 const orbitCategories = Array.from(
@@ -145,7 +146,7 @@ function ARScannerComponent(
       const { MindARAdapter } = await import("@/components/ar/MindARAdapter");
       if (attempt !== startAttemptRef.current) return;
       const adapter = new MindARAdapter({
-        imageTargetSrc: "/targets/exhibition.mind",
+        imageTargetSrc: `/api/targets?v=${targetBundleVersion}`,
         targets: artifacts.map(
           ({ id, targetIndex, particleForm, color }) => ({
             id,

@@ -1,60 +1,27 @@
-// Renders every artifact's particle constellation to its -white.png target
-// with the same painter as the gallery. The exhibition prints white targets
-// only; the gallery keeps the dark preview.
+// Renders every artifact's white-background constellation to the small PNG
+// that MindAR compiles into public/targets/exhibition.mind. These images only
+// feed the compiler: the bundle size grows with their resolution, so they stay
+// small. Print files come from `npm run targets:print` instead. The gallery
+// keeps the dark preview, which is not exported.
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createCanvas } from "canvas";
-import {
-  constellationParticleCount,
-  frameConstellation,
-  initialOrientation,
-  paintConstellation,
-  prepareConstellation,
-} from "../src/components/particles/constellationPainter.ts";
-import { createArtifactFormationPositions } from "../src/components/particles/particleGeometry.ts";
 import { artifacts } from "../src/data/artifacts.ts";
+import { TARGET_ASPECT, drawConstellationTarget, targetFileName } from "./constellation-target.mjs";
+
+/** Pixel width of the compiled target images; see the README before changing it. */
+export const COMPILE_WIDTH = 400;
 
 const outputDirectory = join(dirname(fileURLToPath(import.meta.url)), "../public/targets");
-const width = 400;
-const height = 300;
-const pixelRatio = 2;
-const variants = [
-  { suffix: "-white", background: "#FFFFFF", colorKey: "alternativeColor", surface: "light" },
-];
-
-function renderFormation(artifact, variant) {
-  const canvas = createCanvas(width * pixelRatio, height * pixelRatio);
-  const context = canvas.getContext("2d");
-  context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
-  context.fillStyle = variant.background;
-  context.fillRect(0, 0, width, height);
-
-  const constellation = prepareConstellation(
-    createArtifactFormationPositions(artifact, constellationParticleCount),
-    artifact[variant.colorKey],
-    variant.surface,
-  );
-  paintConstellation(
-    context,
-    width,
-    height,
-    constellation,
-    initialOrientation,
-    frameConstellation(constellation, initialOrientation),
-  );
-
-  return canvas.toBuffer("image/png");
-}
+const width = COMPILE_WIDTH;
+const height = Math.round(COMPILE_WIDTH / TARGET_ASPECT);
 
 mkdirSync(outputDirectory, { recursive: true });
 for (const artifact of artifacts) {
-  for (const variant of variants) {
-    const file = join(
-      outputDirectory,
-      `${artifact.exhibitionId}-${artifact.id}${variant.suffix}.png`,
-    );
-    writeFileSync(file, renderFormation(artifact, variant));
-    console.log(`${artifact.particleForm.padEnd(13)} ${file}`);
-  }
+  const canvas = createCanvas(width, height);
+  drawConstellationTarget(canvas.getContext("2d"), artifact, width, height);
+  const file = join(outputDirectory, targetFileName(artifact, "png"));
+  writeFileSync(file, canvas.toBuffer("image/png"));
+  console.log(`${artifact.particleForm.padEnd(13)} ${file} (${width}×${height})`);
 }

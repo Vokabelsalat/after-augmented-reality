@@ -31,3 +31,6 @@ certificates
 
 # local exhibition database
 /data/*.sqlite*
+
+# print exports (npm run targets:print)
+/print/
