@@ -13,7 +13,8 @@
     "test:watch": "vitest",
     "targets:export": "node scripts/export-particle-targets.mjs",
     "targets:compile": "node scripts/compile-mind-targets.mjs",
-    "targets:verify": "node scripts/verify-mind-targets.mjs"
+    "targets:verify": "node scripts/verify-mind-targets.mjs",
+    "targets:print": "node scripts/export-print-sheets.mjs"
   },
   "dependencies": {
     "@react-three/drei": "10.7.8",

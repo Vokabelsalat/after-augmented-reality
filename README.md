@@ -105,6 +105,8 @@ The checked-in `exhibition.mind` bundle contains 32 targets compiled from the 80
 
 Run `npm run targets:verify` after compiling. Each compiled target keeps a downscaled copy of its source image, and the script matches it against the PNGs to confirm that every target index resolves to the expected image. It also prints how many tracking feature points MindAR found per target.
 
+`npm run targets:print` lays out the dark and white targets as A4 test sheets in `public/targets/print-dark.pdf` and `public/targets/print-white.pdf`, six per page with each target's title and MindAR index.
+
 ### 3. Check the configuration mapping
 
 `src/data/artifacts.ts` is the runtime source of truth and follows the CSV row order. `targetIndex` must match the image order used by the compiler. MindAR emits a number, the adapter forwards it, and `artifactByTargetIndex` resolves the exhibition content. The curatorial themes are **Memory**, **Interface**, **Worldmaking**, **Embodiment**, and **Agency**. Until final artwork images are available, the 16 configured works reuse three poster-image families while each keeps the artwork-specific `color`, white-background `alternative_color`, and simplified `particleForm` defined in `public/exhibition.csv`.
