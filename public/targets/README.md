@@ -1,5 +1,5 @@
 # MindAR target file
 
-`exhibition.mind` contains all 16 targets, compiled from the PNG images in this folder in exhibition ID order (`1-finding-frida.png` through `16-fiery-sparks-of-light.png`). Target index `N` belongs to the artifact with exhibition ID `N + 1`.
+`exhibition.mind` contains all 15 targets, compiled from the white-background PNG images in this folder in exhibition ID order (`1-finding-frida-white.png` through `15-fiery-sparks-of-light-white.png`). Target index `N` belongs to the artifact with exhibition ID `N + 1`.
 
 Regenerate the images with `npm run targets:export`, recompile the bundle with `npm run targets:compile`, and check the result with `npm run targets:verify`. See the repository README for details.

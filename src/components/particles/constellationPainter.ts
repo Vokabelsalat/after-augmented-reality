@@ -10,6 +10,8 @@ export type Constellation = {
   halo: [number, number, number];
   core: [number, number, number];
   compositeOperation: "lighter" | "source-over";
+  /** Added to every halo's opacity; prints on white need denser ink. */
+  haloOpacityBoost: number;
 };
 
 export type ConstellationSurface = "dark" | "light";
@@ -36,9 +38,14 @@ const baseRadius = 2;
 // Colors darker than this are lifted towards white so they read on the abyss.
 const minimumHaloLuminance = 0.5;
 const coreWhiteMix = 0.7;
-// On white the roles swap: a dark halo disc carries a light core dot.
-const lightHaloBlackMix = 0.28;
-const lightCoreWhiteMix = 0.6;
+// On white the roles swap: a dark halo disc carries a light core dot. Both
+// keep the hue at boosted saturation; the halo's lightness is capped so the
+// ink stays dark enough in grayscale for MindAR to find its edges.
+const lightSaturationBoost = 1.45;
+const lightSaturationFloor = 0.2;
+const lightHaloMaxLightness = 0.4;
+const lightHaloOpacityBoost = 0.22;
+const lightCoreLightness = 0.8;
 
 function colorChannels(color: string): [number, number, number] {
   const value = Number.parseInt(color.slice(1), 16);
@@ -56,15 +63,36 @@ function mixWithWhite(
   ];
 }
 
-function mixWithBlack(
-  [red, green, blue]: [number, number, number],
-  amount: number,
-): [number, number, number] {
-  return [
-    Math.round(red * (1 - amount)),
-    Math.round(green * (1 - amount)),
-    Math.round(blue * (1 - amount)),
-  ];
+function toHsl([red, green, blue]: [number, number, number]): [number, number, number] {
+  const r = red / 255;
+  const g = green / 255;
+  const b = blue / 255;
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const lightness = (max + min) / 2;
+  if (max === min) return [0, 0, lightness];
+  const delta = max - min;
+  const saturation = delta / (1 - Math.abs(2 * lightness - 1));
+  const hue =
+    max === r ? ((g - b) / delta + 6) % 6 : max === g ? (b - r) / delta + 2 : (r - g) / delta + 4;
+  return [hue * 60, saturation, lightness];
+}
+
+function fromHsl([hue, saturation, lightness]: [number, number, number]): [number, number, number] {
+  const chroma = (1 - Math.abs(2 * lightness - 1)) * saturation;
+  const x = chroma * (1 - Math.abs(((hue / 60) % 2) - 1));
+  const m = lightness - chroma / 2;
+  const [r, g, b] =
+    hue < 60 ? [chroma, x, 0] : hue < 120 ? [x, chroma, 0] : hue < 180 ? [0, chroma, x]
+      : hue < 240 ? [0, x, chroma] : hue < 300 ? [x, 0, chroma] : [chroma, 0, x];
+  return [Math.round((r + m) * 255), Math.round((g + m) * 255), Math.round((b + m) * 255)];
+}
+
+/** The color's hue at higher saturation and the given lightness. Grays stay gray. */
+function vivid(rgb: [number, number, number], lightness: (current: number) => number) {
+  const [hue, saturation, current] = toHsl(rgb);
+  const boosted = saturation === 0 ? 0 : Math.min(1, Math.max(lightSaturationFloor, saturation * lightSaturationBoost));
+  return fromHsl([hue, boosted, lightness(current)]);
 }
 
 function hash(index: number) {
@@ -91,11 +119,12 @@ export function prepareConstellation(
     sizes,
     halo: surface === "dark"
       ? mixWithWhite(rgb, Math.max(0, minimumHaloLuminance - luminance))
-      : mixWithBlack(rgb, lightHaloBlackMix),
+      : vivid(rgb, (current) => Math.min(current, lightHaloMaxLightness)),
     core: surface === "dark"
       ? mixWithWhite(rgb, coreWhiteMix)
-      : mixWithWhite(rgb, lightCoreWhiteMix),
+      : vivid(rgb, () => lightCoreLightness),
     compositeOperation: surface === "dark" ? "lighter" : "source-over",
+    haloOpacityBoost: surface === "dark" ? 0 : lightHaloOpacityBoost,
   };
 }
 
@@ -158,7 +187,7 @@ export function paintConstellation(
     (height * frameFill) / framing.height,
   );
   const radiusScale = (Math.min(width, height) / referenceSize) * baseRadius;
-  const { positions, sizes, halo, core, compositeOperation } = constellation;
+  const { positions, sizes, halo, core, compositeOperation, haloOpacityBoost } = constellation;
 
   context.globalCompositeOperation = compositeOperation;
   for (let offset = 0; offset < positions.length; offset += 3) {
@@ -166,7 +195,7 @@ export function paintConstellation(
     const screenX = width / 2 + (x - framing.centerX) * scale;
     const screenY = height / 2 - (y - framing.centerY) * scale;
     const radius = radiusScale * sizes[offset / 3] * perspective;
-    const alpha = Math.min(0.92, Math.max(0.28, 0.58 + depth * 0.2));
+    const alpha = Math.min(0.95, Math.max(0.28, 0.58 + depth * 0.2) + haloOpacityBoost);
 
     context.fillStyle = `rgba(${halo[0]}, ${halo[1]}, ${halo[2]}, ${alpha})`;
     context.beginPath();

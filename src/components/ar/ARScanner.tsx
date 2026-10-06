@@ -152,8 +152,8 @@ function ARScannerComponent(
             targetIndex,
             particleForm,
             color,
-            // exhibition.mind holds the dark targets, then the white ones.
-            anchorIndices: [targetIndex, targetIndex + artifacts.length],
+            // exhibition.mind holds one white target per artifact.
+            anchorIndices: [targetIndex],
           }),
         ),
         onTargetFound: (targetIndex) => onTargetFoundRef.current(targetIndex),

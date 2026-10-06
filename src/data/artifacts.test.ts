@@ -66,10 +66,10 @@ describe("artifact target image configuration", () => {
 });
 
 describe("compiled MindAR bundle", () => {
-  it("contains a dark and a white target per artifact", () => {
+  it("contains one white target per artifact", () => {
     const bundle = decode(readFileSync("public/targets/exhibition.mind")) as {
       dataList: unknown[];
     };
-    expect(bundle.dataList).toHaveLength(artifacts.length * 2);
+    expect(bundle.dataList).toHaveLength(artifacts.length);
   });
 });

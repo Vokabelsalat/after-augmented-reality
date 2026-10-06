@@ -91,7 +91,7 @@ Add the final print artwork as high-quality JPG or PNG files in `public/images/`
 
 Open the [MindAR image target compiler](https://hiukim.github.io/mind-ar-js-doc/tools/compile/), add the images in this exact order, compile, and export the bundle:
 
-Compile the final artwork images in the same order as `public/exhibition.csv`. The current configuration assigns target indices `0` through `15`, from **Finding Frida** through **Fiery Sparks of Light**, so target index `N` is the artwork with exhibition ID `N + 1`.
+Compile the final artwork images in the same order as `public/exhibition.csv`. The current configuration assigns target indices `0` through `14`, from **Finding Frida** through **Fiery Sparks of Light**, so target index `N` is the artwork with exhibition ID `N + 1`.
 
 Save the downloaded file as:
 
@@ -99,13 +99,13 @@ Save the downloaded file as:
 public/targets/exhibition.mind
 ```
 
-The checked-in `exhibition.mind` bundle contains 30 targets compiled from the 800 × 600 px particle constellation images in `public/targets/`. Indices `0` through `14` are the dark images (`1-finding-frida.png` through `15-fiery-sparks-of-light.png`, in exhibition ID order), and indices `15` through `29` are the matching `-white.png` images in the same order. `npm run targets:export` regenerates both sets, using each artifact's `alternativeColor` for the white versions. `npm run targets:compile` recompiles the bundle with MindAR's offline compiler, so the web compiler is optional. Recompile whenever the compiled images change.
-
-`ARScanner` gives every artifact two anchors, `targetIndex` and `targetIndex + 15`, so a dark and a white print of the same work reveal the same artifact.
+The exhibition prints the constellations on white. The checked-in `exhibition.mind` bundle contains 15 targets compiled from the 800 × 600 px `-white.png` particle constellation images in `public/targets/`, in exhibition ID order (`1-finding-frida-white.png` through `15-fiery-sparks-of-light-white.png`). `npm run targets:export` regenerates them from each artifact's `alternativeColor`. The constellation gallery still previews the dark version, but dark images are not exported or compiled. `npm run targets:compile` recompiles the bundle with MindAR's offline compiler, so the web compiler is optional. Recompile whenever the compiled images change.
 
 Run `npm run targets:verify` after compiling. Each compiled target keeps a downscaled copy of its source image, and the script matches it against the PNGs to confirm that every target index resolves to the expected image. It also prints how many tracking feature points MindAR found per target.
 
-`npm run targets:print` lays out the dark and white targets as A4 test sheets in `public/targets/print-dark.pdf` and `public/targets/print-white.pdf`, six per page with each target's title and MindAR index.
+`npm run targets:assess [typical|hard] [framesPerTarget]` estimates how reliably each target is detected. It renders synthetic 640 × 480 camera frames of every print at near, mid and far distance with random viewing angle, lighting, ink contrast, blur and noise, runs MindAR's own crop detector and matcher on them like the browser does (first matching target index wins), and reports the detection rate, wrong-target detections and a false-positive check with unrelated dot prints. With the current targets, `typical` detects 100% with no confusions; `hard` (dim light, washed-out ink, motion blur, steep angles) detects about 74%, with the misses almost all at the far distance, where the print covers only a quarter to a third of the frame's shorter side. Keep the printed target at least a third of the camera's shorter side in view: roughly, an A4-wide print up to about 0.8 m away, or larger prints for longer distances. Matte paper avoids glare that washes out the ink.
+
+`npm run targets:print` lays out the white targets as A4 test sheets in `public/targets/print-white.pdf`, six per page with each target's title and MindAR index.
 
 ### 3. Check the configuration mapping
 
@@ -180,7 +180,7 @@ The localStorage key is `say-hi:journey:v1`. It stores only session ID, start an
 
 ## Known prototype limitations
 
-- The particle constellation targets are sparse dots on a dark background, which gives MindAR few tracking feature points (as few as zero for some targets). Detection and tracking must be validated with the printed targets.
+- Target detection has only been assessed on synthetic camera frames (`npm run targets:assess`). It must still be validated with the real prints, phones and exhibition lighting.
 - The current AR-first experiment retains the last valid particle pose when tracking is lost and realigns it when the poster is reacquired. Because MindAR image tracking is not world-tracking/SLAM, that frozen pose cannot remain physically registered if the camera moves significantly while the poster is outside the frame.
 - Detection has been architected for Safari/Chrome lifecycle constraints, but final tracking quality and filter tuning must be validated against the actual prints and exhibition lighting.
 - The poem is template-based and English-only. It varies by first/last work, intermediate order, narrative vocabulary, count, and repeated themes, but it is not an LLM.

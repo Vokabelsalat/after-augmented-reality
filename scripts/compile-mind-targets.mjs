@@ -1,19 +1,16 @@
 // Compiles the exported constellation PNGs into public/targets/exhibition.mind
-// with MindAR's offline compiler. The dark targets come first in exhibitionId
-// order, followed by the -white targets in the same order, so MindAR index N
-// and N + artifacts.length both resolve to the artifact with targetIndex N.
+// with MindAR's offline compiler. Only the -white targets are compiled, in
+// exhibitionId order, so MindAR index N is the artifact with targetIndex N.
 import { writeFileSync } from "node:fs";
 import { loadImage } from "canvas";
 import { OfflineCompiler } from "mind-ar/src/image-target/offline-compiler.js";
 import { artifacts } from "../src/data/artifacts.ts";
 
 const ordered = [...artifacts].sort((a, b) => a.targetIndex - b.targetIndex);
-const sources = ["", "-white"].flatMap((suffix) =>
-  ordered.map((artifact) => ({
-    artifact,
-    file: `public/targets/${artifact.exhibitionId}-${artifact.id}${suffix}.png`,
-  })),
-);
+const sources = ordered.map((artifact) => ({
+  artifact,
+  file: `public/targets/${artifact.exhibitionId}-${artifact.id}-white.png`,
+}));
 const images = await Promise.all(sources.map(({ file }) => loadImage(file)));
 
 const compiler = new OfflineCompiler();

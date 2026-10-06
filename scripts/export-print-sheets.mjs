@@ -1,6 +1,5 @@
 // Lays out the exported constellation targets as A4 print sheets for tracking
-// tests: one PDF with the dark targets and one with the -white targets, in
-// exhibitionId order, six targets per page.
+// tests: the -white targets in exhibitionId order, six targets per page.
 import { writeFileSync } from "node:fs";
 import { createCanvas, loadImage } from "canvas";
 import { artifacts } from "../src/data/artifacts.ts";
@@ -18,8 +17,7 @@ const imageHeight = imageWidth * 0.75;
 
 const ordered = [...artifacts].sort((a, b) => a.targetIndex - b.targetIndex);
 const sheets = [
-  { suffix: "", indexOffset: 0, output: "public/targets/print-dark.pdf" },
-  { suffix: "-white", indexOffset: artifacts.length, output: "public/targets/print-white.pdf" },
+  { suffix: "-white", indexOffset: 0, output: "public/targets/print-white.pdf" },
 ];
 
 for (const sheet of sheets) {

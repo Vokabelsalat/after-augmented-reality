@@ -1,5 +1,6 @@
-// Renders every artifact's particle constellation to a dark target and a
-// matching -white.png target with the same painter as the gallery.
+// Renders every artifact's particle constellation to its -white.png target
+// with the same painter as the gallery. The exhibition prints white targets
+// only; the gallery keeps the dark preview.
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -19,7 +20,6 @@ const width = 400;
 const height = 300;
 const pixelRatio = 2;
 const variants = [
-  { suffix: "", background: "#031015", colorKey: "color", surface: "dark" },
   { suffix: "-white", background: "#FFFFFF", colorKey: "alternativeColor", surface: "light" },
 ];
 

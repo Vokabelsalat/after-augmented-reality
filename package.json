@@ -14,6 +14,7 @@
     "targets:export": "node scripts/export-particle-targets.mjs",
     "targets:compile": "node scripts/compile-mind-targets.mjs",
     "targets:verify": "node scripts/verify-mind-targets.mjs",
+    "targets:assess": "node scripts/assess-mind-targets.mjs",
     "targets:print": "node scripts/export-print-sheets.mjs"
   },
   "dependencies": {
