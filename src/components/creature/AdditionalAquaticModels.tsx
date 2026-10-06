@@ -240,9 +240,9 @@ function SeahorseModel(props: AquaticModelProps) {
         <meshToonMaterial color={colors.light} />
       </mesh>
       <mesh><tubeGeometry args={[tail, 48, 0.105, 9, false]} /><meshToonMaterial color={colors.accent} /></mesh>
-      <mesh position={[0.1, 1.27, 0]} rotation={[0, 0, -0.08]} scale={[0.45, 0.38, 0.3]}>
+      <mesh name="Seahorse head" position={[0.1, 1.27, 0]} rotation={[0, 0, -0.08]} scale={[0.48, 0.4, 0.34]}>
         <sphereGeometry args={[0.72, 20, 16]} />
-        <meshToonMaterial color={colors.light} />
+        <meshToonMaterial color={colors.body} />
       </mesh>
       <mesh position={[0.57, 1.15, 0]} rotation={[0, 0, -Math.PI / 2 + 0.1]} scale={[0.13, 0.52, 0.13]}>
         <coneGeometry args={[1, 1, 10]} />
@@ -252,7 +252,21 @@ function SeahorseModel(props: AquaticModelProps) {
         <sphereGeometry args={[1, 12, 10]} />
         <meshToonMaterial color={colors.dark} />
       </mesh>
-      <MovingPupil position={[0.25, 1.38, 0.28]} scale={0.08} animated={props.animated} />
+      {[-1, 1].map((side) => (
+        <group name={`Seahorse ${side > 0 ? "near" : "far"} eye`} key={`eye-${side}`} position={[0.2, 1.35, side * 0.22]}>
+          <mesh scale={[0.085, 0.085, 0.045]}>
+            <sphereGeometry args={[1, 14, 10]} />
+            <meshToonMaterial color="#F3F0E8" />
+          </mesh>
+          <MovingPupil
+            position={[0.015, 0, side * 0.04]}
+            scale={[0.042, 0.045, 0.022]}
+            animated={props.animated}
+            phase={side * 0.2}
+            range={[0.022, 0.02]}
+          />
+        </group>
+      ))}
       <mesh position={[-0.48, 0.03, -0.03]} rotation={[0, 0, -0.08]} scale={[1, 1, 0.7]}>
         <shapeGeometry args={[dorsalFin, 8]} />
         <meshToonMaterial color={colors.accent} side={THREE.DoubleSide} />
@@ -398,7 +412,9 @@ function ShrimpModel(props: AquaticModelProps) {
           <meshToonMaterial color={colors.light} />
         </mesh>
       ))}
-      <MovingPupil position={[1.25, 0.42, 0.31]} scale={[0.085, 0.09, 0.055]} animated={props.animated} />
+      {[-1, 1].map((side) => (
+        <MovingPupil key={`eye-${side}`} position={[1.25, 0.42, side * 0.31]} scale={[0.085, 0.09, 0.055]} animated={props.animated} phase={side * 0.2} />
+      ))}
       {Array.from({ length: 5 }, (_, index) => [-1, 1].map((depth) => (
         <MovingPart key={`leg-${index}-${depth}`} animated={props.animated} phase={index * 0.55 + depth} base={-0.18 + index * 0.035} amount={0.13} speed={2.1}>
           <group position={[0.68 - index * 0.28, -0.18 - index * 0.035, depth * 0.13]}>
@@ -811,7 +827,9 @@ function NarwhalModel(props: AquaticModelProps) {
       <group position={[-bodyLength * 0.93, 0, 0]}>
         <ArticulatedMammalTail animated={props.animated} colors={colors} />
       </group>
-      <MovingPupil position={[bodyLength * 0.67, 0.17, 0.43]} scale={0.075} animated={props.animated} />
+      {[-1, 1].map((side) => (
+        <MovingPupil key={`eye-${side}`} position={[bodyLength * 0.67, 0.17, side * 0.43]} scale={0.075} animated={props.animated} phase={side * 0.2} />
+      ))}
       <mesh position={[bodyLength * 1.28, 0.13, 0]} rotation={[0, 0, -Math.PI / 2]} scale={[0.11, 1.05, 0.11]}><coneGeometry args={[1, 1, 12]} /><meshToonMaterial color="#F3F0E8" /></mesh>
       <TraitMarks pieces={props.pieces} baseSeed={props.baseSeed} form="narwhal" highlightedPart={props.highlightedPart} />
     </LivingGroup>
@@ -923,13 +941,15 @@ function PufferfishModel(props: AquaticModelProps) {
         <sphereGeometry args={[1, 16, 10]} />
         <meshToonMaterial color={colors.light} />
       </mesh>
-      <group position={[0.62, 0.25, 0.58]}>
-        <mesh scale={[0.15, 0.17, 0.09]}>
-          <sphereGeometry args={[1, 14, 12]} />
-          <meshToonMaterial color="#F3F0E8" />
-        </mesh>
-        <MovingPupil position={[0.035, 0, 0.085]} scale={[0.06, 0.075, 0.035]} animated={props.animated} />
-      </group>
+      {[-1, 1].map((side) => (
+        <group key={`eye-${side}`} position={[0.62, 0.25, side * 0.58]}>
+          <mesh scale={[0.15, 0.17, 0.09]}>
+            <sphereGeometry args={[1, 14, 12]} />
+            <meshToonMaterial color="#F3F0E8" />
+          </mesh>
+          <MovingPupil position={[0.035, 0, side * 0.085]} scale={[0.06, 0.075, 0.035]} animated={props.animated} phase={side * 0.2} />
+        </group>
+      ))}
       <mesh position={[1.08, -0.08, 0.48]} scale={[0.12, 0.12, 0.05]}>
         <torusGeometry args={[1, 0.22, 7, 16]} />
         <meshToonMaterial color={colors.dark} />
