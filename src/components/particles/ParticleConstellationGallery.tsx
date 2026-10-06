@@ -1,6 +1,16 @@
 "use client";
 
 import { useEffect, useMemo, useRef } from "react";
+import {
+  constellationParticleCount,
+  frameConstellation,
+  initialOrientation,
+  paintConstellation,
+  prepareConstellation,
+  type Constellation,
+  type ConstellationFraming,
+  type Orientation,
+} from "@/components/particles/constellationPainter";
 import { createArtifactFormationPositions } from "@/components/particles/particleGeometry";
 import type { ParticleFormId } from "@/types/exhibition";
 
@@ -13,26 +23,17 @@ export type ParticlePreviewArtifact = {
 };
 
 type PreparedArtifact = ParticlePreviewArtifact & {
-  positions: Float32Array;
-  rgb: [number, number, number];
+  constellation: Constellation;
+  // Framed once at the initial angle so dragging does not rescale the shape.
+  framing: ConstellationFraming;
 };
 
-type Orientation = { yaw: number; pitch: number };
-
-const previewParticleCount = 1500;
-const particleRadiusScale = 1.6;
-const initialOrientation: Orientation = { yaw: 0.5, pitch: -0.16 };
 const dragRadiansPerPixel = 0.01;
 const maxPitch = Math.PI / 2;
 const exportWidth = 400;
 const exportHeight = 300;
 const exportPixelRatio = 4;
 const exportBackground = "#031015";
-
-function colorChannels(color: string): [number, number, number] {
-  const value = Number.parseInt(color.slice(1), 16);
-  return [(value >> 16) & 255, (value >> 8) & 255, value & 255];
-}
 
 function drawFormation(
   canvas: HTMLCanvasElement,
@@ -54,47 +55,14 @@ function drawFormation(
 
   context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
   context.clearRect(0, 0, width, height);
-  paintFormation(context, width, height, artifact, orientation);
-}
-
-function paintFormation(
-  context: CanvasRenderingContext2D,
-  width: number,
-  height: number,
-  artifact: PreparedArtifact,
-  orientation: Orientation,
-) {
-  context.globalCompositeOperation = "lighter";
-
-  const cosine = Math.cos(orientation.yaw);
-  const sine = Math.sin(orientation.yaw);
-  const tiltCosine = Math.cos(orientation.pitch);
-  const tiltSine = Math.sin(orientation.pitch);
-  const baseScale = Math.min(width, height) * 0.34;
-  const [red, green, blue] = artifact.rgb;
-  const positions = artifact.positions;
-
-  for (let offset = 0; offset < positions.length; offset += 3) {
-    const x = positions[offset];
-    const y = positions[offset + 1] - 0.32;
-    const z = positions[offset + 2] - 0.35;
-    const rotatedX = x * cosine + z * sine;
-    const rotatedZ = -x * sine + z * cosine;
-    const rotatedY = y * tiltCosine - rotatedZ * tiltSine;
-    const depth = y * tiltSine + rotatedZ * tiltCosine;
-    const perspective = 2.8 / (2.8 + depth);
-    const screenX = width / 2 + rotatedX * baseScale * perspective;
-    const screenY = height / 2 - rotatedY * baseScale * perspective;
-    const radius = Math.max(0.75, 1.25 * perspective) * particleRadiusScale;
-    const alpha = Math.min(0.92, Math.max(0.28, 0.58 + depth * 0.2));
-
-    context.fillStyle = `rgba(${red}, ${green}, ${blue}, ${alpha})`;
-    context.beginPath();
-    context.arc(screenX, screenY, radius, 0, Math.PI * 2);
-    context.fill();
-  }
-
-  context.globalCompositeOperation = "source-over";
+  paintConstellation(
+    context,
+    width,
+    height,
+    artifact.constellation,
+    orientation,
+    artifact.framing,
+  );
 }
 
 function exportFormation(artifact: PreparedArtifact, orientation: Orientation) {
@@ -107,7 +75,14 @@ function exportFormation(artifact: PreparedArtifact, orientation: Orientation) {
   context.setTransform(exportPixelRatio, 0, 0, exportPixelRatio, 0, 0);
   context.fillStyle = exportBackground;
   context.fillRect(0, 0, exportWidth, exportHeight);
-  paintFormation(context, exportWidth, exportHeight, artifact, orientation);
+  paintConstellation(
+    context,
+    exportWidth,
+    exportHeight,
+    artifact.constellation,
+    orientation,
+    frameConstellation(artifact.constellation, orientation),
+  );
 
   canvas.toBlob((blob) => {
     if (!blob) return;
@@ -132,11 +107,17 @@ export function ParticleConstellationGallery({
   );
   const preparedArtifacts = useMemo<PreparedArtifact[]>(
     () =>
-      artifacts.map((artifact) => ({
-        ...artifact,
-        positions: createArtifactFormationPositions(artifact, previewParticleCount),
-        rgb: colorChannels(artifact.color),
-      })),
+      artifacts.map((artifact) => {
+        const constellation = prepareConstellation(
+          createArtifactFormationPositions(artifact, constellationParticleCount),
+          artifact.color,
+        );
+        return {
+          ...artifact,
+          constellation,
+          framing: frameConstellation(constellation, initialOrientation),
+        };
+      }),
     [artifacts],
   );
 
