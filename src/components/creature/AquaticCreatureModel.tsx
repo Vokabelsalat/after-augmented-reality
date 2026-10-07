@@ -6,6 +6,7 @@ import * as THREE from "three";
 import { CreatureModel, type CreaturePiece } from "@/components/creature/CreatureModel";
 import { AdditionalAquaticModel } from "@/components/creature/AdditionalAquaticModels";
 import { aquaticPalette, TraitMarks } from "@/components/creature/AquaticModelShared";
+import { ClawPair } from "@/components/creature/parts/Claw";
 import type { AquaticForm } from "@/lib/creature/aquaticForms";
 import { applyCreatureModelOverrides } from "@/lib/creature/modelOverrides";
 import type { CreaturePartId } from "@/types/exhibition";
@@ -21,8 +22,6 @@ function CrabModel({
   colorPalette,
 }: AquaticModelProps) {
   const groupRef = useRef<THREE.Group>(null);
-  const leftClaw = useRef<THREE.Group>(null);
-  const rightClaw = useRef<THREE.Group>(null);
   const legs = useRef<Array<THREE.Group | null>>([]);
   const lowerLegs = useRef<Array<THREE.Mesh | null>>([]);
   const pupils = useRef<Array<THREE.Mesh | null>>([]);
@@ -34,8 +33,6 @@ function CrabModel({
     const stride = wave * 3.1;
     groupRef.current.position.y = grounded ? Math.abs(Math.sin(stride)) * 0.04 : Math.sin(wave * 1.3) * 0.045;
     groupRef.current.rotation.z = Math.sin(wave * 0.8) * 0.025;
-    if (leftClaw.current) leftClaw.current.rotation.z = 0.35 + Math.sin(wave * 1.7) * 0.14;
-    if (rightClaw.current) rightClaw.current.rotation.z = -0.35 - Math.sin(wave * 1.7 + 0.8) * 0.14;
     legs.current.forEach((leg, index) => {
       if (!leg) return;
       const side = index < 3 ? -1 : 1;
@@ -92,27 +89,15 @@ function CrabModel({
           </mesh>
         </group>
       )))}
-      {[-1, 1].map((side) => (
-        <group
-          key={`claw-${side}`}
-          ref={side < 0 ? leftClaw : rightClaw}
-          position={[side * 1.14, 0.34, 0]}
-          rotation={[0, 0, side * -0.35]}
-        >
-          <mesh position={[side * 0.2, 0.16, 0]} rotation={[0, 0, side * -0.52]} scale={[0.1, 0.42, 0.1]}>
-            <cylinderGeometry args={[1, 0.74, 1, 8]} />
-            <meshToonMaterial color={colors.body} />
-          </mesh>
-          <mesh position={[side * 0.34, 0.47, 0]} scale={[0.34, 0.24, 0.18]}>
-            <sphereGeometry args={[1, 16, 12]} />
-            <meshToonMaterial color={colors.accent} />
-          </mesh>
-          <mesh position={[side * 0.49, 0.56, 0]} rotation={[0, 0, side * -0.5]} scale={[0.18, 0.07, 0.08]}>
-            <coneGeometry args={[1, 1, 10]} />
-            <meshToonMaterial color={colors.accent} />
-          </mesh>
-        </group>
-      ))}
+      <ClawPair
+        offset={[0.96, 0.18, 0.14]}
+        scale={0.9}
+        pose={{ yaw: -0.35 }}
+        color={colors.body}
+        shellColor={colors.accent}
+        jointColor={colors.dark}
+        animated={animated !== false}
+      />
       <TraitMarks pieces={pieces} baseSeed={baseSeed} form="crab" highlightedPart={highlightedPart} />
     </group>
   );
