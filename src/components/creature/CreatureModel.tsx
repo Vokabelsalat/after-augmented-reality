@@ -475,10 +475,6 @@ function DorsalFin({
 }) {
   return (
     <>
-      <mesh position={[0, -0.006, 0]} scale={[1.035, 1.035, 1]}>
-        <shapeGeometry args={[style.shape, 20]} />
-        <meshBasicMaterial color="#080B12" side={THREE.DoubleSide} />
-      </mesh>
       {[1, -1].map((side) => (
         <mesh key={`dorsal-surface-${side}`} position={[0, 0, side * 0.006]}>
           <shapeGeometry args={[style.shape, 20]} />
@@ -521,10 +517,6 @@ function PectoralFin({
 }) {
   return (
     <>
-      <mesh position={[0, 0, -0.012 * side]} scale={[1.035, 1.035, 1]}>
-        <shapeGeometry args={[style.shape, 20]} />
-        <meshBasicMaterial color="#080B12" side={THREE.DoubleSide} />
-      </mesh>
       <mesh>
         <shapeGeometry args={[style.shape, 20]} />
         <SoftMaterial color={color} opacity={0.82} />
@@ -654,18 +646,10 @@ export function CreatureModel({
           <sphereGeometry args={[0.86, 20, 14]} />
           <PatternedToonMaterial color={baseColor} />
         </mesh>
-        <mesh scale={[proportions.length * 1.035, proportions.height * 1.055, proportions.depth * 1.12]}>
-          <sphereGeometry args={[0.86, 20, 14]} />
-          <meshBasicMaterial color="#080B12" side={THREE.BackSide} />
-        </mesh>
       </BodyProportions>
       <mesh position={[headX, 0.02, 0.02]} scale={[proportions.head, proportions.height * 0.9, proportions.depth * 0.96]}>
         <sphereGeometry args={[0.7, 20, 14]} />
         <PatternedToonMaterial color={headColor} repeat={[2, 1]} />
-      </mesh>
-      <mesh position={[headX, 0.02, 0]} scale={[proportions.head * 1.045, proportions.height * 0.95, proportions.depth * 1.1]}>
-        <sphereGeometry args={[0.7, 20, 14]} />
-        <meshBasicMaterial color="#080B12" side={THREE.BackSide} />
       </mesh>
       <BodyProportions>
       {[1, -1].map((side) => (
@@ -687,10 +671,6 @@ export function CreatureModel({
       </mesh>
 
       <group ref={tailRef} position={[tailX, 0, 0]} scale={[1.12, 1.14, 1]}>
-        <mesh scale={[1.055, 1.055, 1]}>
-          <shapeGeometry args={[caudalStyle, 18]} />
-          <meshBasicMaterial color="#080B12" side={THREE.DoubleSide} />
-        </mesh>
         {[1, -1].map((side) => (
           <mesh key={`tail-surface-${side}`} position={[0, 0, side * 0.006]}>
             <shapeGeometry args={[caudalStyle, 18]} />

@@ -21,9 +21,6 @@ function seededUnit(seed: number) {
   return value - Math.floor(value);
 }
 
-const compartmentBounds = [-1, -0.64, -0.08, 0.2, 0.68, 1] as const;
-const wallThresholds = [0.14, 0.32, 0.5, 0.68] as const;
-const wallHolePositions = [34, 66, 43, 72] as const;
 const pairingDistance = 0.65;
 const whaleDepth = -5.4;
 const whaleScale = 9.5;
@@ -106,14 +103,6 @@ function WhaleDepthVeil() {
         toneMapped={false}
       />
     </mesh>
-  );
-}
-
-function wallOpening(progress: number, wallIndex: number) {
-  return THREE.MathUtils.clamp(
-    (progress - wallThresholds[wallIndex]) / 0.16,
-    0,
-    1,
   );
 }
 
@@ -222,7 +211,6 @@ const FloatingCreature = memo(function FloatingCreature({
     vy: isBottomDweller || isWhale ? 0 : Math.sin(placement.heading) * placement.speed,
     vz: placement.depthDirection * placement.depthSpeed,
   });
-  const spawnCompartment = Math.abs(contribution.id) % 5;
   const previousProgress = useRef(progress);
 
   const aimTowardVelocity = (vx: number, vy: number, vz: number) => {
@@ -273,15 +261,12 @@ const FloatingCreature = memo(function FloatingCreature({
     );
     const floorYAt = (z: number) => aquariumFloorY + (floorOffsetRef.current ?? 0.3) * depthScaleAt(z);
     const floorY = floorYAt(state.z);
-    const spawnMinX = compartmentBounds[spawnCompartment] * maxX;
-    const spawnMaxX = compartmentBounds[spawnCompartment + 1] * maxX;
-    const spawnCenterX = (spawnMinX + spawnMaxX) / 2;
     const turnZone = 0.48;
 
     if (!state.initialized || progress < previousProgress.current - 0.025) {
       state.x = isWhale
         ? placement.xUnit * whaleTravelEdge
-        : spawnPosition?.[0] ?? spawnCenterX + placement.xUnit * (spawnMaxX - spawnMinX) * 0.34;
+        : spawnPosition?.[0] ?? placement.xUnit * maxX;
       state.y = isBottomDweller
         ? floorY
         : spawnPosition?.[1] ?? placement.yUnit * maxY * (isWhale ? 0.72 : 1);
@@ -364,32 +349,7 @@ const FloatingCreature = memo(function FloatingCreature({
     aimTowardVelocity(state.vx, state.vy, state.vz);
     const facingError = directionRef.current.quaternion.angleTo(targetOrientation.current);
     const forwardMotion = THREE.MathUtils.smoothstep(Math.PI / 2 - facingError, 0, Math.PI / 2) * settle;
-    const proposedX = state.x + state.vx * delta * forwardMotion;
-    const walls = compartmentBounds.slice(1, -1).map((boundary) => boundary * maxX);
-    const currentCompartment = walls.findIndex((wallX) => state.x < wallX);
-    const currentIndex = currentCompartment === -1 ? 4 : currentCompartment;
-    let blocked = false;
-
-    if (!isWhale && state.vx > 0 && currentIndex < 4 && proposedX >= walls[currentIndex]) {
-      const opening = wallOpening(progress, currentIndex);
-      const holeCenterY = (1 - (wallHolePositions[currentIndex] / 50)) * maxY;
-      const holeHalfHeight = maxY * 0.62 * opening;
-      blocked = opening <= 0 || Math.abs(state.y - holeCenterY) > holeHalfHeight;
-      if (blocked) state.x = walls[currentIndex] - 0.04;
-    } else if (!isWhale && state.vx < 0 && currentIndex > 0 && proposedX <= walls[currentIndex - 1]) {
-      const wallIndex = currentIndex - 1;
-      const opening = wallOpening(progress, wallIndex);
-      const holeCenterY = (1 - (wallHolePositions[wallIndex] / 50)) * maxY;
-      const holeHalfHeight = maxY * 0.62 * opening;
-      blocked = opening <= 0 || Math.abs(state.y - holeCenterY) > holeHalfHeight;
-      if (blocked) state.x = walls[wallIndex] + 0.04;
-    }
-
-    if (blocked) {
-      state.vx *= -1;
-    } else {
-      state.x = proposedX;
-    }
+    state.x += state.vx * delta * forwardMotion;
     if (isWhale) {
       if (state.x > whaleTravelEdge) state.x = -whaleTravelEdge;
       if (state.x < -whaleTravelEdge) state.x = whaleTravelEdge;

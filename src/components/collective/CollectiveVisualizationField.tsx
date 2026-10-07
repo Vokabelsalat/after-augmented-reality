@@ -16,14 +16,6 @@ function seededUnit(seed: number) {
   return value - Math.floor(value);
 }
 
-const compartmentCenters = [
-  [-0.82, 0],
-  [-0.36, 0],
-  [0.06, 0],
-  [0.44, 0],
-  [0.84, 0],
-] as const;
-
 function FloatingAbstractCreature({ contribution, progress }: { contribution: ExhibitionContribution; progress: number }) {
   const ref = useRef<THREE.Group>(null);
   const placement = useMemo(() => ({
@@ -34,14 +26,11 @@ function FloatingAbstractCreature({ contribution, progress }: { contribution: Ex
     speed: 0.16 + seededUnit(contribution.id * 13) * 0.2,
     phase: seededUnit(contribution.id * 17) * Math.PI * 2,
   }), [contribution.id]);
-  const compartment = compartmentCenters[contribution.id % compartmentCenters.length];
-  const containment = Math.max(0, 1 - progress * 1.35);
-
   useFrame(({ clock }) => {
     if (!ref.current) return;
     const time = clock.elapsedTime * placement.speed + placement.phase;
-    ref.current.position.x = placement.x * (1 - containment) + compartment[0] * 5.8 * containment + Math.sin(time * 0.72) * (0.24 + progress * 0.3);
-    ref.current.position.y = placement.y * (1 - containment) + compartment[1] * 3.9 * containment + Math.cos(time) * (0.18 + progress * 0.25);
+    ref.current.position.x = placement.x + Math.sin(time * 0.72) * (0.24 + progress * 0.3);
+    ref.current.position.y = placement.y + Math.cos(time) * (0.18 + progress * 0.25);
     ref.current.rotation.z = Math.sin(time * 0.58) * 0.11;
   });
 
@@ -76,20 +65,14 @@ function CollectiveAbstractField({
   );
 }
 
-function CollectiveNetworkField({ contributions, progress }: { contributions: ExhibitionContribution[]; progress: number }) {
+function CollectiveNetworkField({ contributions }: { contributions: ExhibitionContribution[] }) {
   return (
     <div className="relative size-full">
       {contributions.slice(-collectiveCapacity).map((contribution) => {
         const size = 110 + seededUnit(contribution.id * 7) * 150;
-        const compartment = compartmentCenters[contribution.id % compartmentCenters.length];
-        const containment = Math.max(0, 1 - progress * 1.35);
-        const openLeft = 7 + seededUnit(contribution.id * 3) * 86;
-        const openTop = 12 + seededUnit(contribution.id * 5) * 76;
-        const containedLeft = 50 + compartment[0] * 43;
-        const containedTop = 50 - compartment[1] * 42;
         const style = {
-          left: `${openLeft * (1 - containment) + containedLeft * containment}%`,
-          top: `${openTop * (1 - containment) + containedTop * containment}%`,
+          left: `${7 + seededUnit(contribution.id * 3) * 86}%`,
+          top: `${12 + seededUnit(contribution.id * 5) * 76}%`,
           width: `${size}px`,
           height: `${size}px`,
           "--float-delay": `${seededUnit(contribution.id * 11) * -18}s`,
@@ -131,7 +114,7 @@ function VisualizationField({
   onRenderStats?: (report: RenderStatsReport) => void;
 }) {
   if (visualizationDesign === "constellation") {
-    return <CollectiveNetworkField contributions={contributions} progress={progress} />;
+    return <CollectiveNetworkField contributions={contributions} />;
   }
   if (visualizationDesign === "creature") {
     return <CollectiveAbstractField contributions={contributions} progress={progress} onRenderStats={onRenderStats} />;

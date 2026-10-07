@@ -6,6 +6,7 @@ import type { CreatureArrival } from "@/components/collective/CollectiveCreature
 import { CollectiveHeatmap } from "@/components/collective/CollectiveHeatmap";
 import { SpecimenDialog } from "@/components/collective/SpecimenDialog";
 import { PathVisualization } from "@/components/visualization/PathVisualization";
+import { FitText } from "@/components/ui/FitText";
 import { BiomeBackdrop } from "@/components/visualization/BiomeBackdrop";
 import { creatureFitMargin } from "@/components/creature/CreatureCanvas";
 import { formatRenderStats, type RenderStatsReport } from "@/components/development/RenderStats";
@@ -246,42 +247,10 @@ export function CollectiveWall() {
   const previousContributions = recentContributions.slice(1);
   const dayProgress = clockMinutes / MINUTES_IN_DAY;
   const wallStyle = { "--tank-progress": dayProgress } as CSSProperties;
-  const wallOpenings = [0.14, 0.32, 0.5, 0.68].map((threshold) =>
-    Math.max(0, Math.min(1, (dayProgress - threshold) / 0.16)),
-  );
-  const wallPositions = [18, 46, 60, 84];
-  const holePositions = [34, 66, 43, 72];
 
   return (
     <main className="collective-wall biome-field film-grain relative h-screen overflow-hidden bg-[var(--abyss)] text-[var(--foam)]" style={wallStyle} aria-label={`Collective exhibition ${activeVisualizationCopy.collectivePlace}`}>
       <BiomeBackdrop progress={dayProgress} surfaceRays />
-      <div className="tank-compartments pointer-events-none absolute inset-0" aria-hidden="true">
-        <div className="tank-compartment tank-compartment-one"><span>memory shelf</span></div>
-        <div className="tank-compartment tank-compartment-two"><span>synthetic voice</span></div>
-        <div className="tank-compartment tank-compartment-three"><span>stable specimens</span></div>
-        <div className="tank-compartment tank-compartment-four"><span>correspondence</span></div>
-        <div className="tank-compartment tank-compartment-five"><span>irregular organisms</span></div>
-        {wallOpenings.map((opening, index) => (
-          <div
-            key={wallPositions[index]}
-            className="compartment-wall"
-            style={{
-              "--wall-left": `${wallPositions[index]}%`,
-              "--wall-open": opening,
-              "--wall-hole": holePositions[index],
-              "--wall-top-height": `${Math.max(0, holePositions[index] - opening * 31)}%`,
-              "--wall-bottom-height": `${Math.max(0, 100 - holePositions[index] - opening * 31)}%`,
-            } as CSSProperties}
-          >
-            <i className="compartment-wall-top" />
-            <i className="compartment-wall-bottom" />
-            <b className="compartment-breach" />
-          </div>
-        ))}
-      </div>
-      <div className="compartment-flows pointer-events-none absolute inset-0" aria-hidden="true">
-        <span /><span /><span /><span />
-      </div>
       {view === "collective" ? (
         <div className="collective-swim-field absolute" aria-live="polite">
           <CollectiveVisualizationField
@@ -322,12 +291,13 @@ export function CollectiveWall() {
           </button>
         </div>
         <div className="flex items-center gap-6 text-xs tracking-[0.18em] text-white/42 p-8">
+          {/* Debug controls sit on their own row, so they never run into the view switch. */}
           {showRenderStats && view === "collective" && (
-            <>
+            <div className="absolute right-8 top-20 flex items-center gap-6">
               <RenderSwitch label="Merged meshes" checked={mergeStaticMeshes} onChange={setMergeStaticMeshes} />
               <RenderSwitch label="Reduced detail" checked={reduceGeometryDetail} onChange={setReduceGeometryDetail} />
               <span ref={renderStatsRef} aria-hidden="true" />
-            </>
+            </div>
           )}
           <span>{visibleContributions.length} {visibleContributions.length === 1 ? activeVisualizationCopy.singular : activeVisualizationCopy.plural}</span>
           {/* <span className="flex items-center gap-2">
@@ -400,8 +370,8 @@ export function CollectiveWall() {
           className="collective-recents absolute inset-x-0 bottom-0 z-30 bg-gradient-to-t from-[#030405] via-[#030405]/95 to-[#030405]/80 pb-6 lg:pb-7"
           aria-label={`Most recently shared stories and ${activeVisualizationCopy.plural}`}
         >
-          <div className="collective-recents-grid grid h-full grid-cols-[minmax(24rem,1.5fr)_minmax(20rem,1fr)] pt-4">
-            <article className="collective-recents-latest grid min-w-0 grid-cols-[clamp(7rem,9vw,9rem)_1fr] items-center gap-5 border-r border-white/12 pr-8">
+          <div className="collective-recents-grid grid h-full grid-cols-[minmax(24rem,1.5fr)_minmax(20rem,1fr)] grid-rows-[minmax(0,1fr)] pt-4">
+            <article className="collective-recents-latest grid min-h-0 min-w-0 grid-cols-[clamp(7rem,9vw,9rem)_1fr] items-center gap-5 border-r border-white/12 pr-8">
               <div className="aspect-square w-full">
                 <PathVisualization
                   artifactIds={latestContribution.parts.map((part) => part.artifactId)}
@@ -411,14 +381,15 @@ export function CollectiveWall() {
                   label={`Latest ${activeVisualizationCopy.singular} with ${latestContribution.parts.length} parts`}
                 />
               </div>
-              <div className="min-w-0">
-                <p className="mb-3 text-sm text-white/40">Latest released story</p>
-                <div className="font-display text-[clamp(1.15rem,1.45vw,1.75rem)] leading-[1.12] tracking-[-0.025em] text-white/82">
+              {/* A long story shrinks its text to fit instead of growing past the panel. */}
+              <div className="flex h-full min-h-0 min-w-0 flex-col justify-center">
+                <p className="mb-3 shrink-0 text-sm text-white/40">Latest released story</p>
+                <FitText className="font-display text-[clamp(1.15rem,1.45vw,1.75rem)] leading-[1.12] tracking-[-0.025em] text-white/82">
                   {latestContribution.narrative.map((line, index) => (
                     <p key={`${index}-${line}`} className="my-0.5">{line}</p>
                   ))}
-                </div>
-                <p className="mt-4 text-[10px] tracking-[0.2em] text-white/30">
+                </FitText>
+                <p className="mt-4 shrink-0 text-[10px] tracking-[0.2em] text-white/30">
                   {latestContribution.parts.length} {latestContribution.parts.length === 1 ? "encounter" : "encounters"}
                 </p>
               </div>
