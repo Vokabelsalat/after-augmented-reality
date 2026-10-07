@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties } from "react";
 import { CollectiveVisualizationField } from "@/components/collective/CollectiveVisualizationField";
 import type { CreatureArrival } from "@/components/collective/CollectiveCreatureField";
 import { CollectiveHeatmap } from "@/components/collective/CollectiveHeatmap";
@@ -8,6 +8,7 @@ import { SpecimenDialog } from "@/components/collective/SpecimenDialog";
 import { PathVisualization } from "@/components/visualization/PathVisualization";
 import { BiomeBackdrop } from "@/components/visualization/BiomeBackdrop";
 import { creatureFitMargin } from "@/components/creature/CreatureCanvas";
+import { formatRenderStats, type RenderStatsReport } from "@/components/development/RenderStats";
 import { activeVisualizationCopy, collectiveCapacity } from "@/config/visualization";
 import { artifacts } from "@/data/artifacts";
 import { aggregateContributionDwellTimes } from "@/lib/contributions/heatmap";
@@ -26,6 +27,9 @@ const osloClock = new Intl.DateTimeFormat("en-GB", {
   minute: "2-digit",
   hourCycle: "h23",
 });
+
+// Debug readout: always on during development, and with `?stats` in the URL on a production server.
+const noSubscription = () => () => {};
 
 function minuteOfDay(value: Date | string) {
   const parts = Object.fromEntries(
@@ -59,6 +63,16 @@ export function CollectiveWall() {
   const arrivalCreatureRef = useRef<HTMLDivElement>(null);
   const [releasedArrival, setReleasedArrival] = useState<CreatureArrival | null>(null);
   const [takenOverId, setTakenOverId] = useState<number | null>(null);
+  const renderStatsRef = useRef<HTMLSpanElement>(null);
+  // Written straight into the element, so the readout never re-renders the wall.
+  const showRenderStatsReport = useCallback((report: RenderStatsReport) => {
+    if (renderStatsRef.current) renderStatsRef.current.textContent = formatRenderStats(report);
+  }, []);
+  const showRenderStats = useSyncExternalStore(
+    noSubscription,
+    () => process.env.NODE_ENV !== "production" || new URLSearchParams(window.location.search).has("stats"),
+    () => false,
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -243,6 +257,7 @@ export function CollectiveWall() {
             progress={dayProgress}
             arrival={releasedArrival}
             onSelectContribution={setSelectedContribution}
+            onRenderStats={showRenderStats ? showRenderStatsReport : undefined}
           />
         </div>
       ) : (
@@ -273,6 +288,7 @@ export function CollectiveWall() {
           </button>
         </div>
         <div className="flex items-center gap-6 text-xs tracking-[0.18em] text-white/42 p-8">
+          {showRenderStats && view === "collective" && <span ref={renderStatsRef} aria-hidden="true" />}
           <span>{visibleContributions.length} {visibleContributions.length === 1 ? activeVisualizationCopy.singular : activeVisualizationCopy.plural}</span>
           {/* <span className="flex items-center gap-2">
             <span className={`size-1.5 rounded-full ${connected ? "bg-emerald-300" : "bg-amber-300"}`} aria-hidden="true" />

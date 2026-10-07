@@ -7,6 +7,7 @@ import * as THREE from "three";
 import { CollectiveCreatureField, type CreatureArrival } from "@/components/collective/CollectiveCreatureField";
 import { AbstractCreatureModel } from "@/components/visualization/AbstractCreatureCanvas";
 import { NetworkGlyph } from "@/components/visualization/NetworkGlyph";
+import { RenderStats, type RenderStatsReport } from "@/components/development/RenderStats";
 import { collectiveCapacity, visualizationDesign } from "@/config/visualization";
 import type { ExhibitionContribution } from "@/types/contribution";
 
@@ -51,9 +52,18 @@ function FloatingAbstractCreature({ contribution, progress }: { contribution: Ex
   );
 }
 
-function CollectiveAbstractField({ contributions, progress }: { contributions: ExhibitionContribution[]; progress: number }) {
+function CollectiveAbstractField({
+  contributions,
+  progress,
+  onRenderStats,
+}: {
+  contributions: ExhibitionContribution[];
+  progress: number;
+  onRenderStats?: (report: RenderStatsReport) => void;
+}) {
   return (
     <Canvas orthographic camera={{ position: [0, 0, 10], zoom: 82, near: 0.1, far: 30 }} dpr={[1, 1.35]} gl={{ alpha: true, antialias: true, powerPreference: "high-performance" }}>
+      {onRenderStats && <RenderStats onReport={onRenderStats} />}
       <ambientLight intensity={1.4} />
       <directionalLight position={[2, 5, 8]} intensity={2.4} color="#FFF4DF" />
       <pointLight position={[-5, 1, 5]} intensity={2.2} color="#58D6FF" />
@@ -105,17 +115,20 @@ export function CollectiveVisualizationField({
   progress = 1,
   arrival,
   onSelectContribution,
+  onRenderStats,
 }: {
   contributions: ExhibitionContribution[];
   progress?: number;
   arrival?: CreatureArrival | null;
   onSelectContribution?: (contribution: ExhibitionContribution) => void;
+  /** When set, the 3D aquarium reports its frame rate and mesh counts twice a second. */
+  onRenderStats?: (report: RenderStatsReport) => void;
 }) {
   if (visualizationDesign === "constellation") {
     return <CollectiveNetworkField contributions={contributions} progress={progress} />;
   }
   if (visualizationDesign === "creature") {
-    return <CollectiveAbstractField contributions={contributions} progress={progress} />;
+    return <CollectiveAbstractField contributions={contributions} progress={progress} onRenderStats={onRenderStats} />;
   }
   return (
     <CollectiveCreatureField
@@ -123,6 +136,7 @@ export function CollectiveVisualizationField({
       progress={progress}
       arrival={arrival}
       onSelectContribution={onSelectContribution}
+      onRenderStats={onRenderStats}
     />
   );
 }

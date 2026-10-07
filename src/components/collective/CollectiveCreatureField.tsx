@@ -10,6 +10,7 @@ import { creatureSizeScale, type AquaticForm } from "@/lib/creature/aquaticForms
 import { creatureColorPalette } from "@/lib/creature/colorPalettes";
 import type { ExhibitionContribution } from "@/types/contribution";
 import { collectiveCapacity } from "@/config/visualization";
+import { RenderStats, type RenderStatsReport } from "@/components/development/RenderStats";
 
 function seededUnit(seed: number) {
   const value = Math.sin(seed * 999.13) * 43758.5453;
@@ -689,11 +690,14 @@ export function CollectiveCreatureField({
   progress = 1,
   arrival,
   onSelectContribution,
+  onRenderStats,
 }: {
   contributions: ExhibitionContribution[];
   progress?: number;
   arrival?: CreatureArrival | null;
   onSelectContribution?: (contribution: ExhibitionContribution) => void;
+  /** When set, receives the frame rate and mesh counts twice a second. */
+  onRenderStats?: (report: RenderStatsReport) => void;
 }) {
   const [babies, setBabies] = useState<BabyCreature[]>([]);
   const actorRegistry = useRef(new Map<number, MutableRefObject<CreatureMotion>>());
@@ -718,6 +722,7 @@ export function CollectiveCreatureField({
       dpr={[1, 1.35]}
       gl={{ alpha: true, antialias: true, powerPreference: "high-performance" }}
     >
+      {onRenderStats && <RenderStats onReport={onRenderStats} />}
       <ambientLight intensity={1.4} />
       <directionalLight position={[2, 5, 8]} intensity={2.4} color="#FFF4DF" />
       <pointLight position={[-5, 1, 5]} intensity={2.2} color="#58D6FF" />
