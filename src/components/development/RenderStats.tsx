@@ -6,10 +6,10 @@ import { useRef } from "react";
 const updateEverySeconds = 0.5;
 const numberFormat = new Intl.NumberFormat("en-GB");
 
-export type RenderStatsReport = { fps: number; meshes: number; drawCalls: number };
+export type RenderStatsReport = { fps: number; meshes: number; drawCalls: number; triangles: number };
 
-export function formatRenderStats({ fps, meshes, drawCalls }: RenderStatsReport) {
-  return `${fps} fps · ${numberFormat.format(meshes)} meshes · ${numberFormat.format(drawCalls)} draws`;
+export function formatRenderStats({ fps, meshes, drawCalls, triangles }: RenderStatsReport) {
+  return `${fps} fps · ${numberFormat.format(meshes)} meshes · ${numberFormat.format(drawCalls)} draws · ${numberFormat.format(Math.round(triangles / 1000))}k triangles`;
 }
 
 /**
@@ -37,6 +37,7 @@ export function RenderStats({ onReport }: { onReport: (report: RenderStatsReport
       meshes,
       // `info` still holds the previous frame here, since it resets when a render starts.
       drawCalls: gl.info.render.calls,
+      triangles: gl.info.render.triangles,
     });
     frames.current = 0;
     windowStart.current = now;

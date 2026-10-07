@@ -5,6 +5,7 @@ import { Canvas, useFrame, useThree, type ThreeEvent } from "@react-three/fiber"
 import { useCallback, useEffect, useMemo, useRef, useState, type MutableRefObject } from "react";
 import * as THREE from "three";
 import { AquaticCreatureModel } from "@/components/creature/AquaticCreatureModel";
+import { GeometryDetailReducer } from "@/components/creature/GeometryDetailReducer";
 import { StaticMeshMerger } from "@/components/creature/StaticMeshMerger";
 import { AquariumDioramaPlants } from "@/components/collective/AquariumDioramaPlants";
 import { creatureSizeScale, type AquaticForm } from "@/lib/creature/aquaticForms";
@@ -167,6 +168,7 @@ type FloatingCreatureProps = {
   arrival?: CreatureArrival;
   onSelect?: (contribution: ExhibitionContribution) => void;
   mergeStaticMeshes?: boolean;
+  reduceGeometryDetail?: boolean;
 };
 
 function FloatingCreature({
@@ -179,6 +181,7 @@ function FloatingCreature({
   arrival,
   onSelect,
   mergeStaticMeshes = false,
+  reduceGeometryDetail = false,
 }: FloatingCreatureProps) {
   const canvas = useThree((state) => state.gl.domElement);
   const swimRef = useRef<THREE.Group>(null);
@@ -471,6 +474,13 @@ function FloatingCreature({
     );
   });
 
+  // An arriving creature starts at the size it had on the arrival screen, so it keeps full detail until it settles.
+  const isShownLarge = useCallback((elapsed: number) => {
+    if (arrivalPending.current) return true;
+    const arrivalStart = arrivalMotion.current?.startedAt;
+    return arrivalStart !== undefined && elapsed - arrivalStart < arrivalSinkSeconds + arrivalSettleSeconds;
+  }, []);
+
   const startsFacingLeft = Math.cos(placement.heading) < 0;
   const formScale = collectiveFormScale[contribution.creatureForm];
   const individualScale = creatureSizeScale(contribution.publicId) * (juvenile ? 0.48 : 1);
@@ -497,15 +507,17 @@ function FloatingCreature({
     >
       <group ref={directionRef} rotation={[0, startsFacingLeft ? Math.PI : 0, 0]}>
         <StaticMeshMerger enabled={mergeStaticMeshes}>
-          <AquaticCreatureModel
-            form={contribution.creatureForm}
-            pieces={contribution.parts}
-            baseSeed={contribution.publicId}
-            colorPalette={contribution.creaturePalette}
-            scale={placement.scale * formScale * individualScale}
-            animated
-            grounded={isBottomDweller}
-          />
+          <GeometryDetailReducer enabled={reduceGeometryDetail} isHeld={isShownLarge}>
+            <AquaticCreatureModel
+              form={contribution.creatureForm}
+              pieces={contribution.parts}
+              baseSeed={contribution.publicId}
+              colorPalette={contribution.creaturePalette}
+              scale={placement.scale * formScale * individualScale}
+              animated
+              grounded={isBottomDweller}
+            />
+          </GeometryDetailReducer>
         </StaticMeshMerger>
       </group>
     </group>
@@ -707,6 +719,7 @@ export function CollectiveCreatureField({
   onSelectContribution,
   onRenderStats,
   mergeStaticMeshes = false,
+  reduceGeometryDetail = false,
 }: {
   contributions: ExhibitionContribution[];
   progress?: number;
@@ -716,6 +729,8 @@ export function CollectiveCreatureField({
   onRenderStats?: (report: RenderStatsReport) => void;
   /** Merges each creature's still parts into a few meshes to save draw calls. */
   mergeStaticMeshes?: boolean;
+  /** Builds rounded shapes with only as many segments as their size on screen needs. */
+  reduceGeometryDetail?: boolean;
 }) {
   const [babies, setBabies] = useState<BabyCreature[]>([]);
   const actorRegistry = useRef(new Map<number, MutableRefObject<CreatureMotion>>());
@@ -751,6 +766,7 @@ export function CollectiveCreatureField({
           contribution={contribution}
           progress={progress}
           mergeStaticMeshes={mergeStaticMeshes}
+          reduceGeometryDetail={reduceGeometryDetail}
           arrival={arrival?.id === contribution.id ? arrival : undefined}
           onSelect={onSelectContribution}
         />
@@ -770,6 +786,7 @@ export function CollectiveCreatureField({
           contribution={contribution}
           progress={progress}
           mergeStaticMeshes={mergeStaticMeshes}
+          reduceGeometryDetail={reduceGeometryDetail}
           actorRegistry={actorRegistry}
           pairingRef={pairingRef}
           arrival={arrival?.id === contribution.id ? arrival : undefined}
@@ -782,6 +799,7 @@ export function CollectiveCreatureField({
           contribution={baby.contribution}
           progress={progress}
           mergeStaticMeshes={mergeStaticMeshes}
+          reduceGeometryDetail={reduceGeometryDetail}
           juvenile
           spawnPosition={baby.spawnPosition}
         />

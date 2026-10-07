@@ -117,6 +117,7 @@ export function CollectiveVisualizationField({
   onSelectContribution,
   onRenderStats,
   mergeStaticMeshes = false,
+  reduceGeometryDetail = false,
 }: {
   contributions: ExhibitionContribution[];
   progress?: number;
@@ -124,6 +125,8 @@ export function CollectiveVisualizationField({
   onSelectContribution?: (contribution: ExhibitionContribution) => void;
   /** Merges each creature's still parts into a few meshes in the 3D aquarium. */
   mergeStaticMeshes?: boolean;
+  /** Builds rounded shapes in the 3D aquarium with only as many segments as their size needs. */
+  reduceGeometryDetail?: boolean;
   /** When set, the 3D aquarium reports its frame rate and mesh counts twice a second. */
   onRenderStats?: (report: RenderStatsReport) => void;
 }) {
@@ -141,6 +144,7 @@ export function CollectiveVisualizationField({
       onSelectContribution={onSelectContribution}
       onRenderStats={onRenderStats}
       mergeStaticMeshes={mergeStaticMeshes}
+      reduceGeometryDetail={reduceGeometryDetail}
     />
   );
 }

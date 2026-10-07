@@ -6,6 +6,7 @@ import * as THREE from "three";
 import type { CreaturePiece } from "@/components/creature/CreatureModel";
 import type { AquaticForm } from "@/lib/creature/aquaticForms";
 import { creatureColorPalette, type CreatureColorPalette } from "@/lib/creature/colorPalettes";
+import { withDetailRecipe } from "@/lib/creature/geometryDetail";
 import type { CreaturePartId } from "@/types/exhibition";
 
 export function aquaticPalette(
@@ -139,9 +140,10 @@ function leafShape(length: number, width: number, bend = 0) {
 }
 
 // A tube along `curve` whose radius goes from `radius` at its start to `radius * end` at its end.
-function taperedTube(curve: THREE.Curve<THREE.Vector3>, radius: number, end = 0.15) {
-  const tubular = 48;
-  const radial = 10;
+// `detail` scales its segment counts, for creatures shown small.
+function taperedTube(curve: THREE.Curve<THREE.Vector3>, radius: number, end = 0.15, detail = 1) {
+  const tubular = Math.max(8, Math.round(48 * detail));
+  const radial = Math.max(5, Math.round(10 * detail));
   const geometry = new THREE.TubeGeometry(curve, tubular, radius, radial, false);
   const positions = geometry.attributes.position;
   const vertex = new THREE.Vector3();
@@ -221,7 +223,7 @@ const traitShapes = {
 };
 
 const traitGeometries = {
-  lure: taperedTube(new THREE.LineCurve3(new THREE.Vector3(0, -0.05, 0), new THREE.Vector3(0, 0.72, 0)), 0.05, 0.5),
+  lure: withDetailRecipe(48, (detail) => taperedTube(new THREE.LineCurve3(new THREE.Vector3(0, -0.05, 0), new THREE.Vector3(0, 0.72, 0)), 0.05, 0.5, detail)),
   thorn: (() => {
     // Few radial segments keep the spine faceted, like a crystal grown into a thorn.
     const path = curve([[0, -0.05, 0], [0.02, 0.3, 0], [-0.1, 0.6, 0], [-0.26, 0.78, 0]]);
@@ -238,9 +240,9 @@ const traitGeometries = {
     }
     return geometry.toNonIndexed();
   })(),
-  beak: taperedTube(curve([[0, -0.05, 0], [0.08, 0.2, 0], [0.26, 0.34, 0], [0.42, 0.26, 0]]), 0.17, 0.08),
+  beak: withDetailRecipe(48, (detail) => taperedTube(curve([[0, -0.05, 0], [0.08, 0.2, 0], [0.26, 0.34, 0], [0.42, 0.26, 0]]), 0.17, 0.08, detail)),
   // A fiddlehead: a short stem that rolls into a spiral.
-  curl: taperedTube(curve([
+  curl: withDetailRecipe(48, (detail) => taperedTube(curve([
     [0, -0.05, 0],
     [0.01, 0.2, 0],
     ...Array.from({ length: 16 }, (_, index) => {
@@ -249,13 +251,13 @@ const traitGeometries = {
       const radius = 0.15 * (1 - t * 0.75);
       return [0.15 + Math.cos(angle) * radius, 0.4 + Math.sin(angle) * radius, 0] as [number, number, number];
     }),
-  ]), 0.065, 0.35),
+  ]), 0.065, 0.35, detail)),
   // A chambered shell that coils outward from its tiny first chamber.
-  shell: seated(taperedTube(curve(Array.from({ length: 40 }, (_, index) => {
+  shell: withDetailRecipe(48, (detail) => seated(taperedTube(curve(Array.from({ length: 40 }, (_, index) => {
     const angle = (index / 39) * Math.PI * 2.4;
     const radius = 0.03 * Math.exp(angle * 0.28);
     return [Math.cos(angle) * radius, Math.sin(angle) * radius, 0] as [number, number, number];
-  })), 0.02, 6.5)),
+  })), 0.02, 6.5, detail))),
   // A drop swelling at the end of a thin neck, as if it is just slipping out of the body.
   droplet: new THREE.LatheGeometry(smoothProfile([[0.001, 0], [0.07, 0.02], [0.05, 0.14], [0.13, 0.32], [0.2, 0.48], [0.18, 0.62], [0.1, 0.7], [0.001, 0.72]]), 24),
   polyp: new THREE.LatheGeometry(smoothProfile([[0.001, 0], [0.16, 0.01], [0.08, 0.14], [0.07, 0.26], [0.17, 0.36], [0.18, 0.44], [0.08, 0.5], [0.001, 0.48]]), 22),

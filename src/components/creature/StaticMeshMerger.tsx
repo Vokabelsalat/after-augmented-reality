@@ -136,7 +136,7 @@ type MergeState = {
   poses: Map<THREE.Object3D, Pose>;
   moving: Set<THREE.Object3D>;
   merged: THREE.Mesh[];
-  hidden: Array<{ mesh: THREE.Mesh; layers: number; material: THREE.Material | THREE.Material[] }>;
+  hidden: Array<{ mesh: THREE.Mesh; layers: number; material: THREE.Material | THREE.Material[]; geometry: THREE.BufferGeometry }>;
   nextWatch: number;
 };
 
@@ -224,7 +224,7 @@ function merge(root: THREE.Object3D, state: MergeState) {
     batch.anchor.add(mergedMesh);
     state.merged.push(mergedMesh);
     for (const mesh of batch.meshes) {
-      state.hidden.push({ mesh, layers: mesh.layers.mask, material: mesh.material });
+      state.hidden.push({ mesh, layers: mesh.layers.mask, material: mesh.material, geometry: mesh.geometry });
       mesh.layers.set(hiddenLayer);
     }
   }
@@ -239,8 +239,8 @@ function mergeIsStale(root: THREE.Object3D, state: MergeState) {
       return true;
     }
   }
-  return state.hidden.some(({ mesh, material }) => {
-    if (mesh.material !== material) return true;
+  return state.hidden.some(({ mesh, material, geometry }) => {
+    if (mesh.material !== material || mesh.geometry !== geometry) return true;
     let node: THREE.Object3D | null = mesh;
     while (node && node !== root) node = node.parent;
     return node !== root;

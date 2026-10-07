@@ -3,6 +3,7 @@
 import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
+import { withDetailRecipe } from "@/lib/creature/geometryDetail";
 
 type Vector3Tuple = [number, number, number];
 
@@ -113,6 +114,33 @@ function innerEdgePoint(length: number, width: number, along: number) {
     .add(base.multiplyScalar(along * along));
 }
 
+/** `detail` scales the curve and bevel segments, for claws shown small. */
+function fingerGeometry(length: number, width: number, shellColor: string, tipColor: string, detail = 1) {
+  const depth = width * 0.7;
+  const extruded = new THREE.ExtrudeGeometry(fingerShape(length, width), {
+    depth,
+    steps: 1,
+    curveSegments: Math.max(3, Math.round(14 * detail)),
+    bevelEnabled: true,
+    bevelThickness: depth * 0.35,
+    bevelSize: width * 0.16,
+    bevelSegments: Math.max(1, Math.round(3 * detail)),
+  });
+  extruded.translate(0, 0, -depth / 2);
+  // Fade the last part of the finger into the tip colour.
+  const shell = new THREE.Color(shellColor);
+  const tip = new THREE.Color(tipColor);
+  const mixed = new THREE.Color();
+  const positions = extruded.getAttribute("position");
+  const colors = new Float32Array(positions.count * 3);
+  for (let index = 0; index < positions.count; index += 1) {
+    const fade = THREE.MathUtils.smoothstep(positions.getX(index), length * 0.6, length * 0.88);
+    mixed.copy(shell).lerp(tip, fade).toArray(colors, index * 3);
+  }
+  extruded.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+  return extruded;
+}
+
 function ClawFinger({
   length,
   width,
@@ -126,31 +154,10 @@ function ClawFinger({
   tipColor: string;
   glow?: number;
 }) {
-  const geometry = useMemo(() => {
-    const depth = width * 0.7;
-    const extruded = new THREE.ExtrudeGeometry(fingerShape(length, width), {
-      depth,
-      steps: 1,
-      curveSegments: 14,
-      bevelEnabled: true,
-      bevelThickness: depth * 0.35,
-      bevelSize: width * 0.16,
-      bevelSegments: 3,
-    });
-    extruded.translate(0, 0, -depth / 2);
-    // Fade the last part of the finger into the tip colour.
-    const shell = new THREE.Color(shellColor);
-    const tip = new THREE.Color(tipColor);
-    const mixed = new THREE.Color();
-    const positions = extruded.getAttribute("position");
-    const colors = new Float32Array(positions.count * 3);
-    for (let index = 0; index < positions.count; index += 1) {
-      const fade = THREE.MathUtils.smoothstep(positions.getX(index), length * 0.6, length * 0.88);
-      mixed.copy(shell).lerp(tip, fade).toArray(colors, index * 3);
-    }
-    extruded.setAttribute("color", new THREE.BufferAttribute(colors, 3));
-    return extruded;
-  }, [length, width, shellColor, tipColor]);
+  const geometry = useMemo(
+    () => withDetailRecipe(14, (detail) => fingerGeometry(length, width, shellColor, tipColor, detail)),
+    [length, width, shellColor, tipColor],
+  );
 
   useEffect(() => () => geometry.dispose(), [geometry]);
 
