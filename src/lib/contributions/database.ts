@@ -15,6 +15,7 @@ import {
   type CreatureColorPalette,
 } from "@/lib/creature/colorPalettes";
 import { creaturePattern, isCreaturePattern, type CreaturePattern } from "@/lib/creature/patterns";
+import { creatureProportions, isCreatureProportions, type CreatureProportions } from "@/lib/creature/proportions";
 
 type ContributionRow = {
   id: number;
@@ -23,6 +24,7 @@ type ContributionRow = {
   creature_form: string;
   creature_palette_json: string | null;
   creature_pattern_json: string | null;
+  creature_proportions_json: string | null;
   glyphs_json: string;
   narrative_json: string;
   created_at: string;
@@ -33,7 +35,7 @@ const globalForDatabase = globalThis as typeof globalThis & {
   exhibitionDatabaseSchemaVersion?: number;
 };
 
-const DATABASE_SCHEMA_VERSION = 4;
+const DATABASE_SCHEMA_VERSION = 5;
 
 const exhibitionClock = new Intl.DateTimeFormat("en-CA", {
   timeZone: "Europe/Oslo",
@@ -100,6 +102,7 @@ function openDatabase() {
         creature_form TEXT NOT NULL DEFAULT 'fish',
         creature_palette_json TEXT,
         creature_pattern_json TEXT,
+        creature_proportions_json TEXT,
         glyphs_json TEXT NOT NULL,
         narrative_json TEXT NOT NULL,
         is_synthetic INTEGER NOT NULL DEFAULT 0,
@@ -123,6 +126,9 @@ function openDatabase() {
     }
     if (!contributionColumns.some((column) => column.name === "creature_pattern_json")) {
       database.exec("ALTER TABLE contributions ADD COLUMN creature_pattern_json TEXT");
+    }
+    if (!contributionColumns.some((column) => column.name === "creature_proportions_json")) {
+      database.exec("ALTER TABLE contributions ADD COLUMN creature_proportions_json TEXT");
     }
     globalForDatabase.exhibitionDatabaseSchemaVersion = DATABASE_SCHEMA_VERSION;
   }
@@ -160,6 +166,14 @@ function deserialize(row: ContributionRow): ExhibitionContribution {
   } catch {
     storedPattern = null;
   }
+  let storedProportions: unknown = null;
+  try {
+    storedProportions = row.creature_proportions_json
+      ? JSON.parse(row.creature_proportions_json)
+      : null;
+  } catch {
+    storedProportions = null;
+  }
   return {
     id: row.id,
     publicId: row.public_id,
@@ -171,6 +185,9 @@ function deserialize(row: ContributionRow): ExhibitionContribution {
     creaturePattern: isCreaturePattern(storedPattern)
       ? storedPattern
       : creaturePattern(row.session_id),
+    creatureProportions: isCreatureProportions(storedProportions)
+      ? storedProportions
+      : creatureProportions(row.session_id),
     parts,
     narrative: generateJourneyNarrative(
       parts.map((part) => ({
@@ -187,7 +204,7 @@ function deserialize(row: ContributionRow): ExhibitionContribution {
 export function listContributions(afterId = 0, limit = 80) {
   const rows = openDatabase()
     .prepare(
-      `SELECT id, public_id, session_id, creature_form, creature_palette_json, creature_pattern_json, glyphs_json, narrative_json, created_at
+      `SELECT id, public_id, session_id, creature_form, creature_palette_json, creature_pattern_json, creature_proportions_json, glyphs_json, narrative_json, created_at
        FROM contributions
        WHERE id > ? AND created_at >= ?
        ORDER BY id ASC
@@ -201,7 +218,7 @@ export function listContributions(afterId = 0, limit = 80) {
 export function getCollectiveHeatmap() {
   const rows = openDatabase()
     .prepare(
-      `SELECT id, public_id, session_id, creature_form, creature_palette_json, creature_pattern_json, glyphs_json, narrative_json, created_at
+      `SELECT id, public_id, session_id, creature_form, creature_palette_json, creature_pattern_json, creature_proportions_json, glyphs_json, narrative_json, created_at
        FROM contributions
        WHERE created_at >= ?
        ORDER BY id ASC`,
@@ -220,6 +237,7 @@ export function createContribution(input: {
   creatureForm: AquaticForm;
   creaturePalette: CreatureColorPalette;
   creaturePattern: CreaturePattern;
+  creatureProportions: CreatureProportions;
   parts: SharedCreaturePart[];
   narrative: string[];
   createdAt?: string;
@@ -228,8 +246,8 @@ export function createContribution(input: {
   const database = openDatabase();
   database
     .prepare(
-      `INSERT INTO contributions (public_id, session_id, creature_form, creature_palette_json, creature_pattern_json, glyphs_json, narrative_json, is_synthetic, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `INSERT INTO contributions (public_id, session_id, creature_form, creature_palette_json, creature_pattern_json, creature_proportions_json, glyphs_json, narrative_json, is_synthetic, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT(session_id) DO NOTHING`,
     )
     .run(
@@ -238,6 +256,7 @@ export function createContribution(input: {
       input.creatureForm,
       JSON.stringify(input.creaturePalette),
       JSON.stringify(input.creaturePattern),
+      JSON.stringify(input.creatureProportions),
       JSON.stringify(input.parts),
       JSON.stringify(input.narrative),
       input.synthetic ? 1 : 0,
@@ -246,7 +265,7 @@ export function createContribution(input: {
 
   const row = database
     .prepare(
-      `SELECT id, public_id, session_id, creature_form, creature_palette_json, creature_pattern_json, glyphs_json, narrative_json, created_at
+      `SELECT id, public_id, session_id, creature_form, creature_palette_json, creature_pattern_json, creature_proportions_json, glyphs_json, narrative_json, created_at
        FROM contributions
        WHERE session_id = ?`,
     )

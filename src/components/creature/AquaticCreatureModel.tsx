@@ -12,7 +12,9 @@ import { applyCreatureModelOverrides } from "@/lib/creature/modelOverrides";
 import type { CreaturePartId } from "@/types/exhibition";
 import { creatureColorPalette, type CreatureColorPalette } from "@/lib/creature/colorPalettes";
 import { creaturePattern, type CreaturePattern } from "@/lib/creature/patterns";
-import { CreaturePatternContext, PatternedToonMaterial } from "@/components/creature/CreaturePatternMaterial";
+import { PatternedToonMaterial } from "@/components/creature/CreaturePatternMaterial";
+import { BodyAttachment, BodyProportions, CreatureLookContext } from "@/components/creature/CreatureLook";
+import { creatureProportions, type CreatureProportions } from "@/lib/creature/proportions";
 
 function CrabModel({
   pieces,
@@ -55,16 +57,19 @@ function CrabModel({
 
   return (
     <group ref={groupRef} scale={scale}>
-      <mesh scale={[1.28, 0.68, 0.42]}>
-        <sphereGeometry args={[0.82, 20, 14]} />
-        <PatternedToonMaterial color={colors.body} />
-      </mesh>
-      <mesh position={[0, -0.24, 0.3]} scale={[1.02, 0.34, 0.12]}>
-        <sphereGeometry args={[0.78, 20, 14]} />
-        <meshToonMaterial color={colors.light} />
-      </mesh>
+      <BodyProportions>
+        <mesh scale={[1.28, 0.68, 0.42]}>
+          <sphereGeometry args={[0.82, 20, 14]} />
+          <PatternedToonMaterial color={colors.body} />
+        </mesh>
+        <mesh position={[0, -0.24, 0.3]} scale={[1.02, 0.34, 0.12]}>
+          <sphereGeometry args={[0.78, 20, 14]} />
+          <meshToonMaterial color={colors.light} />
+        </mesh>
+      </BodyProportions>
       {[-1, 1].map((side, index) => (
-        <group key={`eye-${side}`} position={[side * 0.44, 0.57, 0.22]}>
+        <BodyAttachment key={`eye-${side}`} anchor={[side * 0.44, 0.44, 0.22]}>
+        <group position={[side * 0.44, 0.57, 0.22]}>
           <mesh scale={[0.08, 0.26, 0.08]}>
             <cylinderGeometry args={[1, 1, 1, 10]} />
             <meshToonMaterial color={colors.dark} />
@@ -78,6 +83,7 @@ function CrabModel({
             <meshBasicMaterial color="#071015" />
           </mesh>
         </group>
+        </BodyAttachment>
       ))}
       {[-1, 1].flatMap((side, sideIndex) => [0, 1, 2].map((leg) => (
         <group ref={(node) => { legs.current[sideIndex * 3 + leg] = node; }} key={`leg-${side}-${leg}`} position={[side * (0.72 + leg * 0.09), 0.08 - leg * 0.22, 0]} rotation={[0, 0, side * (0.72 + leg * 0.17)]}>
@@ -139,14 +145,16 @@ function JellyfishModel({
 
   return (
     <group ref={groupRef} scale={scale} position={[0, 0.48, 0]}>
-      <mesh scale={[1.05, 0.92, 0.64]}>
-        <sphereGeometry args={[1, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2]} />
-        <PatternedToonMaterial color={colors.body} transparent opacity={0.76} depthWrite={false} />
-      </mesh>
-      <mesh position={[0, -0.05, 0]} scale={[1.02, 0.18, 0.62]}>
-        <sphereGeometry args={[1, 20, 12]} />
-        <meshToonMaterial color={colors.light} transparent opacity={0.62} depthWrite={false} />
-      </mesh>
+      <BodyProportions>
+        <mesh scale={[1.05, 0.92, 0.64]}>
+          <sphereGeometry args={[1, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2]} />
+          <PatternedToonMaterial color={colors.body} transparent opacity={0.76} depthWrite={false} />
+        </mesh>
+        <mesh position={[0, -0.05, 0]} scale={[1.02, 0.18, 0.62]}>
+          <sphereGeometry args={[1, 20, 12]} />
+          <meshToonMaterial color={colors.light} transparent opacity={0.62} depthWrite={false} />
+        </mesh>
+      </BodyProportions>
       {curves.map((curve, index) => (
         <mesh ref={(node) => { tentacles.current[index] = node; }} key={index}>
           <tubeGeometry args={[curve, 22, index % 2 ? 0.035 : 0.052, 7, false]} />
@@ -206,16 +214,19 @@ function OctopusModel({
           <meshToonMaterial color={index % 3 === 0 ? colors.accent : colors.dark} />
         </mesh>
       ))}
-      <mesh position={[0, 0.18, 0]} scale={[0.78, 0.94, 0.58]}>
-        <sphereGeometry args={[0.9, 20, 14]} />
-        <PatternedToonMaterial color={colors.body} />
-      </mesh>
+      <BodyProportions origin={[0, 0.18, 0]}>
+        <mesh position={[0, 0.18, 0]} scale={[0.78, 0.94, 0.58]}>
+          <sphereGeometry args={[0.9, 20, 14]} />
+          <PatternedToonMaterial color={colors.body} />
+        </mesh>
+      </BodyProportions>
       <mesh position={[0, -0.34, 0.02]} scale={[0.94, 0.52, 0.62]}>
         <sphereGeometry args={[0.82, 20, 14]} />
         <meshToonMaterial color={colors.light} />
       </mesh>
       {[-1, 1].map((side, index) => (
-        <group key={side} position={[side * 0.28, 0.2, 0.5]}>
+        <BodyAttachment key={side} anchor={[side * 0.28, 0.2, 0.5]} origin={[0, 0.18, 0]}>
+        <group position={[side * 0.28, 0.2, 0.5]}>
           <mesh scale={[0.15, 0.2, 0.1]}>
             <sphereGeometry args={[1, 14, 12]} />
             <meshToonMaterial color="#F3F0E8" />
@@ -225,6 +236,7 @@ function OctopusModel({
             <meshBasicMaterial color="#071015" />
           </mesh>
         </group>
+        </BodyAttachment>
       ))}
       <TraitMarks pieces={pieces} baseSeed={baseSeed} form="octopus" highlightedPart={highlightedPart} />
     </group>
@@ -251,19 +263,23 @@ export function AquaticCreatureModel({
   grounded = false,
   colorPalette,
   pattern,
+  proportions,
 }: AquaticModelProps & {
   form: AquaticForm;
   /** The skin pattern; previews without a stored one draw it from the creature's seed. */
   pattern?: CreaturePattern;
+  /** How the main body is stretched; previews without stored ones draw them from the seed. */
+  proportions?: CreatureProportions;
 }) {
   const editorRootRef = useRef<THREE.Group>(null);
   const signature = baseSeed ?? pieces[0]?.artifactId ?? "new";
-  const patternContext = useMemo(
+  const look = useMemo(
     () => ({
       pattern: pattern ?? creaturePattern(signature),
       markingColor: (colorPalette ?? creatureColorPalette(signature)).marking,
+      proportions: proportions ?? creatureProportions(signature),
     }),
-    [colorPalette, pattern, signature],
+    [colorPalette, pattern, proportions, signature],
   );
 
   useLayoutEffect(() => {
@@ -283,8 +299,8 @@ export function AquaticCreatureModel({
     model = <CreatureModel pieces={pieces} baseSeed={baseSeed} animated={animated} highlightedPart={highlightedPart} scale={scale} colorPalette={colorPalette} />;
   }
   return (
-    <CreaturePatternContext.Provider value={patternContext}>
+    <CreatureLookContext.Provider value={look}>
       <group ref={editorRootRef}>{model}</group>
-    </CreaturePatternContext.Provider>
+    </CreatureLookContext.Provider>
   );
 }

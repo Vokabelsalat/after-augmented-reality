@@ -80,6 +80,7 @@ export function JourneyFinal() {
           creatureForm={journey.creatureForm}
           creaturePalette={journey.creaturePalette ?? undefined}
           creaturePattern={journey.creaturePattern ?? undefined}
+          creatureProportions={journey.creatureProportions ?? undefined}
           creatureSeed={journey.sessionId ?? undefined}
           fitToView
           label={`Your finished exhibition ${activeVisualizationCopy.singular}`}
@@ -106,6 +107,7 @@ export function JourneyFinal() {
             creatureForm={journey.creatureForm}
             creaturePalette={journey.creaturePalette}
             creaturePattern={journey.creaturePattern}
+            creatureProportions={journey.creatureProportions}
           />
         </div>
 

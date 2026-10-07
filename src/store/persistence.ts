@@ -3,6 +3,7 @@ import { isAquaticForm } from "@/lib/creature/aquaticForms";
 import type { Discovery, PersistedJourney } from "@/store/journeySlice";
 import { isCreatureColorPalette } from "@/lib/creature/colorPalettes";
 import { isCreaturePattern } from "@/lib/creature/patterns";
+import { isCreatureProportions } from "@/lib/creature/proportions";
 
 export const JOURNEY_STORAGE_KEY = "say-hi:journey:v1";
 
@@ -35,6 +36,7 @@ export function loadJourney(storage: StorageLike): PersistedJourney | null {
     const creatureForm = storedCreatureForm === "eel" ? "ray" : storedCreatureForm;
     const creaturePalette = (value as { creaturePalette?: unknown }).creaturePalette;
     const creaturePattern = (value as { creaturePattern?: unknown }).creaturePattern;
+    const creatureProportions = (value as { creatureProportions?: unknown }).creatureProportions;
 
     if (
       !Array.isArray(value.discoveries) ||
@@ -45,6 +47,7 @@ export function loadJourney(storage: StorageLike): PersistedJourney | null {
       (creatureForm !== undefined && creatureForm !== null && !isAquaticForm(creatureForm)) ||
       (creaturePalette !== undefined && creaturePalette !== null && !isCreatureColorPalette(creaturePalette)) ||
       (creaturePattern !== undefined && creaturePattern !== null && !isCreaturePattern(creaturePattern)) ||
+      (creatureProportions !== undefined && creatureProportions !== null && !isCreatureProportions(creatureProportions)) ||
       (value.narrativeState !== undefined && !isNarrativeState(value.narrativeState))
     ) {
       return null;
@@ -57,6 +60,7 @@ export function loadJourney(storage: StorageLike): PersistedJourney | null {
       ...(creatureForm ? { creatureForm } : {}),
       ...(creaturePalette ? { creaturePalette } : {}),
       ...(creaturePattern ? { creaturePattern } : {}),
+      ...(creatureProportions ? { creatureProportions } : {}),
       ...(value.narrativeState ? { narrativeState: value.narrativeState } : {}),
       discoveries: value.discoveries
         .slice()
@@ -84,13 +88,13 @@ export function subscribeToJourneyPersistence(
 ) {
   let previous = "";
   return store.subscribe(() => {
-    const { sessionId, startedAt, completedAt, discoveries, narrativeState, creatureForm, creaturePalette, creaturePattern } = store.getState().journey;
+    const { sessionId, startedAt, completedAt, discoveries, narrativeState, creatureForm, creaturePalette, creaturePattern, creatureProportions } = store.getState().journey;
     if (!sessionId && startedAt === null && discoveries.length === 0) {
       previous = "";
       storage.removeItem(JOURNEY_STORAGE_KEY);
       return;
     }
-    const serialized = JSON.stringify({ sessionId, startedAt, completedAt, discoveries, narrativeState, creatureForm, creaturePalette, creaturePattern });
+    const serialized = JSON.stringify({ sessionId, startedAt, completedAt, discoveries, narrativeState, creatureForm, creaturePalette, creaturePattern, creatureProportions });
     if (serialized === previous) return;
     previous = serialized;
     storage.setItem(JOURNEY_STORAGE_KEY, serialized);

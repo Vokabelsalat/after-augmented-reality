@@ -3,6 +3,7 @@ import { artifacts } from "@/data/artifacts";
 import { aquaticForms } from "@/lib/creature/aquaticForms";
 import { isCreatureColorPalette } from "@/lib/creature/colorPalettes";
 import { isCreaturePattern } from "@/lib/creature/patterns";
+import { isCreatureProportions } from "@/lib/creature/proportions";
 import {
   createSyntheticDataset,
   SYNTHETIC_FEATURED_FORMS,
@@ -60,5 +61,6 @@ describe("createSyntheticDataset", () => {
 
     expect(dataset.every((visitor) => isCreatureColorPalette(visitor.creaturePalette))).toBe(true);
     expect(dataset.every((visitor) => isCreaturePattern(visitor.creaturePattern))).toBe(true);
+    expect(dataset.every((visitor) => isCreatureProportions(visitor.creatureProportions))).toBe(true);
   });
 });

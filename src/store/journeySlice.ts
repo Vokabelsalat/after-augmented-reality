@@ -3,6 +3,7 @@ import { artifactById } from "@/data/artifacts";
 import { pickAquaticForm, type AquaticForm } from "@/lib/creature/aquaticForms";
 import { creatureColorPalette, type CreatureColorPalette } from "@/lib/creature/colorPalettes";
 import { creaturePattern, type CreaturePattern } from "@/lib/creature/patterns";
+import { creatureProportions, type CreatureProportions } from "@/lib/creature/proportions";
 import type { NarrativeState } from "@/types/exhibition";
 
 export type ExperiencePhase =
@@ -31,6 +32,7 @@ export type JourneyState = {
   creatureForm: AquaticForm | null;
   creaturePalette: CreatureColorPalette | null;
   creaturePattern: CreaturePattern | null;
+  creatureProportions: CreatureProportions | null;
 };
 
 export type PersistedJourney = Pick<
@@ -41,6 +43,7 @@ export type PersistedJourney = Pick<
   creatureForm?: AquaticForm | null;
   creaturePalette?: CreatureColorPalette | null;
   creaturePattern?: CreaturePattern | null;
+  creatureProportions?: CreatureProportions | null;
 };
 
 export const neutralNarrativeState: NarrativeState = {
@@ -62,6 +65,7 @@ export const initialJourneyState: JourneyState = {
   creatureForm: null,
   creaturePalette: null,
   creaturePattern: null,
+  creatureProportions: null,
 };
 
 function makeSessionId() {
@@ -92,6 +96,9 @@ const journeySlice = createSlice({
         }
         if (!state.creaturePattern) {
           state.creaturePattern = creaturePattern(state.sessionId ?? action.payload.sessionId);
+        }
+        if (!state.creatureProportions) {
+          state.creatureProportions = creatureProportions(state.sessionId ?? action.payload.sessionId);
         }
         state.activeArtifactId = null;
         state.completedAt = null;
@@ -126,6 +133,9 @@ const journeySlice = createSlice({
         }
         if (!state.creaturePattern) {
           state.creaturePattern = creaturePattern(state.sessionId ?? "anonymous");
+        }
+        if (!state.creatureProportions) {
+          state.creatureProportions = creatureProportions(state.sessionId ?? "anonymous");
         }
 
         state.discoveries.push({
@@ -223,6 +233,8 @@ const journeySlice = createSlice({
         ?? (action.payload.sessionId ? creatureColorPalette(action.payload.sessionId) : null);
       state.creaturePattern = action.payload.creaturePattern
         ?? (action.payload.sessionId ? creaturePattern(action.payload.sessionId) : null);
+      state.creatureProportions = action.payload.creatureProportions
+        ?? (action.payload.sessionId ? creatureProportions(action.payload.sessionId) : null);
       state.activeArtifactId = null;
       state.experiencePhase = action.payload.sessionId ? "scanning" : "intro";
     },

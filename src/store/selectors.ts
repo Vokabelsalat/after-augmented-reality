@@ -20,6 +20,8 @@ export const selectCreaturePalette = (state: RootState) =>
   state.journey.creaturePalette;
 export const selectCreaturePattern = (state: RootState) =>
   state.journey.creaturePattern;
+export const selectCreatureProportions = (state: RootState) =>
+  state.journey.creatureProportions;
 
 export const selectDiscoveredArtifacts = (state: RootState) =>
   state.journey.discoveries

@@ -8,6 +8,7 @@ import { TraitMarks } from "@/components/creature/AquaticModelShared";
 import { creatureColorPalette, type CreatureColorPalette } from "@/lib/creature/colorPalettes";
 import type { CreaturePartId, ThemeId } from "@/types/exhibition";
 import { PatternedToonMaterial } from "@/components/creature/CreaturePatternMaterial";
+import { BodyAttachment, BodyProportions } from "@/components/creature/CreatureLook";
 
 export type CreaturePiece = {
   artifactId: string;
@@ -648,14 +649,16 @@ export function CreatureModel({
 
   return (
     <group ref={groupRef} scale={scale}>
-      <mesh scale={[proportions.length, proportions.height, proportions.depth]}>
-        <sphereGeometry args={[0.86, 20, 14]} />
-        <PatternedToonMaterial color={baseColor} />
-      </mesh>
-      <mesh scale={[proportions.length * 1.035, proportions.height * 1.055, proportions.depth * 1.12]}>
-        <sphereGeometry args={[0.86, 20, 14]} />
-        <meshBasicMaterial color="#080B12" side={THREE.BackSide} />
-      </mesh>
+      <BodyProportions>
+        <mesh scale={[proportions.length, proportions.height, proportions.depth]}>
+          <sphereGeometry args={[0.86, 20, 14]} />
+          <PatternedToonMaterial color={baseColor} />
+        </mesh>
+        <mesh scale={[proportions.length * 1.035, proportions.height * 1.055, proportions.depth * 1.12]}>
+          <sphereGeometry args={[0.86, 20, 14]} />
+          <meshBasicMaterial color="#080B12" side={THREE.BackSide} />
+        </mesh>
+      </BodyProportions>
       <mesh position={[headX, 0.02, 0.02]} scale={[proportions.head, proportions.height * 0.9, proportions.depth * 0.96]}>
         <sphereGeometry args={[0.7, 20, 14]} />
         <PatternedToonMaterial color={headColor} repeat={[2, 1]} />
@@ -664,6 +667,7 @@ export function CreatureModel({
         <sphereGeometry args={[0.7, 20, 14]} />
         <meshBasicMaterial color="#080B12" side={THREE.BackSide} />
       </mesh>
+      <BodyProportions>
       {[1, -1].map((side) => (
         <mesh
           key={`belly-${side}`}
@@ -674,7 +678,9 @@ export function CreatureModel({
           <SoftMaterial color={bellyColor} opacity={0.42} />
         </mesh>
       ))}
+      </BodyProportions>
 
+      <BodyAttachment anchor={[-proportions.length * 0.86, 0, 0]}>
       <mesh position={[tailX + 0.22, 0, 0]} scale={[0.54, 0.2, proportions.depth * 0.78]}>
         <sphereGeometry args={[0.44, 18, 14]} />
         <PatternedToonMaterial color={baseColor} repeat={[2, 1]} />
@@ -692,7 +698,9 @@ export function CreatureModel({
           </mesh>
         ))}
       </group>
+      </BodyAttachment>
 
+      <BodyAttachment anchor={[dorsalStyle.x, proportions.height * 0.78, 0]}>
       <group
         ref={dorsalRef}
         position={[dorsalStyle.x, proportions.height * 0.78, 0]}
@@ -700,13 +708,15 @@ export function CreatureModel({
       >
         <DorsalFin style={dorsalStyle} color={finPalette.dorsal} rayColor={finPalette.rays} />
       </group>
+      </BodyAttachment>
+      <BodyAttachment anchor={[-proportions.length * 0.18, -proportions.height * 0.62, 0]}>
       <group
         ref={pelvicRef}
         position={[-proportions.length * 0.18, -proportions.height * 0.62, 0]}
       >
         {[1, -1].map((side) => (
+          <BodyAttachment key={side} anchor={[0, 0, side * proportions.depth * 0.66]}>
           <group
-            key={side}
             position={[0, 0, side * (proportions.depth * 0.66 + 0.015)]}
             scale={[pelvicStyle.width * 1.24, proportions.height * pelvicStyle.height * 1.18, 1]}
           >
@@ -717,16 +727,19 @@ export function CreatureModel({
               side={side}
             />
           </group>
+          </BodyAttachment>
         ))}
       </group>
+      </BodyAttachment>
 
+      <BodyAttachment anchor={[proportions.length * 0.24, -proportions.height * 0.08, 0]}>
       <group
         ref={finRef}
         position={[proportions.length * 0.24, -proportions.height * 0.08, 0]}
       >
         {[1, -1].map((side) => (
+          <BodyAttachment key={side} anchor={[0, 0, side * proportions.depth * 0.9]}>
           <group
-            key={side}
             position={[0, 0, side * (proportions.depth * 0.9 + 0.018)]}
             scale={[pectoralStyle.width * 1.2, proportions.height * pectoralStyle.height * 1.16, 1]}
           >
@@ -737,8 +750,10 @@ export function CreatureModel({
               side={side}
             />
           </group>
+          </BodyAttachment>
         ))}
       </group>
+      </BodyAttachment>
 
       {[1, -1].map((side, index) => (
         <group

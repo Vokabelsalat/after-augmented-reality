@@ -1,11 +1,9 @@
 "use client";
 
-import { createContext, useContext, useMemo, type ComponentProps } from "react";
+import { useContext, useMemo, type ComponentProps } from "react";
 import * as THREE from "three";
+import { CreatureLookContext } from "@/components/creature/CreatureLook";
 import type { CreaturePattern } from "@/lib/creature/patterns";
-
-/** The pattern and marking colour of the creature being drawn, provided by AquaticCreatureModel. */
-export const CreaturePatternContext = createContext<{ pattern?: CreaturePattern; markingColor?: string }>({});
 
 const tileSize = 128;
 
@@ -157,7 +155,7 @@ export function PatternedToonMaterial({
   wraps = "u",
   ...material
 }: ToonProps & { color: string; repeat?: [number, number]; wraps?: "u" | "v" | false }) {
-  const { pattern, markingColor } = useContext(CreaturePatternContext);
+  const { pattern, markingColor } = useContext(CreatureLookContext);
   const patterned = pattern && pattern.kind !== "plain" && markingColor;
   const repeatX = repeat[0] * (pattern?.density ?? 1);
   const repeatY = repeat[1] * (pattern?.density ?? 1);

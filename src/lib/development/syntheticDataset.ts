@@ -5,6 +5,7 @@ import { generateJourneyNarrative } from "@/lib/narrative/generateJourneyNarrati
 import type { SharedCreaturePart } from "@/types/contribution";
 import { creatureColorPalette, type CreatureColorPalette } from "@/lib/creature/colorPalettes";
 import { creaturePattern, type CreaturePattern } from "@/lib/creature/patterns";
+import { creatureProportions, type CreatureProportions } from "@/lib/creature/proportions";
 
 export const SYNTHETIC_VISITOR_COUNT = 150;
 
@@ -27,6 +28,7 @@ export type SyntheticContribution = {
   creatureForm: (typeof aquaticForms)[number];
   creaturePalette: CreatureColorPalette;
   creaturePattern: CreaturePattern;
+  creatureProportions: CreatureProportions;
   parts: SharedCreaturePart[];
   narrative: string[];
   createdAt: string;
@@ -113,6 +115,7 @@ export function createSyntheticDataset(
       creatureForm: syntheticFormRotation[visitorIndex % syntheticFormRotation.length],
       creaturePalette: creatureColorPalette(sessionId),
       creaturePattern: creaturePattern(sessionId),
+      creatureProportions: creatureProportions(sessionId),
       parts,
       narrative: generateJourneyNarrative(discoveries, artifacts),
       createdAt: new Date(completedAt).toISOString(),

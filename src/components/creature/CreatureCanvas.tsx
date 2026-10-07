@@ -11,6 +11,7 @@ import { aquaticFormLabels, type AquaticForm } from "@/lib/creature/aquaticForms
 import type { CreaturePartId } from "@/types/exhibition";
 import type { CreatureColorPalette } from "@/lib/creature/colorPalettes";
 import type { CreaturePattern } from "@/lib/creature/patterns";
+import type { CreatureProportions } from "@/lib/creature/proportions";
 
 /** Share of the canvas a fitted creature fills before `fitScale` is applied. */
 export const creatureFitMargin = 0.82;
@@ -79,6 +80,7 @@ export function CreatureCanvas({
   creatureSeed,
   creaturePalette,
   creaturePattern,
+  creatureProportions,
   emergingArtifactId,
   emerging = false,
   label,
@@ -95,6 +97,7 @@ export function CreatureCanvas({
   creatureSeed?: string;
   creaturePalette?: CreatureColorPalette;
   creaturePattern?: CreaturePattern;
+  creatureProportions?: CreatureProportions;
   /** A trait that stays collapsed until `emerging` turns true, then grows in. */
   emergingArtifactId?: string;
   emerging?: boolean;
@@ -128,7 +131,7 @@ export function CreatureCanvas({
         <pointLight position={[3, -2, 3]} intensity={1.4} color="#FF7557" />
         <group ref={creatureRootRef}>
           <TraitGrowthContext.Provider value={growth}>
-            <AquaticCreatureModel form={creatureForm} pieces={pieces} baseSeed={creatureSeed} colorPalette={creaturePalette} pattern={creaturePattern} highlightedPart={highlightedPart} scale={(compact ? 0.86 : 1) * creatureScale} />
+            <AquaticCreatureModel form={creatureForm} pieces={pieces} baseSeed={creatureSeed} colorPalette={creaturePalette} pattern={creaturePattern} proportions={creatureProportions} highlightedPart={highlightedPart} scale={(compact ? 0.86 : 1) * creatureScale} />
           </TraitGrowthContext.Provider>
         </group>
         {interactive && (

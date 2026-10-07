@@ -12,6 +12,7 @@ import {
   selectCreatureSeed,
   selectCreaturePalette,
   selectCreaturePattern,
+  selectCreatureProportions,
 } from "@/store/selectors";
 import { PathVisualization } from "@/components/visualization/PathVisualization";
 import { activeVisualizationCopy, visualizationDesign } from "@/config/visualization";
@@ -29,6 +30,7 @@ export function JourneyScreen() {
   const creatureSeed = useAppSelector(selectCreatureSeed);
   const creaturePalette = useAppSelector(selectCreaturePalette);
   const creaturePattern = useAppSelector(selectCreaturePattern);
+  const creatureProportions = useAppSelector(selectCreatureProportions);
   const readyToRelease = discoveries.length >= 3;
 
   return (
@@ -52,7 +54,7 @@ export function JourneyScreen() {
       </header>
 
       <div className="mx-auto h-[38dvh] min-h-72 w-full max-w-xl">
-        <PathVisualization artifactIds={discoveries.map((item) => item.artifactId)} creatureForm={creatureForm} creatureSeed={creatureSeed} creaturePalette={creaturePalette ?? undefined} creaturePattern={creaturePattern ?? undefined} fitToView interactive label={`Your evolving exhibition ${activeVisualizationCopy.singular}`} />
+        <PathVisualization artifactIds={discoveries.map((item) => item.artifactId)} creatureForm={creatureForm} creatureSeed={creatureSeed} creaturePalette={creaturePalette ?? undefined} creaturePattern={creaturePattern ?? undefined} creatureProportions={creatureProportions ?? undefined} fitToView interactive label={`Your evolving exhibition ${activeVisualizationCopy.singular}`} />
       </div>
 
       <div className="mx-auto w-full max-w-xl flex-1">

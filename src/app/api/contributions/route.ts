@@ -12,6 +12,7 @@ import { calculateDwellTimes } from "@/lib/contributions/dwellTime";
 import { isAquaticForm, pickAquaticForm } from "@/lib/creature/aquaticForms";
 import { creatureColorPalette, isCreatureColorPalette } from "@/lib/creature/colorPalettes";
 import { creaturePattern, isCreaturePattern } from "@/lib/creature/patterns";
+import { creatureProportions, isCreatureProportions } from "@/lib/creature/proportions";
 import type { ContributionSubmission, SharedCreaturePart } from "@/types/contribution";
 
 export const runtime = "nodejs";
@@ -88,8 +89,19 @@ function parseSubmission(value: unknown): ContributionSubmission | string {
   const pattern = isCreaturePattern(candidate.creaturePattern)
     ? candidate.creaturePattern
     : creaturePattern(candidate.sessionId);
+  const proportions = isCreatureProportions(candidate.creatureProportions)
+    ? candidate.creatureProportions
+    : creatureProportions(candidate.sessionId);
 
-  return { sessionId: candidate.sessionId, creatureForm, creaturePalette, creaturePattern: pattern, completedAt: candidate.completedAt, discoveries };
+  return {
+    sessionId: candidate.sessionId,
+    creatureForm,
+    creaturePalette,
+    creaturePattern: pattern,
+    creatureProportions: proportions,
+    completedAt: candidate.completedAt,
+    discoveries,
+  };
 }
 
 export async function GET(request: Request) {
@@ -147,6 +159,7 @@ export async function POST(request: Request) {
     creatureForm: submission.creatureForm,
     creaturePalette: submission.creaturePalette,
     creaturePattern: submission.creaturePattern,
+    creatureProportions: submission.creatureProportions,
     parts,
     narrative,
   });

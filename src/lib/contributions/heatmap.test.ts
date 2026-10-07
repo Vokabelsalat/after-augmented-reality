@@ -22,6 +22,7 @@ function contribution(
       marking: "#183b55",
     },
     creaturePattern: { kind: "plain", density: 1, orientation: "along", contrast: 0.5, seed: 1 },
+    creatureProportions: { x: 1, y: 1, z: 1 },
     parts,
     narrative: [],
     createdAt: "2026-09-17T00:00:00.000Z",

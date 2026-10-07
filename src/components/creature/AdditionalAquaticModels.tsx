@@ -7,6 +7,7 @@ import { aquaticPalette, TraitMarks } from "@/components/creature/AquaticModelSh
 import type { AquaticModelProps } from "@/components/creature/AquaticCreatureModel";
 import type { AquaticForm } from "@/lib/creature/aquaticForms";
 import { PatternedToonMaterial } from "@/components/creature/CreaturePatternMaterial";
+import { BodyAttachment, BodyProportions } from "@/components/creature/CreatureLook";
 
 type AdditionalForm = Exclude<AquaticForm, "fish" | "crab" | "jellyfish" | "octopus">;
 
@@ -76,20 +77,22 @@ function TurtleModel(props: AquaticModelProps) {
   const colors = aquaticPalette(props.pieces, props.baseSeed, props.colorPalette);
   return (
     <LivingGroup animated={props.animated} scale={props.scale}>
-      <mesh scale={[1.18, 0.78, 0.38]}>
-        <sphereGeometry args={[0.9, 20, 14]} />
-        <meshToonMaterial color={colors.dark} />
-      </mesh>
-      <mesh position={[0, 0.03, 0.24]} scale={[0.92, 0.58, 0.18]}>
-        <sphereGeometry args={[0.92, 20, 14]} />
-        <PatternedToonMaterial color={colors.body} />
-      </mesh>
-      {[0.46, 0.8].map((ring, index) => (
-        <mesh key={ring} position={[0, 0.03, 0.43]} scale={[ring * 1.18, ring * 0.78, 0.06]}>
-          <torusGeometry args={[0.72, 0.035 + index * 0.01, 7, 24]} />
-          <meshToonMaterial color={colors.light} />
+      <BodyProportions>
+        <mesh scale={[1.18, 0.78, 0.38]}>
+          <sphereGeometry args={[0.9, 20, 14]} />
+          <meshToonMaterial color={colors.dark} />
         </mesh>
-      ))}
+        <mesh position={[0, 0.03, 0.24]} scale={[0.92, 0.58, 0.18]}>
+          <sphereGeometry args={[0.92, 20, 14]} />
+          <PatternedToonMaterial color={colors.body} />
+        </mesh>
+        {[0.46, 0.8].map((ring, index) => (
+          <mesh key={ring} position={[0, 0.03, 0.43]} scale={[ring * 1.18, ring * 0.78, 0.06]}>
+            <torusGeometry args={[0.72, 0.035 + index * 0.01, 7, 24]} />
+            <meshToonMaterial color={colors.light} />
+          </mesh>
+        ))}
+      </BodyProportions>
       <mesh position={[1.12, 0.02, 0]} scale={[0.46, 0.38, 0.34]}>
         <sphereGeometry args={[0.75, 20, 14]} />
         <meshToonMaterial color={colors.light} />
@@ -128,14 +131,16 @@ function RayModel(props: AquaticModelProps) {
   ]), []);
   return (
     <LivingGroup animated={props.animated} scale={props.scale} motion="glide">
-      <mesh position={[0, 0, -0.12]}>
-        <extrudeGeometry args={[disc, { depth: 0.18, bevelEnabled: true, bevelSegments: 3, steps: 1, bevelSize: 0.1, bevelThickness: 0.08, curveSegments: 28 }]} />
-        <PatternedToonMaterial color={colors.body} repeat={[0.8, 0.8]} wraps={false} />
-      </mesh>
-      <mesh position={[0.42, 0, 0.1]} scale={[0.92, 0.54, 0.16]}>
-        <sphereGeometry args={[0.92, 20, 14]} />
-        <meshToonMaterial color={colors.light} />
-      </mesh>
+      <BodyProportions>
+        <mesh position={[0, 0, -0.12]}>
+          <extrudeGeometry args={[disc, { depth: 0.18, bevelEnabled: true, bevelSegments: 3, steps: 1, bevelSize: 0.1, bevelThickness: 0.08, curveSegments: 28 }]} />
+          <PatternedToonMaterial color={colors.body} repeat={[0.8, 0.8]} wraps={false} />
+        </mesh>
+        <mesh position={[0.42, 0, 0.1]} scale={[0.92, 0.54, 0.16]}>
+          <sphereGeometry args={[0.92, 20, 14]} />
+          <meshToonMaterial color={colors.light} />
+        </mesh>
+      </BodyProportions>
       {[-1, 1].map((side) => (
         <mesh
           key={side}
@@ -147,19 +152,24 @@ function RayModel(props: AquaticModelProps) {
           <meshToonMaterial color={colors.dark} />
         </mesh>
       ))}
-      <mesh>
-        <tubeGeometry args={[tail, 40, 0.028, 7, false]} />
-        <meshToonMaterial color={colors.dark} />
-      </mesh>
+      <BodyProportions>
+        <mesh>
+          <tubeGeometry args={[tail, 40, 0.028, 7, false]} />
+          <meshToonMaterial color={colors.dark} />
+        </mesh>
+      </BodyProportions>
       {[-1, 1].map((side) => (
-        <group key={`eye-${side}`} position={[0.75, side * 0.24, 0.31]}>
+        <BodyAttachment key={`eye-${side}`} anchor={[0.75, side * 0.24, 0.27]}>
+        <group position={[0.75, side * 0.24, 0.31]}>
           <mesh scale={[0.105, 0.075, 0.06]}>
             <sphereGeometry args={[1, 14, 10]} />
             <meshToonMaterial color="#F3F0E8" />
           </mesh>
           <MovingPupil position={[0.025, 0, 0.055]} scale={[0.042, 0.034, 0.025]} animated={props.animated} phase={side * 0.25} />
         </group>
+        </BodyAttachment>
       ))}
+      <BodyProportions>
       {[-1, 1].flatMap((side) => [0, 1, 2].map((index) => (
         <mesh
           key={`gill-${side}-${index}`}
@@ -175,6 +185,7 @@ function RayModel(props: AquaticModelProps) {
         <torusGeometry args={[1, 0.16, 7, 18]} />
         <meshBasicMaterial color={colors.dark} />
       </mesh>
+      </BodyProportions>
       <TraitMarks pieces={props.pieces} baseSeed={props.baseSeed} form="ray" highlightedPart={props.highlightedPart} />
     </LivingGroup>
   );
@@ -184,6 +195,8 @@ function StarfishModel(props: AquaticModelProps) {
   const colors = aquaticPalette(props.pieces, props.baseSeed, props.colorPalette);
   return (
     <LivingGroup animated={props.animated} scale={props.scale} motion="bob">
+      {/* A starfish's whole star is its body. */}
+      <BodyProportions>
       {Array.from({ length: 5 }, (_, index) => {
         const angle = index * Math.PI * 0.4;
         return (
@@ -197,6 +210,7 @@ function StarfishModel(props: AquaticModelProps) {
         <sphereGeometry args={[0.72, 20, 14]} />
         <meshToonMaterial color={colors.light} />
       </mesh>
+      </BodyProportions>
       <TraitMarks pieces={props.pieces} baseSeed={props.baseSeed} form="starfish" highlightedPart={props.highlightedPart} />
     </LivingGroup>
   );
@@ -232,14 +246,16 @@ function SeahorseModel(props: AquaticModelProps) {
   return (
     <LivingGroup animated={props.animated} scale={props.scale} motion="bob">
       <mesh><tubeGeometry args={[neck, 28, 0.23, 10, false]} /><PatternedToonMaterial color={colors.body} repeat={[3, 2]} wraps="v" /></mesh>
-      <mesh position={[-0.02, 0.02, 0]} rotation={[0, 0, -0.12]} scale={[0.58, 0.86, 0.36]}>
-        <sphereGeometry args={[0.82, 20, 14]} />
-        <PatternedToonMaterial color={colors.body} />
-      </mesh>
-      <mesh position={[0.22, 0.16, 0.03]} rotation={[0, 0, -0.18]} scale={[0.42, 0.65, 0.31]}>
-        <sphereGeometry args={[0.76, 20, 14]} />
-        <meshToonMaterial color={colors.light} />
-      </mesh>
+      <BodyProportions origin={[-0.02, 0.02, 0]}>
+        <mesh position={[-0.02, 0.02, 0]} rotation={[0, 0, -0.12]} scale={[0.58, 0.86, 0.36]}>
+          <sphereGeometry args={[0.82, 20, 14]} />
+          <PatternedToonMaterial color={colors.body} />
+        </mesh>
+        <mesh position={[0.22, 0.16, 0.03]} rotation={[0, 0, -0.18]} scale={[0.42, 0.65, 0.31]}>
+          <sphereGeometry args={[0.76, 20, 14]} />
+          <meshToonMaterial color={colors.light} />
+        </mesh>
+      </BodyProportions>
       <mesh><tubeGeometry args={[tail, 48, 0.105, 9, false]} /><meshToonMaterial color={colors.accent} /></mesh>
       <mesh name="Seahorse head" position={[0.1, 1.27, 0]} rotation={[0, 0, -0.08]} scale={[0.48, 0.4, 0.34]}>
         <sphereGeometry args={[0.72, 20, 14]} />
@@ -268,10 +284,12 @@ function SeahorseModel(props: AquaticModelProps) {
           />
         </group>
       ))}
-      <mesh position={[-0.48, 0.03, -0.03]} rotation={[0, 0, -0.08]} scale={[1, 1, 0.7]}>
-        <shapeGeometry args={[dorsalFin, 8]} />
-        <meshToonMaterial color={colors.accent} side={THREE.DoubleSide} />
-      </mesh>
+      <BodyAttachment anchor={[-0.42, 0.03, 0]} origin={[-0.02, 0.02, 0]}>
+        <mesh position={[-0.48, 0.03, -0.03]} rotation={[0, 0, -0.08]} scale={[1, 1, 0.7]}>
+          <shapeGeometry args={[dorsalFin, 8]} />
+          <meshToonMaterial color={colors.accent} side={THREE.DoubleSide} />
+        </mesh>
+      </BodyAttachment>
       {Array.from({ length: 8 }, (_, index) => {
         const angle = 0.55 + index * 0.31;
         return (
@@ -281,12 +299,14 @@ function SeahorseModel(props: AquaticModelProps) {
         </mesh>
         );
       })}
-      {Array.from({ length: 6 }, (_, index) => (
-        <mesh key={`rib-${index}`} position={[0.17, 0.52 - index * 0.18, 0.32]} rotation={[0, 0, 0.16]} scale={[0.3, 0.035, 0.035]}>
-          <capsuleGeometry args={[0.5, 0.5, 4, 8]} />
-          <meshToonMaterial color={colors.accent} />
-        </mesh>
-      ))}
+      <BodyProportions origin={[-0.02, 0.02, 0]}>
+        {Array.from({ length: 6 }, (_, index) => (
+          <mesh key={`rib-${index}`} position={[0.17, 0.52 - index * 0.18, 0.32]} rotation={[0, 0, 0.16]} scale={[0.3, 0.035, 0.035]}>
+            <capsuleGeometry args={[0.5, 0.5, 4, 8]} />
+            <meshToonMaterial color={colors.accent} />
+          </mesh>
+        ))}
+      </BodyProportions>
       <TraitMarks pieces={props.pieces} baseSeed={props.baseSeed} form="seahorse" highlightedPart={props.highlightedPart} />
     </LivingGroup>
   );
@@ -342,10 +362,12 @@ function SealModel(props: AquaticModelProps) {
   const colors = aquaticPalette(props.pieces, props.baseSeed, props.colorPalette);
   return (
     <LivingGroup animated={props.animated} scale={props.scale}>
-      <mesh scale={[1.38, 0.66, 0.46]}>
-        <sphereGeometry args={[0.9, 20, 14]} />
-        <PatternedToonMaterial color={colors.body} />
-      </mesh>
+      <BodyProportions>
+        <mesh scale={[1.38, 0.66, 0.46]}>
+          <sphereGeometry args={[0.9, 20, 14]} />
+          <PatternedToonMaterial color={colors.body} />
+        </mesh>
+      </BodyProportions>
       <mesh position={[1.12, 0.2, 0]} scale={[0.62, 0.54, 0.5]}>
         <sphereGeometry args={[0.72, 20, 14]} />
         <meshToonMaterial color={colors.light} />
@@ -359,7 +381,9 @@ function SealModel(props: AquaticModelProps) {
           <mesh position={[0.25, side * 0.55, -0.02]} scale={[0.62, 0.2, 0.1]}><sphereGeometry args={[1, 18, 12]} /><meshToonMaterial color={colors.accent} /></mesh>
         </MovingPart>
       ))}
-      <ArticulatedSealTail animated={props.animated} colors={colors} />
+      <BodyProportions>
+        <ArticulatedSealTail animated={props.animated} colors={colors} />
+      </BodyProportions>
       <group position={[1.12, 0, 0]}>
         {PairOfEyes({ x: 0.22, y: 0.36, z: 0.4, animated: props.animated })}
       </group>
@@ -393,12 +417,14 @@ function ShrimpModel(props: AquaticModelProps) {
   ], []);
   return (
     <LivingGroup animated={props.animated} scale={props.scale} motion="coil">
-      {abdomen.map((segment, index) => (
-        <mesh key={`segment-${index}`} position={segment.position} rotation={[0, 0, segment.rotation]} scale={segment.scale}>
-          <sphereGeometry args={[1, 18, 14]} />
-          <PatternedToonMaterial color={index % 2 ? colors.body : colors.light} repeat={[2, 1]} />
-        </mesh>
-      ))}
+      <BodyProportions>
+        {abdomen.map((segment, index) => (
+          <mesh key={`segment-${index}`} position={segment.position} rotation={[0, 0, segment.rotation]} scale={segment.scale}>
+            <sphereGeometry args={[1, 18, 14]} />
+            <PatternedToonMaterial color={index % 2 ? colors.body : colors.light} repeat={[2, 1]} />
+          </mesh>
+        ))}
+      </BodyProportions>
       <mesh position={[1.02, 0.2, 0]} rotation={[0, 0, 0.06]} scale={[0.58, 0.43, 0.36]}>
         <sphereGeometry args={[1, 20, 14]} />
         <meshToonMaterial color={colors.accent} />
@@ -416,6 +442,7 @@ function ShrimpModel(props: AquaticModelProps) {
       {[-1, 1].map((side) => (
         <MovingPupil key={`eye-${side}`} position={[1.25, 0.42, side * 0.31]} scale={[0.085, 0.09, 0.055]} animated={props.animated} phase={side * 0.2} />
       ))}
+      <BodyProportions>
       {Array.from({ length: 5 }, (_, index) => [-1, 1].map((depth) => (
         <MovingPart key={`leg-${index}-${depth}`} animated={props.animated} phase={index * 0.55 + depth} base={-0.18 + index * 0.035} amount={0.13} speed={2.1}>
           <group position={[0.68 - index * 0.28, -0.18 - index * 0.035, depth * 0.13]}>
@@ -430,7 +457,9 @@ function ShrimpModel(props: AquaticModelProps) {
           </group>
         </MovingPart>
       )))}
+      </BodyProportions>
       {/* The tail fan continues the curl of the last abdomen segment and spreads out from its tip. */}
+      <BodyProportions>
       <group position={[-0.93, -0.8, 0]} rotation={[0, 0, -0.47]}>
         {[-1, 0, 1].map((fan) => (
           <group key={`tail-${fan}`} rotation={[0, 0, fan * 0.42]}>
@@ -441,6 +470,7 @@ function ShrimpModel(props: AquaticModelProps) {
           </group>
         ))}
       </group>
+      </BodyProportions>
       <TraitMarks pieces={props.pieces} baseSeed={props.baseSeed} form="shrimp" highlightedPart={props.highlightedPart} />
     </LivingGroup>
   );
@@ -594,21 +624,27 @@ function BlueWhaleModel(props: AquaticModelProps) {
 
   return (
     <LivingGroup animated={props.animated} scale={props.scale} motion="glide">
-      <BlueWhaleTail animated={props.animated} colors={colors} />
+      <BodyProportions>
+        <BlueWhaleTail animated={props.animated} colors={colors} />
+      </BodyProportions>
       {/* Whales only ever swim across the frame without turning, so their parts are kept flat:
           one bevel step keeps each outline while dropping the rounded edge. */}
-      <mesh name="Blue whale body" position={[0, 0, -0.22]}>
-        <extrudeGeometry args={[body, { depth: 0.44, bevelEnabled: true, bevelSegments: 1, bevelSize: 0.07, bevelThickness: 0.065, curveSegments: 16 }]} />
-        <PatternedToonMaterial color={colors.body} repeat={[0.8, 0.8]} wraps={false} />
-      </mesh>
-      <mesh name="Blue whale belly" position={[0, 0, 0.24]}>
-        <shapeGeometry args={[belly, 12]} />
-        <meshToonMaterial color={colors.light} side={THREE.DoubleSide} />
-      </mesh>
-      <mesh name="Blue whale dorsal fin" position={[0, 0.57, -0.09]}>
-        <extrudeGeometry args={[dorsalFin, { depth: 0.18, bevelEnabled: true, bevelSegments: 1, bevelSize: 0.04, bevelThickness: 0.04, curveSegments: 10 }]} />
-        <meshToonMaterial color={colors.dark} side={THREE.DoubleSide} />
-      </mesh>
+      <BodyProportions>
+        <mesh name="Blue whale body" position={[0, 0, -0.22]}>
+          <extrudeGeometry args={[body, { depth: 0.44, bevelEnabled: true, bevelSegments: 1, bevelSize: 0.07, bevelThickness: 0.065, curveSegments: 16 }]} />
+          <PatternedToonMaterial color={colors.body} repeat={[0.8, 0.8]} wraps={false} />
+        </mesh>
+        <mesh name="Blue whale belly" position={[0, 0, 0.24]}>
+          <shapeGeometry args={[belly, 12]} />
+          <meshToonMaterial color={colors.light} side={THREE.DoubleSide} />
+        </mesh>
+      </BodyProportions>
+      <BodyAttachment anchor={[0, 0.57, 0]}>
+        <mesh name="Blue whale dorsal fin" position={[0, 0.57, -0.09]}>
+          <extrudeGeometry args={[dorsalFin, { depth: 0.18, bevelEnabled: true, bevelSegments: 1, bevelSize: 0.04, bevelThickness: 0.04, curveSegments: 10 }]} />
+          <meshToonMaterial color={colors.dark} side={THREE.DoubleSide} />
+        </mesh>
+      </BodyAttachment>
       <MovingPart animated={props.animated} phase={0.6} base={-0.06} amount={0.08} speed={1.05}>
         <mesh name="Blue whale far flipper" position={[0.3, -0.13, -0.3]} scale={[0.88, 0.88, 0.88]}>
           <extrudeGeometry args={[flipper, { depth: 0.1, bevelEnabled: true, bevelSegments: 1, bevelSize: 0.035, bevelThickness: 0.035, curveSegments: 12 }]} />
@@ -621,18 +657,21 @@ function BlueWhaleModel(props: AquaticModelProps) {
           <meshToonMaterial color={colors.accent} side={THREE.DoubleSide} />
         </mesh>
       </MovingPart>
-      <mesh name="Blue whale mouth">
-        <tubeGeometry args={[mouth, 28, 0.014, 7, false]} />
-        <meshBasicMaterial color={colors.dark} />
-      </mesh>
-      {throatGrooves.map((groove, index) => (
-        <mesh name="Blue whale throat groove" key={index}>
-          <tubeGeometry args={[groove, 20, 0.006, 5, false]} />
-          <meshBasicMaterial color={colors.dark} transparent opacity={0.5} />
+      <BodyProportions>
+        <mesh name="Blue whale mouth">
+          <tubeGeometry args={[mouth, 28, 0.014, 7, false]} />
+          <meshBasicMaterial color={colors.dark} />
         </mesh>
-      ))}
+        {throatGrooves.map((groove, index) => (
+          <mesh name="Blue whale throat groove" key={index}>
+            <tubeGeometry args={[groove, 20, 0.006, 5, false]} />
+            <meshBasicMaterial color={colors.dark} transparent opacity={0.5} />
+          </mesh>
+        ))}
+      </BodyProportions>
       {[-1, 1].map((side) => (
-        <group name={`Blue whale ${side > 0 ? "near" : "far"} eye`} key={`eye-${side}`} position={[1.25, 0.09, side * 0.255]}>
+        <BodyAttachment key={`eye-${side}`} anchor={[1.25, 0.09, side * 0.255]}>
+        <group name={`Blue whale ${side > 0 ? "near" : "far"} eye`} position={[1.25, 0.09, side * 0.255]}>
           <mesh scale={[0.075, 0.07, 0.035]}>
             <sphereGeometry args={[1, 14, 10]} />
             <meshToonMaterial color="#F3F0E8" />
@@ -642,13 +681,16 @@ function BlueWhaleModel(props: AquaticModelProps) {
             <meshBasicMaterial color="#071015" />
           </mesh>
         </group>
+        </BodyAttachment>
       ))}
-      {[-0.035, 0.035].map((z) => (
-        <mesh name="Blue whale blowhole" key={z} position={[0.93, 0.6, z]} rotation={[Math.PI / 2, 0, -0.1]} scale={[0.055, 0.023, 0.018]}>
-          <sphereGeometry args={[1, 12, 8]} />
-          <meshBasicMaterial color={colors.dark} />
-        </mesh>
-      ))}
+      <BodyAttachment anchor={[0.93, 0.6, 0]}>
+        {[-0.035, 0.035].map((z) => (
+          <mesh name="Blue whale blowhole" key={z} position={[0.93, 0.6, z]} rotation={[Math.PI / 2, 0, -0.1]} scale={[0.055, 0.023, 0.018]}>
+            <sphereGeometry args={[1, 12, 8]} />
+            <meshBasicMaterial color={colors.dark} />
+          </mesh>
+        ))}
+      </BodyAttachment>
       <TraitMarks pieces={props.pieces} baseSeed={props.baseSeed} form="whale" highlightedPart={props.highlightedPart} />
     </LivingGroup>
   );
@@ -755,15 +797,18 @@ function DolphinModel(props: AquaticModelProps) {
 
   return (
     <LivingGroup animated={props.animated} scale={props.scale} motion="glide">
-      <DolphinTail animated={props.animated} colors={colors} />
-      <mesh name="Dolphin body" position={[0, 0, -0.19]}>
-        <extrudeGeometry args={[body, { depth: 0.38, bevelEnabled: true, bevelSegments: 2, bevelSize: 0.06, bevelThickness: 0.055, curveSegments: 16 }]} />
-        <PatternedToonMaterial color={colors.body} repeat={[0.8, 0.8]} wraps={false} />
-      </mesh>
-      <mesh name="Dolphin belly" position={[0, 0, 0.205]}>
-        <shapeGeometry args={[belly, 12]} />
-        <meshToonMaterial color={colors.light} side={THREE.DoubleSide} />
-      </mesh>
+      <BodyProportions>
+        <DolphinTail animated={props.animated} colors={colors} />
+        <mesh name="Dolphin body" position={[0, 0, -0.19]}>
+          <extrudeGeometry args={[body, { depth: 0.38, bevelEnabled: true, bevelSegments: 2, bevelSize: 0.06, bevelThickness: 0.055, curveSegments: 16 }]} />
+          <PatternedToonMaterial color={colors.body} repeat={[0.8, 0.8]} wraps={false} />
+        </mesh>
+        <mesh name="Dolphin belly" position={[0, 0, 0.205]}>
+          <shapeGeometry args={[belly, 12]} />
+          <meshToonMaterial color={colors.light} side={THREE.DoubleSide} />
+        </mesh>
+      </BodyProportions>
+      <BodyAttachment anchor={[1.2, -0.035, 0]}>
       <mesh name="Dolphin beak" position={[1.45, -0.035, 0]} rotation={[0, 0, -Math.PI / 2]} scale={[1, 1, 0.72]}>
         <cylinderGeometry args={[0.02, 0.13, 0.66, 14, 1, false]} />
         <meshToonMaterial color={colors.body} />
@@ -772,10 +817,13 @@ function DolphinModel(props: AquaticModelProps) {
         <sphereGeometry args={[1, 16, 12]} />
         <meshToonMaterial color={colors.body} />
       </mesh>
-      <mesh name="Dolphin dorsal fin" position={[0, 0.48, -0.075]}>
-        <extrudeGeometry args={[dorsalFin, { depth: 0.15, bevelEnabled: true, bevelSegments: 2, bevelSize: 0.035, bevelThickness: 0.035, curveSegments: 10 }]} />
-        <meshToonMaterial color={colors.dark} side={THREE.DoubleSide} />
-      </mesh>
+      </BodyAttachment>
+      <BodyAttachment anchor={[0, 0.48, 0]}>
+        <mesh name="Dolphin dorsal fin" position={[0, 0.48, -0.075]}>
+          <extrudeGeometry args={[dorsalFin, { depth: 0.15, bevelEnabled: true, bevelSegments: 2, bevelSize: 0.035, bevelThickness: 0.035, curveSegments: 10 }]} />
+          <meshToonMaterial color={colors.dark} side={THREE.DoubleSide} />
+        </mesh>
+      </BodyAttachment>
       <MovingPart animated={props.animated} phase={0.65} base={-0.04} amount={0.11} speed={1.35}>
         <mesh name="Dolphin far flipper" position={[0.48, -0.12, -0.26]} scale={[0.84, 0.84, 0.84]}>
           <extrudeGeometry args={[flipper, { depth: 0.09, bevelEnabled: true, bevelSegments: 2, bevelSize: 0.032, bevelThickness: 0.032, curveSegments: 12 }]} />
@@ -788,12 +836,15 @@ function DolphinModel(props: AquaticModelProps) {
           <meshToonMaterial color={colors.accent} side={THREE.DoubleSide} />
         </mesh>
       </MovingPart>
-      <mesh name="Dolphin mouth">
-        <tubeGeometry args={[mouth, 20, 0.011, 6, false]} />
-        <meshBasicMaterial color={colors.dark} />
-      </mesh>
+      <BodyProportions>
+        <mesh name="Dolphin mouth">
+          <tubeGeometry args={[mouth, 20, 0.011, 6, false]} />
+          <meshBasicMaterial color={colors.dark} />
+        </mesh>
+      </BodyProportions>
       {[-1, 1].map((side) => (
-        <group name={`Dolphin ${side > 0 ? "near" : "far"} eye`} key={`eye-${side}`} position={[1.17, 0.13, side * 0.215]}>
+        <BodyAttachment key={`eye-${side}`} anchor={[1.17, 0.13, side * 0.215]}>
+        <group name={`Dolphin ${side > 0 ? "near" : "far"} eye`} position={[1.17, 0.13, side * 0.215]}>
           <mesh scale={[0.058, 0.055, 0.028]}>
             <sphereGeometry args={[1, 14, 10]} />
             <meshBasicMaterial color="#FFFFFF" />
@@ -806,6 +857,7 @@ function DolphinModel(props: AquaticModelProps) {
             range={[0.018, 0.016]}
           />
         </group>
+        </BodyAttachment>
       ))}
       <TraitMarks pieces={props.pieces} baseSeed={props.baseSeed} form="dolphin" highlightedPart={props.highlightedPart} />
     </LivingGroup>
@@ -818,22 +870,34 @@ function NarwhalModel(props: AquaticModelProps) {
   const bodyHeight = 0.58;
   return (
     <LivingGroup animated={props.animated} scale={props.scale} motion="glide">
-      <mesh scale={[bodyLength, bodyHeight, 0.48]}><sphereGeometry args={[1, 20, 14]} /><PatternedToonMaterial color={colors.body} /></mesh>
-      <mesh position={[0.42, -bodyHeight * 0.42, 0.28]} scale={[bodyLength * 0.7, bodyHeight * 0.42, 0.3]}><sphereGeometry args={[1, 20, 14]} /><meshToonMaterial color={colors.light} /></mesh>
-      <mesh position={[bodyLength * 0.92, 0.03, 0]} scale={[0.42, 0.26, 0.28]}><sphereGeometry args={[1, 20, 14]} /><meshToonMaterial color={colors.light} /></mesh>
-      <mesh position={[0.05, bodyHeight * 0.92, -0.03]} rotation={[0, 0, -0.22]} scale={[0.34, 0.46, 0.09]}><coneGeometry args={[1, 1, 12]} /><meshToonMaterial color={colors.dark} /></mesh>
+      <BodyProportions>
+        <mesh scale={[bodyLength, bodyHeight, 0.48]}><sphereGeometry args={[1, 20, 14]} /><PatternedToonMaterial color={colors.body} /></mesh>
+        <mesh position={[0.42, -bodyHeight * 0.42, 0.28]} scale={[bodyLength * 0.7, bodyHeight * 0.42, 0.3]}><sphereGeometry args={[1, 20, 14]} /><meshToonMaterial color={colors.light} /></mesh>
+      </BodyProportions>
+      <BodyAttachment anchor={[bodyLength * 0.92, 0.03, 0]}>
+        <mesh position={[bodyLength * 0.92, 0.03, 0]} scale={[0.42, 0.26, 0.28]}><sphereGeometry args={[1, 20, 14]} /><meshToonMaterial color={colors.light} /></mesh>
+      </BodyAttachment>
+      <BodyAttachment anchor={[0.05, bodyHeight * 0.92, 0]}>
+        <mesh position={[0.05, bodyHeight * 0.92, -0.03]} rotation={[0, 0, -0.22]} scale={[0.34, 0.46, 0.09]}><coneGeometry args={[1, 1, 12]} /><meshToonMaterial color={colors.dark} /></mesh>
+      </BodyAttachment>
       {[-1, 1].map((side) => (
         <MovingPart key={`flipper-${side}`} animated={props.animated} phase={side} base={side * -0.52} amount={0.12} speed={1.2}>
           <mesh position={[0.36, side * bodyHeight * 0.8, -0.06]} scale={[0.58, 0.14, 0.08]}><sphereGeometry args={[1, 18, 12]} /><meshToonMaterial color={colors.accent} /></mesh>
         </MovingPart>
       ))}
-      <group position={[-bodyLength * 0.93, 0, 0]}>
-        <ArticulatedMammalTail animated={props.animated} colors={colors} />
-      </group>
+      <BodyAttachment anchor={[-bodyLength * 0.93, 0, 0]}>
+        <group position={[-bodyLength * 0.93, 0, 0]}>
+          <ArticulatedMammalTail animated={props.animated} colors={colors} />
+        </group>
+      </BodyAttachment>
       {[-1, 1].map((side) => (
-        <MovingPupil key={`eye-${side}`} position={[bodyLength * 0.67, 0.17, side * 0.43]} scale={0.075} animated={props.animated} phase={side * 0.2} />
+        <BodyAttachment key={`eye-${side}`} anchor={[bodyLength * 0.67, 0.17, side * 0.43]}>
+          <MovingPupil position={[bodyLength * 0.67, 0.17, side * 0.43]} scale={0.075} animated={props.animated} phase={side * 0.2} />
+        </BodyAttachment>
       ))}
-      <mesh position={[bodyLength * 1.28, 0.13, 0]} rotation={[0, 0, -Math.PI / 2]} scale={[0.11, 1.05, 0.11]}><coneGeometry args={[1, 1, 12]} /><meshToonMaterial color="#F3F0E8" /></mesh>
+      <BodyAttachment anchor={[bodyLength * 0.92, 0.03, 0]}>
+        <mesh position={[bodyLength * 1.28, 0.13, 0]} rotation={[0, 0, -Math.PI / 2]} scale={[0.11, 1.05, 0.11]}><coneGeometry args={[1, 1, 12]} /><meshToonMaterial color="#F3F0E8" /></mesh>
+      </BodyAttachment>
       <TraitMarks pieces={props.pieces} baseSeed={props.baseSeed} form="narwhal" highlightedPart={props.highlightedPart} />
     </LivingGroup>
   );
@@ -845,6 +909,7 @@ function ClamModel(props: AquaticModelProps) {
     <LivingGroup animated={props.animated} scale={props.scale} motion="pulse" grounded={props.grounded}>
       {[-1, 1].map((side) => (
         <MovingPart key={side} animated={props.animated} phase={side} base={side * -0.2} amount={0.08} speed={0.9}>
+        <BodyProportions>
         <group position={[0, side * 0.28, 0]}>
           <mesh scale={[1.22, 0.58, 0.28]}>
             <sphereGeometry args={[0.88, 20, 14]} />
@@ -857,6 +922,7 @@ function ClamModel(props: AquaticModelProps) {
             </mesh>
           ))}
         </group>
+        </BodyProportions>
         </MovingPart>
       ))}
       <mesh position={[0, 0, 0.36]} scale={0.24}>
@@ -918,6 +984,7 @@ function PufferfishModel(props: AquaticModelProps) {
   const colors = aquaticPalette(props.pieces, props.baseSeed, props.colorPalette);
   return (
     <LivingGroup animated={props.animated} scale={props.scale} motion="pulse">
+      <BodyProportions>
       <mesh scale={[1.16, 0.82, 0.62]}>
         <sphereGeometry args={[1, 20, 14]} />
         <PatternedToonMaterial color={colors.body} />
@@ -932,31 +999,42 @@ function PufferfishModel(props: AquaticModelProps) {
         );
       })}
       <ArticulatedPufferfishTail animated={props.animated} colors={colors} />
-      <mesh position={[-0.2, 0.82, -0.04]} rotation={[0, 0, -0.16]} scale={[0.34, 0.38, 0.08]}>
-        <coneGeometry args={[1, 1, 12]} />
-        <meshToonMaterial color={colors.dark} />
-      </mesh>
-      <mesh position={[0.05, -0.74, -0.02]} rotation={[0, 0, Math.PI + 0.18]} scale={[0.28, 0.34, 0.08]}>
-        <coneGeometry args={[1, 1, 12]} />
-        <meshToonMaterial color={colors.dark} />
-      </mesh>
-      <mesh position={[0.08, -0.08, 0.62]} rotation={[0.18, 0, -0.18]} scale={[0.38, 0.18, 0.07]}>
-        <sphereGeometry args={[1, 16, 10]} />
-        <meshToonMaterial color={colors.light} />
-      </mesh>
+      </BodyProportions>
+      <BodyAttachment anchor={[-0.2, 0.8, 0]}>
+        <mesh position={[-0.2, 0.82, -0.04]} rotation={[0, 0, -0.16]} scale={[0.34, 0.38, 0.08]}>
+          <coneGeometry args={[1, 1, 12]} />
+          <meshToonMaterial color={colors.dark} />
+        </mesh>
+      </BodyAttachment>
+      <BodyAttachment anchor={[0.05, -0.8, 0]}>
+        <mesh position={[0.05, -0.74, -0.02]} rotation={[0, 0, Math.PI + 0.18]} scale={[0.28, 0.34, 0.08]}>
+          <coneGeometry args={[1, 1, 12]} />
+          <meshToonMaterial color={colors.dark} />
+        </mesh>
+      </BodyAttachment>
+      <BodyProportions>
+        <mesh position={[0.08, -0.08, 0.62]} rotation={[0.18, 0, -0.18]} scale={[0.38, 0.18, 0.07]}>
+          <sphereGeometry args={[1, 16, 10]} />
+          <meshToonMaterial color={colors.light} />
+        </mesh>
+      </BodyProportions>
       {[-1, 1].map((side) => (
-        <group key={`eye-${side}`} position={[0.62, 0.25, side * 0.58]}>
+        <BodyAttachment key={`eye-${side}`} anchor={[0.62, 0.25, side * 0.5]}>
+        <group position={[0.62, 0.25, side * 0.58]}>
           <mesh scale={[0.15, 0.17, 0.09]}>
             <sphereGeometry args={[1, 14, 12]} />
             <meshToonMaterial color="#F3F0E8" />
           </mesh>
           <MovingPupil position={[0.035, 0, side * 0.085]} scale={[0.06, 0.075, 0.035]} animated={props.animated} phase={side * 0.2} />
         </group>
+        </BodyAttachment>
       ))}
-      <mesh position={[1.08, -0.08, 0.48]} scale={[0.12, 0.12, 0.05]}>
-        <torusGeometry args={[1, 0.22, 7, 16]} />
-        <meshToonMaterial color={colors.dark} />
-      </mesh>
+      <BodyAttachment anchor={[1.08, -0.08, 0.4]}>
+        <mesh position={[1.08, -0.08, 0.48]} scale={[0.12, 0.12, 0.05]}>
+          <torusGeometry args={[1, 0.22, 7, 16]} />
+          <meshToonMaterial color={colors.dark} />
+        </mesh>
+      </BodyAttachment>
       <TraitMarks pieces={props.pieces} baseSeed={props.baseSeed} form="pufferfish" highlightedPart={props.highlightedPart} />
     </LivingGroup>
   );
