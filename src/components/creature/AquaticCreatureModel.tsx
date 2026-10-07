@@ -54,7 +54,7 @@ function CrabModel({
   return (
     <group ref={groupRef} scale={scale}>
       <mesh scale={[1.28, 0.68, 0.42]}>
-        <sphereGeometry args={[0.82, 28, 20]} />
+        <sphereGeometry args={[0.82, 20, 14]} />
         <meshToonMaterial color={colors.body} />
       </mesh>
       <mesh position={[0, -0.24, 0.3]} scale={[1.02, 0.34, 0.12]}>
@@ -138,11 +138,11 @@ function JellyfishModel({
   return (
     <group ref={groupRef} scale={scale} position={[0, 0.48, 0]}>
       <mesh scale={[1.05, 0.92, 0.64]}>
-        <sphereGeometry args={[1, 32, 20, 0, Math.PI * 2, 0, Math.PI / 2]} />
+        <sphereGeometry args={[1, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2]} />
         <meshToonMaterial color={colors.body} transparent opacity={0.76} depthWrite={false} />
       </mesh>
       <mesh position={[0, -0.05, 0]} scale={[1.02, 0.18, 0.62]}>
-        <sphereGeometry args={[1, 28, 12]} />
+        <sphereGeometry args={[1, 20, 12]} />
         <meshToonMaterial color={colors.light} transparent opacity={0.62} depthWrite={false} />
       </mesh>
       {curves.map((curve, index) => (
@@ -205,11 +205,11 @@ function OctopusModel({
         </mesh>
       ))}
       <mesh position={[0, 0.18, 0]} scale={[0.78, 0.94, 0.58]}>
-        <sphereGeometry args={[0.9, 30, 24]} />
+        <sphereGeometry args={[0.9, 20, 14]} />
         <meshToonMaterial color={colors.body} />
       </mesh>
       <mesh position={[0, -0.34, 0.02]} scale={[0.94, 0.52, 0.62]}>
-        <sphereGeometry args={[0.82, 28, 20]} />
+        <sphereGeometry args={[0.82, 20, 14]} />
         <meshToonMaterial color={colors.light} />
       </mesh>
       {[-1, 1].map((side, index) => (

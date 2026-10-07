@@ -323,7 +323,7 @@ function AquaticTraitForm({ partId, color, highlighted }: { partId: CreaturePart
     case "inner-eye":
       return (
         <>
-          <mesh scale={[1, 0.7, 1]}><sphereGeometry args={[0.24, 24, 14, 0, Math.PI * 2, 0, Math.PI / 2]} />{material}</mesh>
+          <mesh scale={[1, 0.7, 1]}><sphereGeometry args={[0.24, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2]} />{material}</mesh>
           <mesh position={[0, 0.15, 0]} scale={[1, 0.5, 1]}><sphereGeometry args={[0.1, 14, 10]} /><meshBasicMaterial color="#071015" /></mesh>
         </>
       );

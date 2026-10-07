@@ -723,19 +723,19 @@ export function CreatureModel({
   return (
     <group ref={groupRef} scale={scale}>
       <mesh scale={[proportions.length, proportions.height, proportions.depth]}>
-        <sphereGeometry args={[0.86, 32, 26]} />
+        <sphereGeometry args={[0.86, 20, 14]} />
         <meshToonMaterial color={baseColor} />
       </mesh>
       <mesh scale={[proportions.length * 1.035, proportions.height * 1.055, proportions.depth * 1.12]}>
-        <sphereGeometry args={[0.86, 32, 26]} />
+        <sphereGeometry args={[0.86, 20, 14]} />
         <meshBasicMaterial color="#080B12" side={THREE.BackSide} />
       </mesh>
       <mesh position={[headX, 0.02, 0.02]} scale={[proportions.head, proportions.height * 0.9, proportions.depth * 0.96]}>
-        <sphereGeometry args={[0.7, 28, 24]} />
+        <sphereGeometry args={[0.7, 20, 14]} />
         <meshToonMaterial color={headColor} />
       </mesh>
       <mesh position={[headX, 0.02, 0]} scale={[proportions.head * 1.045, proportions.height * 0.95, proportions.depth * 1.1]}>
-        <sphereGeometry args={[0.7, 28, 24]} />
+        <sphereGeometry args={[0.7, 20, 14]} />
         <meshBasicMaterial color="#080B12" side={THREE.BackSide} />
       </mesh>
       {[1, -1].map((side) => (
@@ -744,7 +744,7 @@ export function CreatureModel({
           position={[-0.12, -0.08, side * proportions.depth * 0.72]}
           scale={[proportions.length * 0.72, proportions.height * 0.62, 0.12]}
         >
-          <sphereGeometry args={[0.76, 24, 20]} />
+          <sphereGeometry args={[0.76, 20, 14]} />
           <SoftMaterial color={bellyColor} opacity={0.42} />
         </mesh>
       ))}
@@ -830,7 +830,7 @@ export function CreatureModel({
           rotation={[0, side > 0 ? 0 : Math.PI, 0]}
         >
           <mesh>
-            <sphereGeometry args={[0.14, 18, 18]} />
+            <sphereGeometry args={[0.14, 18, 14]} />
             <meshToonMaterial color="#F3F0E8" />
           </mesh>
           <mesh ref={(node) => { pupilRefs.current[index] = node; }} position={[0.025, 0, 0.1]}>
