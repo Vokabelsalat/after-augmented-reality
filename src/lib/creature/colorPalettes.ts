@@ -17,7 +17,8 @@ export function isCreatureColorPalette(value: unknown): value is CreatureColorPa
   );
 }
 
-const marinePalettes: CreatureColorPalette[] = [
+/** Every palette a creature can be drawn in; the palettes page shows them side by side. */
+export const marinePalettes: readonly CreatureColorPalette[] = [
   { body: "#34789a", head: "#285a7a", belly: "#c8d9d3", fin: "#d5b43d", marking: "#183b55" },
   { body: "#d56d32", head: "#ad4d28", belly: "#f0dfbf", fin: "#d88a38", marking: "#44322c" },
   { body: "#527e87", head: "#365f69", belly: "#d8ded3", fin: "#718879", marking: "#203e49" },
