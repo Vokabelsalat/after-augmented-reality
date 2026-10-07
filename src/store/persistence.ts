@@ -2,6 +2,7 @@ import type { AppStore } from "@/store";
 import { isAquaticForm } from "@/lib/creature/aquaticForms";
 import type { Discovery, PersistedJourney } from "@/store/journeySlice";
 import { isCreatureColorPalette } from "@/lib/creature/colorPalettes";
+import { isCreaturePattern } from "@/lib/creature/patterns";
 
 export const JOURNEY_STORAGE_KEY = "say-hi:journey:v1";
 
@@ -33,6 +34,7 @@ export function loadJourney(storage: StorageLike): PersistedJourney | null {
     const storedCreatureForm = (value as { creatureForm?: unknown }).creatureForm;
     const creatureForm = storedCreatureForm === "eel" ? "ray" : storedCreatureForm;
     const creaturePalette = (value as { creaturePalette?: unknown }).creaturePalette;
+    const creaturePattern = (value as { creaturePattern?: unknown }).creaturePattern;
 
     if (
       !Array.isArray(value.discoveries) ||
@@ -42,6 +44,7 @@ export function loadJourney(storage: StorageLike): PersistedJourney | null {
       (value.completedAt != null && typeof value.completedAt !== "number") ||
       (creatureForm !== undefined && creatureForm !== null && !isAquaticForm(creatureForm)) ||
       (creaturePalette !== undefined && creaturePalette !== null && !isCreatureColorPalette(creaturePalette)) ||
+      (creaturePattern !== undefined && creaturePattern !== null && !isCreaturePattern(creaturePattern)) ||
       (value.narrativeState !== undefined && !isNarrativeState(value.narrativeState))
     ) {
       return null;
@@ -53,6 +56,7 @@ export function loadJourney(storage: StorageLike): PersistedJourney | null {
       completedAt: value.completedAt ?? null,
       ...(creatureForm ? { creatureForm } : {}),
       ...(creaturePalette ? { creaturePalette } : {}),
+      ...(creaturePattern ? { creaturePattern } : {}),
       ...(value.narrativeState ? { narrativeState: value.narrativeState } : {}),
       discoveries: value.discoveries
         .slice()
@@ -80,13 +84,13 @@ export function subscribeToJourneyPersistence(
 ) {
   let previous = "";
   return store.subscribe(() => {
-    const { sessionId, startedAt, completedAt, discoveries, narrativeState, creatureForm, creaturePalette } = store.getState().journey;
+    const { sessionId, startedAt, completedAt, discoveries, narrativeState, creatureForm, creaturePalette, creaturePattern } = store.getState().journey;
     if (!sessionId && startedAt === null && discoveries.length === 0) {
       previous = "";
       storage.removeItem(JOURNEY_STORAGE_KEY);
       return;
     }
-    const serialized = JSON.stringify({ sessionId, startedAt, completedAt, discoveries, narrativeState, creatureForm, creaturePalette });
+    const serialized = JSON.stringify({ sessionId, startedAt, completedAt, discoveries, narrativeState, creatureForm, creaturePalette, creaturePattern });
     if (serialized === previous) return;
     previous = serialized;
     storage.setItem(JOURNEY_STORAGE_KEY, serialized);

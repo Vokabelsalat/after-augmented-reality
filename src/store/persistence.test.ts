@@ -9,6 +9,7 @@ import {
   subscribeToJourneyPersistence,
 } from "@/store/persistence";
 import { creatureColorPalette } from "@/lib/creature/colorPalettes";
+import { creaturePattern } from "@/lib/creature/patterns";
 
 class MemoryStorage {
   private values = new Map<string, string>();
@@ -35,6 +36,7 @@ describe("journey persistence", () => {
       completedAt: null,
       creatureForm: "jellyfish" as const,
       creaturePalette: creatureColorPalette("session-test"),
+      creaturePattern: creaturePattern("session-test"),
       discoveries: [
         { artifactId: "memory-fragment", sequence: 1, discoveredAt: 200 },
       ],
@@ -49,6 +51,22 @@ describe("journey persistence", () => {
     storage.setItem(
       JOURNEY_STORAGE_KEY,
       JSON.stringify({ sessionId: 42, discoveries: "not-an-array" }),
+    );
+
+    expect(loadJourney(storage)).toBeNull();
+  });
+
+  it("rejects a malformed skin pattern", () => {
+    const storage = new MemoryStorage();
+    storage.setItem(
+      JOURNEY_STORAGE_KEY,
+      JSON.stringify({
+        sessionId: "session-test",
+        startedAt: 100,
+        completedAt: null,
+        creaturePattern: { kind: "tartan", density: 2, orientation: "along", contrast: 0.5, seed: 1 },
+        discoveries: [],
+      }),
     );
 
     expect(loadJourney(storage)).toBeNull();

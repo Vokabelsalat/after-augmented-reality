@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { artifacts } from "@/data/artifacts";
 import { aquaticForms } from "@/lib/creature/aquaticForms";
 import { isCreatureColorPalette } from "@/lib/creature/colorPalettes";
+import { isCreaturePattern } from "@/lib/creature/patterns";
 import {
   createSyntheticDataset,
   SYNTHETIC_FEATURED_FORMS,
@@ -58,5 +59,6 @@ describe("createSyntheticDataset", () => {
     const dataset = createSyntheticDataset(cycleStart);
 
     expect(dataset.every((visitor) => isCreatureColorPalette(visitor.creaturePalette))).toBe(true);
+    expect(dataset.every((visitor) => isCreaturePattern(visitor.creaturePattern))).toBe(true);
   });
 });

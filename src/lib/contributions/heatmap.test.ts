@@ -21,6 +21,7 @@ function contribution(
       fin: "#d5b43d",
       marking: "#183b55",
     },
+    creaturePattern: { kind: "plain", density: 1, orientation: "along", contrast: 0.5, seed: 1 },
     parts,
     narrative: [],
     createdAt: "2026-09-17T00:00:00.000Z",

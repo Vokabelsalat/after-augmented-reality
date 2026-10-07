@@ -4,6 +4,7 @@ import { useState } from "react";
 import { activeVisualizationCopy } from "@/config/visualization";
 import type { AquaticForm } from "@/lib/creature/aquaticForms";
 import type { CreatureColorPalette } from "@/lib/creature/colorPalettes";
+import type { CreaturePattern } from "@/lib/creature/patterns";
 import type { Discovery } from "@/store/journeySlice";
 
 type ShareState = "idle" | "sharing" | "shared" | "error";
@@ -14,12 +15,14 @@ export function ShareContribution({
   discoveries,
   creatureForm,
   creaturePalette,
+  creaturePattern,
 }: {
   sessionId: string | null;
   completedAt: number | null;
   discoveries: Discovery[];
   creatureForm: AquaticForm | null;
   creaturePalette: CreatureColorPalette | null;
+  creaturePattern: CreaturePattern | null;
 }) {
   const [state, setState] = useState<ShareState>("idle");
 
@@ -30,7 +33,7 @@ export function ShareContribution({
       const response = await fetch("/api/contributions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId, completedAt, discoveries, creatureForm, creaturePalette }),
+        body: JSON.stringify({ sessionId, completedAt, discoveries, creatureForm, creaturePalette, creaturePattern }),
       });
       if (!response.ok) throw new Error("Share failed");
       setState("shared");

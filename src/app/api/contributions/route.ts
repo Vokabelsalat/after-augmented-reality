@@ -11,6 +11,7 @@ import { generateJourneyNarrative } from "@/lib/narrative/generateJourneyNarrati
 import { calculateDwellTimes } from "@/lib/contributions/dwellTime";
 import { isAquaticForm, pickAquaticForm } from "@/lib/creature/aquaticForms";
 import { creatureColorPalette, isCreatureColorPalette } from "@/lib/creature/colorPalettes";
+import { creaturePattern, isCreaturePattern } from "@/lib/creature/patterns";
 import type { ContributionSubmission, SharedCreaturePart } from "@/types/contribution";
 
 export const runtime = "nodejs";
@@ -84,8 +85,11 @@ function parseSubmission(value: unknown): ContributionSubmission | string {
   const creaturePalette = isCreatureColorPalette(candidate.creaturePalette)
     ? candidate.creaturePalette
     : creatureColorPalette(candidate.sessionId);
+  const pattern = isCreaturePattern(candidate.creaturePattern)
+    ? candidate.creaturePattern
+    : creaturePattern(candidate.sessionId);
 
-  return { sessionId: candidate.sessionId, creatureForm, creaturePalette, completedAt: candidate.completedAt, discoveries };
+  return { sessionId: candidate.sessionId, creatureForm, creaturePalette, creaturePattern: pattern, completedAt: candidate.completedAt, discoveries };
 }
 
 export async function GET(request: Request) {
@@ -142,6 +146,7 @@ export async function POST(request: Request) {
     sessionId: submission.sessionId,
     creatureForm: submission.creatureForm,
     creaturePalette: submission.creaturePalette,
+    creaturePattern: submission.creaturePattern,
     parts,
     narrative,
   });

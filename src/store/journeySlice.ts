@@ -2,6 +2,7 @@ import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import { artifactById } from "@/data/artifacts";
 import { pickAquaticForm, type AquaticForm } from "@/lib/creature/aquaticForms";
 import { creatureColorPalette, type CreatureColorPalette } from "@/lib/creature/colorPalettes";
+import { creaturePattern, type CreaturePattern } from "@/lib/creature/patterns";
 import type { NarrativeState } from "@/types/exhibition";
 
 export type ExperiencePhase =
@@ -29,6 +30,7 @@ export type JourneyState = {
   narrativeState: NarrativeState;
   creatureForm: AquaticForm | null;
   creaturePalette: CreatureColorPalette | null;
+  creaturePattern: CreaturePattern | null;
 };
 
 export type PersistedJourney = Pick<
@@ -38,6 +40,7 @@ export type PersistedJourney = Pick<
   narrativeState?: NarrativeState;
   creatureForm?: AquaticForm | null;
   creaturePalette?: CreatureColorPalette | null;
+  creaturePattern?: CreaturePattern | null;
 };
 
 export const neutralNarrativeState: NarrativeState = {
@@ -58,6 +61,7 @@ export const initialJourneyState: JourneyState = {
   narrativeState: { ...neutralNarrativeState },
   creatureForm: null,
   creaturePalette: null,
+  creaturePattern: null,
 };
 
 function makeSessionId() {
@@ -85,6 +89,9 @@ const journeySlice = createSlice({
         }
         if (!state.creaturePalette) {
           state.creaturePalette = creatureColorPalette(state.sessionId ?? action.payload.sessionId);
+        }
+        if (!state.creaturePattern) {
+          state.creaturePattern = creaturePattern(state.sessionId ?? action.payload.sessionId);
         }
         state.activeArtifactId = null;
         state.completedAt = null;
@@ -116,6 +123,9 @@ const journeySlice = createSlice({
         }
         if (!state.creaturePalette) {
           state.creaturePalette = creatureColorPalette(state.sessionId ?? "anonymous");
+        }
+        if (!state.creaturePattern) {
+          state.creaturePattern = creaturePattern(state.sessionId ?? "anonymous");
         }
 
         state.discoveries.push({
@@ -211,6 +221,8 @@ const journeySlice = createSlice({
             : null);
       state.creaturePalette = action.payload.creaturePalette
         ?? (action.payload.sessionId ? creatureColorPalette(action.payload.sessionId) : null);
+      state.creaturePattern = action.payload.creaturePattern
+        ?? (action.payload.sessionId ? creaturePattern(action.payload.sessionId) : null);
       state.activeArtifactId = null;
       state.experiencePhase = action.payload.sessionId ? "scanning" : "intro";
     },

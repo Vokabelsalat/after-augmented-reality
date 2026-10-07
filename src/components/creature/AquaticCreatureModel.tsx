@@ -10,7 +10,9 @@ import { ClawPair } from "@/components/creature/parts/Claw";
 import type { AquaticForm } from "@/lib/creature/aquaticForms";
 import { applyCreatureModelOverrides } from "@/lib/creature/modelOverrides";
 import type { CreaturePartId } from "@/types/exhibition";
-import type { CreatureColorPalette } from "@/lib/creature/colorPalettes";
+import { creatureColorPalette, type CreatureColorPalette } from "@/lib/creature/colorPalettes";
+import { creaturePattern, type CreaturePattern } from "@/lib/creature/patterns";
+import { CreaturePatternContext, PatternedToonMaterial } from "@/components/creature/CreaturePatternMaterial";
 
 function CrabModel({
   pieces,
@@ -55,7 +57,7 @@ function CrabModel({
     <group ref={groupRef} scale={scale}>
       <mesh scale={[1.28, 0.68, 0.42]}>
         <sphereGeometry args={[0.82, 20, 14]} />
-        <meshToonMaterial color={colors.body} />
+        <PatternedToonMaterial color={colors.body} />
       </mesh>
       <mesh position={[0, -0.24, 0.3]} scale={[1.02, 0.34, 0.12]}>
         <sphereGeometry args={[0.78, 20, 14]} />
@@ -139,7 +141,7 @@ function JellyfishModel({
     <group ref={groupRef} scale={scale} position={[0, 0.48, 0]}>
       <mesh scale={[1.05, 0.92, 0.64]}>
         <sphereGeometry args={[1, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2]} />
-        <meshToonMaterial color={colors.body} transparent opacity={0.76} depthWrite={false} />
+        <PatternedToonMaterial color={colors.body} transparent opacity={0.76} depthWrite={false} />
       </mesh>
       <mesh position={[0, -0.05, 0]} scale={[1.02, 0.18, 0.62]}>
         <sphereGeometry args={[1, 20, 12]} />
@@ -206,7 +208,7 @@ function OctopusModel({
       ))}
       <mesh position={[0, 0.18, 0]} scale={[0.78, 0.94, 0.58]}>
         <sphereGeometry args={[0.9, 20, 14]} />
-        <meshToonMaterial color={colors.body} />
+        <PatternedToonMaterial color={colors.body} />
       </mesh>
       <mesh position={[0, -0.34, 0.02]} scale={[0.94, 0.52, 0.62]}>
         <sphereGeometry args={[0.82, 20, 14]} />
@@ -248,8 +250,21 @@ export function AquaticCreatureModel({
   scale = 1,
   grounded = false,
   colorPalette,
-}: AquaticModelProps & { form: AquaticForm }) {
+  pattern,
+}: AquaticModelProps & {
+  form: AquaticForm;
+  /** The skin pattern; previews without a stored one draw it from the creature's seed. */
+  pattern?: CreaturePattern;
+}) {
   const editorRootRef = useRef<THREE.Group>(null);
+  const signature = baseSeed ?? pieces[0]?.artifactId ?? "new";
+  const patternContext = useMemo(
+    () => ({
+      pattern: pattern ?? creaturePattern(signature),
+      markingColor: (colorPalette ?? creatureColorPalette(signature)).marking,
+    }),
+    [colorPalette, pattern, signature],
+  );
 
   useLayoutEffect(() => {
     if (editorRootRef.current) applyCreatureModelOverrides(editorRootRef.current, form);
@@ -267,5 +282,9 @@ export function AquaticCreatureModel({
   } else {
     model = <CreatureModel pieces={pieces} baseSeed={baseSeed} animated={animated} highlightedPart={highlightedPart} scale={scale} colorPalette={colorPalette} />;
   }
-  return <group ref={editorRootRef}>{model}</group>;
+  return (
+    <CreaturePatternContext.Provider value={patternContext}>
+      <group ref={editorRootRef}>{model}</group>
+    </CreaturePatternContext.Provider>
+  );
 }

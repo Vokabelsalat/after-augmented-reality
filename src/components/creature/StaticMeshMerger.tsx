@@ -60,7 +60,8 @@ function isMergedMesh(object: THREE.Object3D) {
 type MergeableMaterial = THREE.Material & { color: THREE.Color; vertexColors: boolean };
 
 const mergeableMaterialTypes = new Set(["MeshToonMaterial", "MeshStandardMaterial", "MeshBasicMaterial"]);
-const textureSlots = ["map", "alphaMap", "aoMap", "bumpMap", "normalMap", "emissiveMap", "envMap", "lightMap", "roughnessMap", "metalnessMap", "displacementMap", "gradientMap"] as const;
+// A colour map is allowed: parts sharing the same one are merged with their texture coordinates.
+const textureSlots = ["alphaMap", "aoMap", "bumpMap", "normalMap", "emissiveMap", "envMap", "lightMap", "roughnessMap", "metalnessMap", "displacementMap", "gradientMap"] as const;
 
 function mergeableMaterial(mesh: THREE.Mesh): MergeableMaterial | null {
   const material = mesh.material;
@@ -92,6 +93,7 @@ function materialSignature(mesh: THREE.Mesh, material: MergeableMaterial) {
     standard.emissiveIntensity,
     standard.roughness,
     standard.metalness,
+    (material as unknown as { map?: THREE.Texture | null }).map?.uuid,
     mesh.renderOrder,
   ].join("|");
 }
@@ -105,6 +107,11 @@ function bakedGeometry(mesh: THREE.Mesh, material: MergeableMaterial, toAnchor: 
   geometry.setAttribute("position", position.clone());
   if (source.getAttribute("normal")) geometry.setAttribute("normal", source.getAttribute("normal").clone());
   else geometry.computeVertexNormals();
+  if ((material as unknown as { map?: THREE.Texture | null }).map) {
+    const uv = source.getAttribute("uv");
+    if (!uv) return null;
+    geometry.setAttribute("uv", uv.clone());
+  }
 
   const colors = new Float32Array(position.count * 3);
   const vertexColors = material.vertexColors ? source.getAttribute("color") : undefined;

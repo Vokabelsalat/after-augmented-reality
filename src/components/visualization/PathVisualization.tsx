@@ -10,6 +10,7 @@ import type { CreaturePartId } from "@/types/exhibition";
 import type { AquaticForm } from "@/lib/creature/aquaticForms";
 import { creatureSizeScale } from "@/lib/creature/aquaticForms";
 import type { CreatureColorPalette } from "@/lib/creature/colorPalettes";
+import type { CreaturePattern } from "@/lib/creature/patterns";
 
 export function PathVisualization({
   artifactIds,
@@ -22,6 +23,7 @@ export function PathVisualization({
   creatureForm,
   creatureSeed,
   creaturePalette,
+  creaturePattern,
   emergingArtifactId,
   emerging = false,
   label,
@@ -37,6 +39,7 @@ export function PathVisualization({
   creatureForm?: AquaticForm | null;
   creatureSeed?: string;
   creaturePalette?: CreatureColorPalette;
+  creaturePattern?: CreaturePattern;
   /** A newly found trait that is held back until `emerging` turns true, then grows in. */
   emergingArtifactId?: string;
   emerging?: boolean;
@@ -78,6 +81,7 @@ export function PathVisualization({
       creatureForm={contribution?.creatureForm ?? creatureForm ?? "fish"}
       creatureSeed={creatureSeed ?? contribution?.publicId}
       creaturePalette={contribution?.creaturePalette ?? creaturePalette}
+      creaturePattern={contribution?.creaturePattern ?? creaturePattern}
       emergingArtifactId={emergingArtifactId}
       emerging={emerging}
       label={label}

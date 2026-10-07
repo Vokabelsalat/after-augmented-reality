@@ -6,6 +6,7 @@ import * as THREE from "three";
 import { aquaticPalette, TraitMarks } from "@/components/creature/AquaticModelShared";
 import type { AquaticModelProps } from "@/components/creature/AquaticCreatureModel";
 import type { AquaticForm } from "@/lib/creature/aquaticForms";
+import { PatternedToonMaterial } from "@/components/creature/CreaturePatternMaterial";
 
 type AdditionalForm = Exclude<AquaticForm, "fish" | "crab" | "jellyfish" | "octopus">;
 
@@ -81,7 +82,7 @@ function TurtleModel(props: AquaticModelProps) {
       </mesh>
       <mesh position={[0, 0.03, 0.24]} scale={[0.92, 0.58, 0.18]}>
         <sphereGeometry args={[0.92, 20, 14]} />
-        <meshToonMaterial color={colors.body} />
+        <PatternedToonMaterial color={colors.body} />
       </mesh>
       {[0.46, 0.8].map((ring, index) => (
         <mesh key={ring} position={[0, 0.03, 0.43]} scale={[ring * 1.18, ring * 0.78, 0.06]}>
@@ -129,7 +130,7 @@ function RayModel(props: AquaticModelProps) {
     <LivingGroup animated={props.animated} scale={props.scale} motion="glide">
       <mesh position={[0, 0, -0.12]}>
         <extrudeGeometry args={[disc, { depth: 0.18, bevelEnabled: true, bevelSegments: 3, steps: 1, bevelSize: 0.1, bevelThickness: 0.08, curveSegments: 28 }]} />
-        <meshToonMaterial color={colors.body} />
+        <PatternedToonMaterial color={colors.body} repeat={[0.8, 0.8]} wraps={false} />
       </mesh>
       <mesh position={[0.42, 0, 0.1]} scale={[0.92, 0.54, 0.16]}>
         <sphereGeometry args={[0.92, 20, 14]} />
@@ -188,7 +189,7 @@ function StarfishModel(props: AquaticModelProps) {
         return (
           <mesh key={index} position={[Math.sin(angle) * 0.7, Math.cos(angle) * 0.7, 0]} rotation={[0, 0, -angle]} scale={[0.38, 0.92, 0.16]}>
             <capsuleGeometry args={[0.44, 0.92, 8, 14]} />
-            <meshToonMaterial color={index % 2 ? colors.body : colors.accent} />
+            <PatternedToonMaterial color={index % 2 ? colors.body : colors.accent} repeat={[2, 2]} />
           </mesh>
         );
       })}
@@ -230,10 +231,10 @@ function SeahorseModel(props: AquaticModelProps) {
   }, []);
   return (
     <LivingGroup animated={props.animated} scale={props.scale} motion="bob">
-      <mesh><tubeGeometry args={[neck, 28, 0.23, 10, false]} /><meshToonMaterial color={colors.body} /></mesh>
+      <mesh><tubeGeometry args={[neck, 28, 0.23, 10, false]} /><PatternedToonMaterial color={colors.body} repeat={[3, 2]} wraps="v" /></mesh>
       <mesh position={[-0.02, 0.02, 0]} rotation={[0, 0, -0.12]} scale={[0.58, 0.86, 0.36]}>
         <sphereGeometry args={[0.82, 20, 14]} />
-        <meshToonMaterial color={colors.body} />
+        <PatternedToonMaterial color={colors.body} />
       </mesh>
       <mesh position={[0.22, 0.16, 0.03]} rotation={[0, 0, -0.18]} scale={[0.42, 0.65, 0.31]}>
         <sphereGeometry args={[0.76, 20, 14]} />
@@ -242,7 +243,7 @@ function SeahorseModel(props: AquaticModelProps) {
       <mesh><tubeGeometry args={[tail, 48, 0.105, 9, false]} /><meshToonMaterial color={colors.accent} /></mesh>
       <mesh name="Seahorse head" position={[0.1, 1.27, 0]} rotation={[0, 0, -0.08]} scale={[0.48, 0.4, 0.34]}>
         <sphereGeometry args={[0.72, 20, 14]} />
-        <meshToonMaterial color={colors.body} />
+        <PatternedToonMaterial color={colors.body} />
       </mesh>
       <mesh position={[0.57, 1.15, 0]} rotation={[0, 0, -Math.PI / 2 + 0.1]} scale={[0.13, 0.52, 0.13]}>
         <coneGeometry args={[1, 1, 10]} />
@@ -317,7 +318,7 @@ function ArticulatedSealTail({
         scale={[0.14, 0.64, 0.16]}
       >
         <cylinderGeometry args={[0.5, 1, 1, 14]} />
-        <meshToonMaterial color={colors.body} />
+        <PatternedToonMaterial color={colors.body} repeat={[2, 1]} />
       </mesh>
       <group ref={finsRef} position={[-0.64, 0, 0]}>
         {[-1, 1].map((side) => (
@@ -343,7 +344,7 @@ function SealModel(props: AquaticModelProps) {
     <LivingGroup animated={props.animated} scale={props.scale}>
       <mesh scale={[1.38, 0.66, 0.46]}>
         <sphereGeometry args={[0.9, 20, 14]} />
-        <meshToonMaterial color={colors.body} />
+        <PatternedToonMaterial color={colors.body} />
       </mesh>
       <mesh position={[1.12, 0.2, 0]} scale={[0.62, 0.54, 0.5]}>
         <sphereGeometry args={[0.72, 20, 14]} />
@@ -395,7 +396,7 @@ function ShrimpModel(props: AquaticModelProps) {
       {abdomen.map((segment, index) => (
         <mesh key={`segment-${index}`} position={segment.position} rotation={[0, 0, segment.rotation]} scale={segment.scale}>
           <sphereGeometry args={[1, 18, 14]} />
-          <meshToonMaterial color={index % 2 ? colors.body : colors.light} />
+          <PatternedToonMaterial color={index % 2 ? colors.body : colors.light} repeat={[2, 1]} />
         </mesh>
       ))}
       <mesh position={[1.02, 0.2, 0]} rotation={[0, 0, 0.06]} scale={[0.58, 0.43, 0.36]}>
@@ -467,7 +468,7 @@ function ArticulatedMammalTail({
     <group ref={stemRef}>
       <mesh position={[-stemLength * 0.48, 0, 0]} rotation={[0, 0, Math.PI / 2]} scale={[0.085, stemLength, 0.11]}>
         <cylinderGeometry args={[0.42, 1, 1, 14]} />
-        <meshToonMaterial color={colors.body} />
+        <PatternedToonMaterial color={colors.body} repeat={[2, 1]} />
       </mesh>
       <group ref={flukesRef} position={[-stemLength, 0, 0]}>
         {[-1, 1].map((side) => (
@@ -510,7 +511,7 @@ function BlueWhaleTail({
     <group ref={stemRef} position={[-1.62, 0.08, 0]}>
       <mesh name="Blue whale tail stock" position={[0, 0, -0.16]}>
         <extrudeGeometry args={[stem, { depth: 0.32, bevelEnabled: true, bevelSegments: 1, bevelSize: 0.045, bevelThickness: 0.04, curveSegments: 12 }]} />
-        <meshToonMaterial color={colors.body} />
+        <PatternedToonMaterial color={colors.body} repeat={[0.8, 0.8]} wraps={false} />
       </mesh>
       <group ref={flukesRef} position={[-0.87, 0, 0]} rotation={[0.52, 0, 0]}>
         {[-1, 1].map((side) => (
@@ -598,7 +599,7 @@ function BlueWhaleModel(props: AquaticModelProps) {
           one bevel step keeps each outline while dropping the rounded edge. */}
       <mesh name="Blue whale body" position={[0, 0, -0.22]}>
         <extrudeGeometry args={[body, { depth: 0.44, bevelEnabled: true, bevelSegments: 1, bevelSize: 0.07, bevelThickness: 0.065, curveSegments: 16 }]} />
-        <meshToonMaterial color={colors.body} />
+        <PatternedToonMaterial color={colors.body} repeat={[0.8, 0.8]} wraps={false} />
       </mesh>
       <mesh name="Blue whale belly" position={[0, 0, 0.24]}>
         <shapeGeometry args={[belly, 12]} />
@@ -682,7 +683,7 @@ function DolphinTail({
     <group ref={stemRef} position={[-1.2, 0.05, 0]}>
       <mesh name="Dolphin tail stock" position={[0, 0, -0.13]}>
         <extrudeGeometry args={[stem, { depth: 0.26, bevelEnabled: true, bevelSegments: 2, bevelSize: 0.038, bevelThickness: 0.035, curveSegments: 12 }]} />
-        <meshToonMaterial color={colors.body} />
+        <PatternedToonMaterial color={colors.body} repeat={[0.8, 0.8]} wraps={false} />
       </mesh>
       <group ref={flukesRef} position={[-0.73, 0, 0]} rotation={[0.54, 0, 0]}>
         {[-1, 1].map((side) => (
@@ -757,7 +758,7 @@ function DolphinModel(props: AquaticModelProps) {
       <DolphinTail animated={props.animated} colors={colors} />
       <mesh name="Dolphin body" position={[0, 0, -0.19]}>
         <extrudeGeometry args={[body, { depth: 0.38, bevelEnabled: true, bevelSegments: 2, bevelSize: 0.06, bevelThickness: 0.055, curveSegments: 16 }]} />
-        <meshToonMaterial color={colors.body} />
+        <PatternedToonMaterial color={colors.body} repeat={[0.8, 0.8]} wraps={false} />
       </mesh>
       <mesh name="Dolphin belly" position={[0, 0, 0.205]}>
         <shapeGeometry args={[belly, 12]} />
@@ -817,7 +818,7 @@ function NarwhalModel(props: AquaticModelProps) {
   const bodyHeight = 0.58;
   return (
     <LivingGroup animated={props.animated} scale={props.scale} motion="glide">
-      <mesh scale={[bodyLength, bodyHeight, 0.48]}><sphereGeometry args={[1, 20, 14]} /><meshToonMaterial color={colors.body} /></mesh>
+      <mesh scale={[bodyLength, bodyHeight, 0.48]}><sphereGeometry args={[1, 20, 14]} /><PatternedToonMaterial color={colors.body} /></mesh>
       <mesh position={[0.42, -bodyHeight * 0.42, 0.28]} scale={[bodyLength * 0.7, bodyHeight * 0.42, 0.3]}><sphereGeometry args={[1, 20, 14]} /><meshToonMaterial color={colors.light} /></mesh>
       <mesh position={[bodyLength * 0.92, 0.03, 0]} scale={[0.42, 0.26, 0.28]}><sphereGeometry args={[1, 20, 14]} /><meshToonMaterial color={colors.light} /></mesh>
       <mesh position={[0.05, bodyHeight * 0.92, -0.03]} rotation={[0, 0, -0.22]} scale={[0.34, 0.46, 0.09]}><coneGeometry args={[1, 1, 12]} /><meshToonMaterial color={colors.dark} /></mesh>
@@ -847,7 +848,7 @@ function ClamModel(props: AquaticModelProps) {
         <group position={[0, side * 0.28, 0]}>
           <mesh scale={[1.22, 0.58, 0.28]}>
             <sphereGeometry args={[0.88, 20, 14]} />
-            <meshToonMaterial color={side > 0 ? colors.body : colors.dark} />
+            <PatternedToonMaterial color={side > 0 ? colors.body : colors.dark} />
           </mesh>
           {[-0.72, -0.36, 0, 0.36, 0.72].map((x) => (
             <mesh key={x} position={[x, 0, 0.25]} scale={[0.035, 0.42, 0.035]}>
@@ -893,7 +894,7 @@ function ArticulatedPufferfishTail({
         scale={[0.13, 0.6, 0.14]}
       >
         <cylinderGeometry args={[0.48, 1, 1, 14]} />
-        <meshToonMaterial color={colors.body} />
+        <PatternedToonMaterial color={colors.body} repeat={[2, 1]} />
       </mesh>
       <group ref={finsRef} position={[-0.6, 0, 0]}>
         {[-1, 1].map((side) => (
@@ -919,7 +920,7 @@ function PufferfishModel(props: AquaticModelProps) {
     <LivingGroup animated={props.animated} scale={props.scale} motion="pulse">
       <mesh scale={[1.16, 0.82, 0.62]}>
         <sphereGeometry args={[1, 20, 14]} />
-        <meshToonMaterial color={colors.body} />
+        <PatternedToonMaterial color={colors.body} />
       </mesh>
       {Array.from({ length: 18 }, (_, index) => {
         const angle = (index / 18) * Math.PI * 2;

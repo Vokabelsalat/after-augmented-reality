@@ -10,6 +10,7 @@ import { StaticMeshMerger } from "@/components/creature/StaticMeshMerger";
 import { AquariumDioramaPlants } from "@/components/collective/AquariumDioramaPlants";
 import { creatureSizeScale, type AquaticForm } from "@/lib/creature/aquaticForms";
 import { creatureColorPalette } from "@/lib/creature/colorPalettes";
+import { creaturePattern } from "@/lib/creature/patterns";
 import type { ExhibitionContribution } from "@/types/contribution";
 import { collectiveCapacity } from "@/config/visualization";
 import { RenderStats, type RenderStatsReport } from "@/components/development/RenderStats";
@@ -514,6 +515,7 @@ const FloatingCreature = memo(function FloatingCreature({
               pieces={contribution.parts}
               baseSeed={contribution.publicId}
               colorPalette={contribution.creaturePalette}
+            pattern={contribution.creaturePattern}
               scale={placement.scale * formScale * individualScale}
               animated
               grounded={isBottomDweller}
@@ -705,6 +707,7 @@ function createBaby(event: PairingEvent): BabyCreature {
       publicId,
       creatureForm: first.creatureForm,
       creaturePalette: creatureColorPalette(publicId),
+      creaturePattern: creaturePattern(publicId),
       parts: inheritedParts,
       narrative: [],
       createdAt: new Date().toISOString(),

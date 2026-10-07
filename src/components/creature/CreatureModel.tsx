@@ -7,6 +7,7 @@ import { artifactById } from "@/data/artifacts";
 import { TraitMarks } from "@/components/creature/AquaticModelShared";
 import { creatureColorPalette, type CreatureColorPalette } from "@/lib/creature/colorPalettes";
 import type { CreaturePartId, ThemeId } from "@/types/exhibition";
+import { PatternedToonMaterial } from "@/components/creature/CreaturePatternMaterial";
 
 export type CreaturePiece = {
   artifactId: string;
@@ -21,7 +22,6 @@ type FishProfile = {
   head: number;
 };
 
-type FishPattern = "bands" | "spots" | "stripe" | "belly";
 
 type FishLook = {
   profile: FishProfile;
@@ -30,7 +30,6 @@ type FishLook = {
   belly: string;
   fin: string;
   marking: string;
-  pattern: FishPattern;
 };
 
 const fishProfiles: Record<ThemeId, FishProfile> = {
@@ -42,21 +41,21 @@ const fishProfiles: Record<ThemeId, FishProfile> = {
 };
 
 const fishLooks: Record<string, Omit<FishLook, "profile"> & { profile: keyof typeof fishProfiles }> = {
-  "finding-frida": { profile: "memory", body: "#2D7786", head: "#3E9299", belly: "#D8C57E", fin: "#E2A53A", marking: "#173D55", pattern: "bands" },
-  "historically-yours": { profile: "agency", body: "#9AA6A2", head: "#687675", belly: "#E7E1CA", fin: "#C47A45", marking: "#303B3C", pattern: "spots" },
-  "from-ingrid-to-bergen": { profile: "interface", body: "#BC6B3D", head: "#D5894F", belly: "#F0D8AD", fin: "#712F2B", marking: "#F1B84A", pattern: "stripe" },
-  "your-update-has-failed": { profile: "embodiment", body: "#3D83A6", head: "#23526D", belly: "#D5E7DE", fin: "#E4C33B", marking: "#162C4B", pattern: "stripe" },
-  "grand-hotel-bald-cockatoo": { profile: "worldmaking", body: "#EE8A32", head: "#E35F2B", belly: "#F2E6C9", fin: "#202632", marking: "#F4EEE0", pattern: "bands" },
-  "glass-like-fabric": { profile: "memory", body: "#5AC5C3", head: "#2A8CAA", belly: "#D9F0DF", fin: "#7257A8", marking: "#E3D262", pattern: "spots" },
-  "between-page-and-screen": { profile: "agency", body: "#ADB9BA", head: "#62767C", belly: "#E9E7DD", fin: "#2B3E52", marking: "#151B25", pattern: "bands" },
-  "bybanen-slop-surfer": { profile: "interface", body: "#B5C95B", head: "#829735", belly: "#E5E5A7", fin: "#D8A42B", marking: "#405326", pattern: "spots" },
-  emperor: { profile: "memory", body: "#8E83A8", head: "#655C83", belly: "#DAD4DF", fin: "#C2A1D6", marking: "#35314B", pattern: "stripe" },
-  "grand-hotel-galactic-center": { profile: "embodiment", body: "#274E93", head: "#1E3570", belly: "#E5C945", fin: "#E0B72B", marking: "#101E4E", pattern: "bands" },
-  "her-name-was-gisberta": { profile: "worldmaking", body: "#D34A79", head: "#A92E59", belly: "#F3B7A3", fin: "#ED7C3D", marking: "#682342", pattern: "spots" },
-  goliath: { profile: "worldmaking", body: "#69884A", head: "#405E3B", belly: "#D6CF83", fin: "#D7A62C", marking: "#26372B", pattern: "bands" },
-  "land-of-crystals": { profile: "memory", body: "#6E9EAE", head: "#456F82", belly: "#DCE9E8", fin: "#A8CED7", marking: "#345361", pattern: "spots" },
-  "grand-hotel-sand-fountain": { profile: "worldmaking", body: "#A98254", head: "#795D40", belly: "#E8D3AA", fin: "#CDAA6D", marking: "#57412E", pattern: "bands" },
-  "fiery-sparks-of-light": { profile: "interface", body: "#C84B35", head: "#913326", belly: "#F3C39F", fin: "#F07845", marking: "#67231F", pattern: "stripe" },
+  "finding-frida": { profile: "memory", body: "#2D7786", head: "#3E9299", belly: "#D8C57E", fin: "#E2A53A", marking: "#173D55" },
+  "historically-yours": { profile: "agency", body: "#9AA6A2", head: "#687675", belly: "#E7E1CA", fin: "#C47A45", marking: "#303B3C" },
+  "from-ingrid-to-bergen": { profile: "interface", body: "#BC6B3D", head: "#D5894F", belly: "#F0D8AD", fin: "#712F2B", marking: "#F1B84A" },
+  "your-update-has-failed": { profile: "embodiment", body: "#3D83A6", head: "#23526D", belly: "#D5E7DE", fin: "#E4C33B", marking: "#162C4B" },
+  "grand-hotel-bald-cockatoo": { profile: "worldmaking", body: "#EE8A32", head: "#E35F2B", belly: "#F2E6C9", fin: "#202632", marking: "#F4EEE0" },
+  "glass-like-fabric": { profile: "memory", body: "#5AC5C3", head: "#2A8CAA", belly: "#D9F0DF", fin: "#7257A8", marking: "#E3D262" },
+  "between-page-and-screen": { profile: "agency", body: "#ADB9BA", head: "#62767C", belly: "#E9E7DD", fin: "#2B3E52", marking: "#151B25" },
+  "bybanen-slop-surfer": { profile: "interface", body: "#B5C95B", head: "#829735", belly: "#E5E5A7", fin: "#D8A42B", marking: "#405326" },
+  emperor: { profile: "memory", body: "#8E83A8", head: "#655C83", belly: "#DAD4DF", fin: "#C2A1D6", marking: "#35314B" },
+  "grand-hotel-galactic-center": { profile: "embodiment", body: "#274E93", head: "#1E3570", belly: "#E5C945", fin: "#E0B72B", marking: "#101E4E" },
+  "her-name-was-gisberta": { profile: "worldmaking", body: "#D34A79", head: "#A92E59", belly: "#F3B7A3", fin: "#ED7C3D", marking: "#682342" },
+  goliath: { profile: "worldmaking", body: "#69884A", head: "#405E3B", belly: "#D6CF83", fin: "#D7A62C", marking: "#26372B" },
+  "land-of-crystals": { profile: "memory", body: "#6E9EAE", head: "#456F82", belly: "#DCE9E8", fin: "#A8CED7", marking: "#345361" },
+  "grand-hotel-sand-fountain": { profile: "worldmaking", body: "#A98254", head: "#795D40", belly: "#E8D3AA", fin: "#CDAA6D", marking: "#57412E" },
+  "fiery-sparks-of-light": { profile: "interface", body: "#C84B35", head: "#913326", belly: "#F3C39F", fin: "#F07845", marking: "#67231F" },
 };
 
 const caudalTailShape = new THREE.Shape();
@@ -548,78 +547,6 @@ function PectoralFin({
   );
 }
 
-function FishMarkings({
-  pattern,
-  color,
-  length,
-  height,
-  depth,
-}: {
-  pattern: FishPattern;
-  color: string;
-  length: number;
-  height: number;
-  depth: number;
-}) {
-  const z = depth * 0.94 + 0.018;
-
-  if (pattern === "bands") {
-    return (
-      <>
-        {[1, -1].map((side) => (
-          <group key={side} position={[0, 0, side * z]}>
-            {[-0.52, -0.05, 0.42].map((x, index) => (
-              <mesh key={x} position={[x * length, 0, 0]} scale={[0.48, height * (1.15 - index * 0.08), 0.06]}>
-                <torusGeometry args={[0.42, 0.055, 6, 24]} />
-                <meshBasicMaterial color={color} transparent opacity={0.72} />
-              </mesh>
-            ))}
-          </group>
-        ))}
-      </>
-    );
-  }
-
-  if (pattern === "spots") {
-    const spots = [
-      [-0.66, 0.2, 0.12],
-      [-0.34, -0.2, 0.1],
-      [-0.02, 0.26, 0.13],
-      [0.3, -0.18, 0.09],
-      [0.58, 0.16, 0.1],
-    ] as const;
-    return (
-      <>
-        {[1, -1].map((side) => (
-          <group key={side} position={[0, 0, side * z]}>
-            {spots.map(([x, y, size]) => (
-              <mesh key={`${x}:${y}`} position={[x * length, y * height, 0]} scale={[1.3, 0.9, 0.08]}>
-                <sphereGeometry args={[size, 12, 12]} />
-                <meshBasicMaterial color={color} transparent opacity={0.78} />
-              </mesh>
-            ))}
-          </group>
-        ))}
-      </>
-    );
-  }
-
-  if (pattern === "stripe") {
-    return (
-      <>
-        {[1, -1].map((side) => (
-          <mesh key={side} position={[-0.12 * length, 0.06 * height, side * z]} scale={[length * 0.76, height * 0.14, 0.055]}>
-            <sphereGeometry args={[0.72, 18, 12]} />
-            <meshBasicMaterial color={color} transparent opacity={0.74} />
-          </mesh>
-        ))}
-      </>
-    );
-  }
-
-  return null;
-}
-
 export function CreatureModel({
   pieces,
   baseSeed,
@@ -661,7 +588,6 @@ export function CreatureModel({
   const bellyColor = colorPalette.belly;
   const finColor = colorPalette.fin;
   const markingColor = colorPalette.marking;
-  const pattern = configuredLook?.pattern ?? "belly";
   const colorSignature = encodedColorPalette
     ? Object.values(encodedColorPalette).join(":")
     : signature;
@@ -724,7 +650,7 @@ export function CreatureModel({
     <group ref={groupRef} scale={scale}>
       <mesh scale={[proportions.length, proportions.height, proportions.depth]}>
         <sphereGeometry args={[0.86, 20, 14]} />
-        <meshToonMaterial color={baseColor} />
+        <PatternedToonMaterial color={baseColor} />
       </mesh>
       <mesh scale={[proportions.length * 1.035, proportions.height * 1.055, proportions.depth * 1.12]}>
         <sphereGeometry args={[0.86, 20, 14]} />
@@ -732,7 +658,7 @@ export function CreatureModel({
       </mesh>
       <mesh position={[headX, 0.02, 0.02]} scale={[proportions.head, proportions.height * 0.9, proportions.depth * 0.96]}>
         <sphereGeometry args={[0.7, 20, 14]} />
-        <meshToonMaterial color={headColor} />
+        <PatternedToonMaterial color={headColor} repeat={[2, 1]} />
       </mesh>
       <mesh position={[headX, 0.02, 0]} scale={[proportions.head * 1.045, proportions.height * 0.95, proportions.depth * 1.1]}>
         <sphereGeometry args={[0.7, 20, 14]} />
@@ -749,17 +675,9 @@ export function CreatureModel({
         </mesh>
       ))}
 
-      <FishMarkings
-        pattern={pattern}
-        color={markingColor}
-        length={proportions.length}
-        height={proportions.height}
-        depth={proportions.depth}
-      />
-
       <mesh position={[tailX + 0.22, 0, 0]} scale={[0.54, 0.2, proportions.depth * 0.78]}>
         <sphereGeometry args={[0.44, 18, 14]} />
-        <meshToonMaterial color={baseColor} />
+        <PatternedToonMaterial color={baseColor} repeat={[2, 1]} />
       </mesh>
 
       <group ref={tailRef} position={[tailX, 0, 0]} scale={[1.12, 1.14, 1]}>
