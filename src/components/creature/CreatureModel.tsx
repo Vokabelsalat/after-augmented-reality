@@ -867,6 +867,7 @@ export function CreatureModel({
           cy: 0,
           z: proportions.depth * 0.86,
           scale: 0.48,
+          mouth: { y: -proportions.height * 0.1 },
         }}
       />
     </group>

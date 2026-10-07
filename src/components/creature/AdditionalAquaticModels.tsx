@@ -325,7 +325,7 @@ function ArticulatedSealTail({
             name={`Seal tail fin ${side < 0 ? "lower" : "upper"}`}
             key={side}
             position={[-0.24, side * 0.2, 0]}
-            rotation={[0, 0, side * 0.5]}
+            rotation={[0, 0, side * -0.5]}
             scale={[0.5, 0.18, 0.1]}
           >
             <sphereGeometry args={[1, 16, 10]} />
@@ -429,17 +429,17 @@ function ShrimpModel(props: AquaticModelProps) {
           </group>
         </MovingPart>
       )))}
-      {[-1, 0, 1].map((fan) => (
-        <mesh
-          key={`tail-${fan}`}
-          position={[-0.96 + fan * 0.13, -0.96, fan * 0.04]}
-          rotation={[0, 0, fan * 0.32 - 0.08]}
-          scale={[0.18, 0.4, 0.09]}
-        >
-          <sphereGeometry args={[1, 14, 10]} />
-          <meshToonMaterial color={fan === 0 ? colors.dark : colors.accent} />
-        </mesh>
-      ))}
+      {/* The tail fan continues the curl of the last abdomen segment and spreads out from its tip. */}
+      <group position={[-0.93, -0.8, 0]} rotation={[0, 0, -0.47]}>
+        {[-1, 0, 1].map((fan) => (
+          <group key={`tail-${fan}`} rotation={[0, 0, fan * 0.42]}>
+            <mesh position={[0, -0.32, fan * 0.04]} scale={[0.18, 0.4, 0.09]}>
+              <sphereGeometry args={[1, 14, 10]} />
+              <meshToonMaterial color={fan === 0 ? colors.dark : colors.accent} />
+            </mesh>
+          </group>
+        ))}
+      </group>
       <TraitMarks pieces={props.pieces} baseSeed={props.baseSeed} form="shrimp" highlightedPart={props.highlightedPart} />
     </LivingGroup>
   );
@@ -471,7 +471,7 @@ function ArticulatedMammalTail({
       </mesh>
       <group ref={flukesRef} position={[-stemLength, 0, 0]}>
         {[-1, 1].map((side) => (
-          <mesh key={side} position={[-0.22, side * 0.23, 0]} rotation={[0, 0, side * 0.52]} scale={[0.57, 0.18, 0.085]}>
+          <mesh key={side} position={[-0.22, side * 0.23, 0]} rotation={[0, 0, side * -0.52]} scale={[0.57, 0.18, 0.085]}>
             <sphereGeometry args={[1, 18, 12]} />
             <meshToonMaterial color={colors.dark} />
           </mesh>
@@ -899,7 +899,7 @@ function ArticulatedPufferfishTail({
             name={`Pufferfish tail fin ${side < 0 ? "lower" : "upper"}`}
             key={side}
             position={[-0.22, side * 0.22, 0]}
-            rotation={[0, 0, side * 0.54]}
+            rotation={[0, 0, side * -0.54]}
             scale={[0.52, 0.24, 0.09]}
           >
             <sphereGeometry args={[1, 18, 12]} />

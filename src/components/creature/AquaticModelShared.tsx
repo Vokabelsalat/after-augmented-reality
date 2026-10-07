@@ -1,7 +1,7 @@
 "use client";
 
 import { useFrame } from "@react-three/fiber";
-import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { createContext, useContext, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import * as THREE from "three";
 import type { CreaturePiece } from "@/components/creature/CreatureModel";
 import type { AquaticForm } from "@/lib/creature/aquaticForms";
@@ -58,26 +58,52 @@ function TraitMaterial({ color, highlighted, opacity = 1, glow = 0.24 }: { color
 
 export type TraitMount = "top" | "bottom" | "left" | "right";
 
-// Every artifact grows exactly one form, always on the same side of the body.
-// `along` is where on that side it sits, from tail (-1) to head (1).
-export const traitMounts: Record<CreaturePartId, { mount: TraitMount; along: number }> = {
-  "signal-antenna": { mount: "top", along: 0.5 },
-  "goliath-horns": { mount: "top", along: 0.15 },
-  "spark-plume": { mount: "top", along: -0.2 },
-  "crystal-spines": { mount: "top", along: -0.5 },
-  "helping-arms": { mount: "bottom", along: 0.4 },
-  "surfer-feet": { mount: "bottom", along: 0.1 },
-  "sand-hourglass": { mount: "bottom", along: -0.2 },
-  "route-tail": { mount: "bottom", along: -0.5 },
-  "cockatoo-beak": { mount: "right", along: 0.45 },
-  "inner-eye": { mount: "right", along: 0.15 },
-  "heart-plume": { mount: "right", along: -0.15 },
-  "memory-crown": { mount: "right", along: -0.45 },
-  "archive-ears": { mount: "left", along: 0.45 },
-  "orbit-ring": { mount: "left", along: 0.15 },
-  "glass-wings": { mount: "left", along: -0.15 },
-  "page-fins": { mount: "left", along: -0.45 },
-};
+function hashUnit(value: string) {
+  let hash = 2166136261;
+  for (let index = 0; index < value.length; index += 1) {
+    hash ^= value.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  return (hash >>> 0) / 4294967295;
+}
+
+// The beak always grows from the mouth; every other trait can grow from any side of the body.
+const mouthPartIds = new Set<CreaturePartId>(["cockatoo-beak"]);
+// Volumetric traits stand off the flanks; flat ones fold down so their face turns toward the viewer.
+const volumetricPartIds = new Set<CreaturePartId>(["inner-eye", "heart-plume"]);
+const traitSides: TraitMount[] = ["top", "bottom", "left", "right"];
+
+// Lets the creature editor reshuffle trait positions or pin every trait to one side.
+export const TraitPreviewContext = createContext<{ seed?: string; side?: TraitMount }>({});
+
+// Each creature spreads its traits over the four sides, starting from a seeded preference
+// and moving to the least crowded side, then spaces the traits on each side from tail to head.
+function assignMounts(pieces: CreaturePiece[], signature: string, forcedSide?: TraitMount) {
+  const bySide = new Map<TraitMount, CreaturePiece[]>(traitSides.map((side) => [side, []]));
+  const ordered = pieces
+    .filter((piece) => !mouthPartIds.has(piece.partId))
+    .sort((a, b) => hashUnit(`${signature}:${a.artifactId}:order`) - hashUnit(`${signature}:${b.artifactId}:order`));
+  for (const piece of ordered) {
+    const preferred = Math.floor(hashUnit(`${signature}:${piece.artifactId}:side`) * traitSides.length);
+    let side = forcedSide ?? traitSides[preferred];
+    for (let offset = 1; !forcedSide && offset < traitSides.length; offset += 1) {
+      const candidate = traitSides[(preferred + offset) % traitSides.length];
+      if (bySide.get(candidate)!.length < bySide.get(side)!.length) side = candidate;
+    }
+    bySide.get(side)!.push(piece);
+  }
+  const mounts: Record<string, { mount: TraitMount; along: number }> = {};
+  for (const [mount, sidePieces] of bySide) {
+    sidePieces.forEach((piece, index) => {
+      const spread = forcedSide ? 1.6 : 1;
+      const along = sidePieces.length === 1
+        ? (hashUnit(`${signature}:${piece.artifactId}:along`) - 0.5) * 0.6
+        : spread * (-0.5 + ((index + 0.5) / sidePieces.length));
+      mounts[piece.artifactId] = { mount, along };
+    });
+  }
+  return mounts;
+}
 
 function shapeFrom(points: Array<[number, number]>) {
   const shape = new THREE.Shape();
@@ -96,9 +122,9 @@ function leafShape(length: number, width: number, bend = 0) {
   return shape;
 }
 
-// A tube along `curve` that narrows from `radius` at its base to a soft tip.
-function taperedTube(curve: THREE.Curve<THREE.Vector3>, radius: number, tip = 0.15) {
-  const tubular = 32;
+// A tube along `curve` whose radius goes from `radius` at its start to `radius * end` at its end.
+function taperedTube(curve: THREE.Curve<THREE.Vector3>, radius: number, end = 0.15) {
+  const tubular = 48;
   const radial = 10;
   const geometry = new THREE.TubeGeometry(curve, tubular, radius, radial, false);
   const positions = geometry.attributes.position;
@@ -106,7 +132,7 @@ function taperedTube(curve: THREE.Curve<THREE.Vector3>, radius: number, tip = 0.
   for (let ring = 0; ring <= tubular; ring += 1) {
     const t = ring / tubular;
     const center = curve.getPointAt(t);
-    const taper = 1 - (1 - tip) * Math.pow(t, 1.4);
+    const taper = 1 - (1 - end) * Math.pow(t, 1.4);
     for (let side = 0; side <= radial; side += 1) {
       const index = ring * (radial + 1) + side;
       vertex.fromBufferAttribute(positions, index).sub(center).multiplyScalar(taper).add(center);
@@ -123,6 +149,14 @@ function curve(points: Array<[number, number, number]>) {
 
 function smoothProfile(points: Array<[number, number]>) {
   return new THREE.SplineCurve(points.map(([x, y]) => new THREE.Vector2(x, y))).getPoints(28);
+}
+
+// Moves a geometry so it is centred on x and its lowest point sinks `sink` below the skin.
+function seated(geometry: THREE.BufferGeometry, sink = 0.04) {
+  geometry.computeBoundingBox();
+  const box = geometry.boundingBox!;
+  geometry.translate(-(box.min.x + box.max.x) / 2, -box.min.y - sink, -(box.min.z + box.max.z) / 2);
+  return geometry;
 }
 
 const flatExtrude = { depth: 0.04, bevelEnabled: true, bevelThickness: 0.025, bevelSize: 0.025, bevelSegments: 3, curveSegments: 18 };
@@ -144,8 +178,25 @@ const traitShapes = {
       return [Math.sin(y * 6) * 0.1 + 0.07 * (1 - y * 0.6), y] as [number, number];
     }),
   ]),
-  scale: leafShape(0.5, 0.36),
-  leaf: leafShape(0.62, 0.24, -0.12),
+  scale: leafShape(0.55, 0.34),
+  glassFin: leafShape(0.72, 0.34, -0.22),
+  page: (() => {
+    const shape = new THREE.Shape();
+    shape.moveTo(0, 0);
+    shape.bezierCurveTo(0.14, 0.02, 0.3, 0.04, 0.32, 0.1);
+    shape.bezierCurveTo(0.34, 0.3, 0.28, 0.5, 0.18, 0.58);
+    shape.bezierCurveTo(0.1, 0.62, 0.04, 0.64, 0, 0.64);
+    shape.closePath();
+    return shape;
+  })(),
+  surfFin: (() => {
+    const shape = new THREE.Shape();
+    shape.moveTo(0.22, 0);
+    shape.bezierCurveTo(0.12, 0.26, -0.12, 0.5, -0.42, 0.64);
+    shape.bezierCurveTo(-0.34, 0.46, -0.24, 0.24, -0.26, 0);
+    shape.closePath();
+    return shape;
+  })(),
   fan: (() => {
     // A half-fan whose rim is scalloped like a frilled gill.
     const shape = new THREE.Shape();
@@ -164,23 +215,47 @@ const traitShapes = {
 };
 
 const traitGeometries = {
-  lure: taperedTube(curve([[0, -0.05, 0], [0.04, 0.42, 0], [0.28, 0.74, 0], [0.48, 0.7, 0]]), 0.05, 0.5),
-  arm: taperedTube(curve([[0, -0.05, 0], [0.04, 0.36, 0], [0.28, 0.6, 0], [0.48, 0.46, 0], [0.38, 0.3, 0], [0.28, 0.38, 0]]), 0.1, 0.18),
-  thorn: taperedTube(curve([[0, -0.05, 0], [0.02, 0.3, 0], [-0.1, 0.6, 0], [-0.26, 0.78, 0]]), 0.13, 0.05),
+  lure: taperedTube(new THREE.LineCurve3(new THREE.Vector3(0, -0.05, 0), new THREE.Vector3(0, 0.72, 0)), 0.05, 0.5),
+  thorn: (() => {
+    // Few radial segments keep the spine faceted, like a crystal grown into a thorn.
+    const path = curve([[0, -0.05, 0], [0.02, 0.3, 0], [-0.1, 0.6, 0], [-0.26, 0.78, 0]]);
+    const geometry = new THREE.TubeGeometry(path, 12, 0.13, 5, false);
+    const positions = geometry.attributes.position;
+    const vertex = new THREE.Vector3();
+    for (let ring = 0; ring <= 12; ring += 1) {
+      const center = path.getPointAt(ring / 12);
+      for (let side = 0; side <= 5; side += 1) {
+        const index = ring * 6 + side;
+        vertex.fromBufferAttribute(positions, index).sub(center).multiplyScalar(1 - 0.95 * (ring / 12)).add(center);
+        positions.setXYZ(index, vertex.x, vertex.y, vertex.z);
+      }
+    }
+    return geometry.toNonIndexed();
+  })(),
   beak: taperedTube(curve([[0, -0.05, 0], [0.08, 0.2, 0], [0.26, 0.34, 0], [0.42, 0.26, 0]]), 0.17, 0.08),
-  // A fiddlehead curl lying on the skin.
-  curl: taperedTube(curve(Array.from({ length: 14 }, (_, index) => {
-    const t = index / 13;
-    const angle = t * Math.PI * 2.2;
-    const radius = 0.32 * (1 - t * 0.78);
-    return [Math.cos(angle) * radius - 0.1, 0.06 + t * 0.05, -Math.sin(angle) * radius];
-  })), 0.07, 0.35),
-  hourglass: new THREE.LatheGeometry(smoothProfile([[0.001, 0], [0.2, 0.03], [0.24, 0.14], [0.07, 0.32], [0.24, 0.5], [0.2, 0.61], [0.001, 0.64]]), 22),
+  // A fiddlehead: a short stem that rolls into a spiral.
+  curl: taperedTube(curve([
+    [0, -0.05, 0],
+    [0.01, 0.2, 0],
+    ...Array.from({ length: 16 }, (_, index) => {
+      const t = index / 15;
+      const angle = Math.PI - t * Math.PI * 2.1;
+      const radius = 0.15 * (1 - t * 0.75);
+      return [0.15 + Math.cos(angle) * radius, 0.4 + Math.sin(angle) * radius, 0] as [number, number, number];
+    }),
+  ]), 0.065, 0.35),
+  // A chambered shell that coils outward from its tiny first chamber.
+  shell: seated(taperedTube(curve(Array.from({ length: 40 }, (_, index) => {
+    const angle = (index / 39) * Math.PI * 2.4;
+    const radius = 0.03 * Math.exp(angle * 0.28);
+    return [Math.cos(angle) * radius, Math.sin(angle) * radius, 0] as [number, number, number];
+  })), 0.02, 6.5)),
   polyp: new THREE.LatheGeometry(smoothProfile([[0.001, 0], [0.16, 0.01], [0.08, 0.14], [0.07, 0.26], [0.17, 0.36], [0.18, 0.44], [0.08, 0.5], [0.001, 0.48]]), 22),
 };
+traitGeometries.thorn.computeVertexNormals();
 
-// One form per part, built in a mount frame: origin on the skin, +y pointing away from the body,
-// +x pointing toward the head and -z pointing up on the flanks. Flank forms mostly lie in the xz plane so they face the viewer.
+// One form per part, built in a mount frame: origin on the skin, +y pointing away from the body
+// and +x pointing toward the head. Every form stands in the xy plane so it reads from any side.
 function AquaticTraitForm({ partId, color, highlighted }: { partId: CreaturePartId; color: string; highlighted: boolean }) {
   const material = <TraitMaterial color={color} highlighted={highlighted} />;
   switch (partId) {
@@ -188,7 +263,7 @@ function AquaticTraitForm({ partId, color, highlighted }: { partId: CreaturePart
       return (
         <>
           <mesh geometry={traitGeometries.lure}>{material}</mesh>
-          <mesh position={[0.48, 0.7, 0]}><sphereGeometry args={[0.11, 16, 12]} /><TraitMaterial color={color} highlighted={highlighted} glow={1.2} /></mesh>
+          <mesh position={[0, 0.78, 0]}><sphereGeometry args={[0.11, 16, 12]} /><TraitMaterial color={color} highlighted={highlighted} glow={1.2} /></mesh>
         </>
       );
     case "goliath-horns":
@@ -198,11 +273,11 @@ function AquaticTraitForm({ partId, color, highlighted }: { partId: CreaturePart
     case "crystal-spines":
       return <mesh geometry={traitGeometries.thorn}><TraitMaterial color={color} highlighted={highlighted} opacity={0.86} /></mesh>;
     case "helping-arms":
-      return <mesh geometry={traitGeometries.arm}>{material}</mesh>;
+      return <mesh geometry={traitGeometries.curl} scale={[1.2, 1.2, 1.4]}>{material}</mesh>;
     case "surfer-feet":
-      return <mesh position={[-0.1, 0.3, 0]} rotation={[0, 0, 0.45]} scale={[0.17, 0.4, 0.05]}><sphereGeometry args={[1, 20, 14]} />{material}</mesh>;
+      return <mesh position={[0, -0.06, -0.02]}><extrudeGeometry args={[traitShapes.surfFin, flatExtrude]} />{material}</mesh>;
     case "sand-hourglass":
-      return <mesh position={[0, -0.04, 0]} geometry={traitGeometries.hourglass}><TraitMaterial color={color} highlighted={highlighted} opacity={0.8} /></mesh>;
+      return <mesh geometry={traitGeometries.shell}>{material}</mesh>;
     case "route-tail":
       return <mesh position={[0, -0.04, -0.02]} rotation={[0, 0, 0.5]}><extrudeGeometry args={[traitShapes.ribbon, thinExtrude]} /><TraitMaterial color={color} highlighted={highlighted} opacity={0.85} /></mesh>;
     case "cockatoo-beak":
@@ -215,17 +290,27 @@ function AquaticTraitForm({ partId, color, highlighted }: { partId: CreaturePart
         </>
       );
     case "heart-plume":
-      return <mesh position={[0, -0.02, 0]} rotation={[-0.35, 0, 0]} geometry={traitGeometries.polyp}>{material}</mesh>;
+      return <mesh position={[0, -0.02, 0]} geometry={traitGeometries.polyp}><TraitMaterial color={color} highlighted={highlighted} glow={0.55} /></mesh>;
     case "memory-crown":
-      return <mesh position={[0.18, 0.05, -0.02]} rotation={[-Math.PI / 2, 0, Math.PI / 2 - 0.2]}><extrudeGeometry args={[traitShapes.scale, flatExtrude]} />{material}</mesh>;
+      return <mesh position={[0, -0.05, -0.02]} rotation={[0, 0, 0.3]}><extrudeGeometry args={[traitShapes.scale, flatExtrude]} /><TraitMaterial color={color} highlighted={highlighted} glow={0.45} /></mesh>;
     case "archive-ears":
-      return <mesh position={[0, 0.06, 0]} rotation={[-Math.PI / 2 + 0.45, 0, 0]}><extrudeGeometry args={[traitShapes.fan, thinExtrude]} />{material}</mesh>;
+      return <mesh position={[0, -0.04, -0.01]}><extrudeGeometry args={[traitShapes.fan, thinExtrude]} />{material}</mesh>;
     case "orbit-ring":
-      return <mesh geometry={traitGeometries.curl}>{material}</mesh>;
+      return <mesh geometry={traitGeometries.curl}><TraitMaterial color={color} highlighted={highlighted} glow={0.6} /></mesh>;
     case "glass-wings":
-      return <mesh position={[-0.2, 0.1, 0]} rotation={[0, 0.3, -0.35]} scale={[0.46, 0.04, 0.22]}><sphereGeometry args={[1, 20, 14]} /><TraitMaterial color={color} highlighted={highlighted} opacity={0.58} /></mesh>;
+      return <mesh position={[0, -0.05, -0.01]}><extrudeGeometry args={[traitShapes.glassFin, thinExtrude]} /><TraitMaterial color={color} highlighted={highlighted} opacity={0.55} /></mesh>;
     case "page-fins":
-      return <mesh position={[0.2, 0.08, 0]} rotation={[-Math.PI / 2, 0.25, Math.PI / 2 + 0.3]}><extrudeGeometry args={[traitShapes.leaf, thinExtrude]} />{material}</mesh>;
+      // A fin folded along its spine like a half-open page.
+      return (
+        <group position={[0, -0.05, 0]}>
+          {[0.55, Math.PI - 0.55].map((angle) => (
+            <mesh key={angle} rotation={[0, angle, 0]}>
+              <extrudeGeometry args={[traitShapes.page, thinExtrude]} />
+              {material}
+            </mesh>
+          ))}
+        </group>
+      );
   }
 }
 
@@ -248,30 +333,34 @@ function isSkin(object: THREE.Object3D) {
   return materials.every((material) => material && material.side !== THREE.BackSide && (!material.transparent || material.opacity >= 0.6));
 }
 
-type TraitLayout = { x: number; y: number; cx: number; cy: number; z: number; scale: number; vertical?: boolean };
+// Spines, tusks and other cones stick out past the mouth, so the beak looks past them.
+function isMouthSkin(object: THREE.Object3D) {
+  return isSkin(object) && !((object as THREE.Mesh).geometry instanceof THREE.ConeGeometry);
+}
 
-const mountTilt = 0.35;
-const mountRotations: Record<"horizontal" | "vertical", Record<TraitMount, THREE.Euler>> = {
-  horizontal: {
-    top: new THREE.Euler(0, 0, 0),
-    bottom: new THREE.Euler(Math.PI, 0, 0),
-    right: new THREE.Euler(Math.PI / 2 - mountTilt, 0, 0),
-    left: new THREE.Euler(Math.PI / 2 - mountTilt, 0, 0),
-  },
+type TraitMouth = { y: number; x?: number; facing?: "forward" | "viewer" };
+type TraitLayout = { x: number; y: number; cx: number; cy: number; z: number; scale: number; vertical?: boolean; mouth: TraitMouth };
+
+const flankTilt = { flat: 1.1, volumetric: 0.35 };
+
+function mountRotation(mount: TraitMount, vertical: boolean | undefined, volumetric: boolean) {
+  if (mount === "left" || mount === "right") {
+    // The left flank is the right flank mirrored (see mountMirror), so both use the same rotation.
+    return new THREE.Euler(Math.PI / 2 - flankTilt[volumetric ? "volumetric" : "flat"], 0, 0);
+  }
   // Upright bodies grow their top traits from the back and their bottom traits from the belly.
-  vertical: {
-    top: new THREE.Euler(0, 0, Math.PI / 2),
-    bottom: new THREE.Euler(Math.PI, 0, Math.PI / 2, "ZYX"),
-    right: new THREE.Euler(Math.PI / 2 - mountTilt, 0, 0),
-    left: new THREE.Euler(Math.PI / 2 - mountTilt, 0, 0),
-  },
-};
-// The left flank is the right flank mirrored, so flank forms keep pointing up and forward on both sides.
-const mountMirrors: Record<TraitMount, [number, number, number]> = {
-  top: [1, 1, 1],
-  bottom: [1, 1, 1],
-  right: [1, 1, 1],
-  left: [1, 1, -1],
+  if (vertical) return mount === "top" ? new THREE.Euler(0, 0, Math.PI / 2) : new THREE.Euler(Math.PI, 0, Math.PI / 2, "ZYX");
+  return mount === "top" ? new THREE.Euler(0, 0, 0) : new THREE.Euler(Math.PI, 0, 0);
+}
+
+function mountMirror(mount: TraitMount): [number, number, number] {
+  return mount === "left" ? [1, 1, -1] : [1, 1, 1];
+}
+
+// The beak points out of the mouth with its hook curving down.
+const mouthRotations = {
+  forward: new THREE.Euler(0, 0, -Math.PI / 2),
+  viewer: new THREE.Euler(0, -Math.PI / 2, -Math.PI / 2, "YZX"),
 };
 
 function mountGeometry(layout: TraitLayout, mount: TraitMount, along: number) {
@@ -294,13 +383,27 @@ function mountGeometry(layout: TraitLayout, mount: TraitMount, along: number) {
   return { start, outward, reach };
 }
 
+function mouthGeometry(layout: TraitLayout, slide = 0) {
+  const { mouth } = layout;
+  const y = mouth.y + (layout.cy - mouth.y) * slide;
+  if (mouth.facing === "viewer") {
+    return { start: new THREE.Vector3(mouth.x ?? layout.cx, y, 0), outward: new THREE.Vector3(0, 0, 1), reach: layout.z * 2 };
+  }
+  return { start: new THREE.Vector3(layout.cx, y, 0), outward: new THREE.Vector3(1, 0, 0), reach: layout.x * 2 };
+}
+
 // Casts a ray from outside the body back toward its core and returns the first skin hit in body-local space.
-function skinPoint(body: THREE.Object3D, start: THREE.Vector3, outward: THREE.Vector3, reach: number, raycaster: THREE.Raycaster) {
+function skinPoint(
+  body: THREE.Object3D,
+  { start, outward, reach }: { start: THREE.Vector3; outward: THREE.Vector3; reach: number },
+  raycaster: THREE.Raycaster,
+  accepts = isSkin,
+) {
   const origin = body.localToWorld(start.clone().addScaledVector(outward, 20));
   const target = body.localToWorld(start.clone());
   raycaster.set(origin, target.sub(origin).normalize());
   for (const hit of raycaster.intersectObjects(body.children, true)) {
-    if (!isSkin(hit.object)) continue;
+    if (!accepts(hit.object)) continue;
     const point = body.worldToLocal(hit.point.clone());
     const height = point.clone().sub(start).dot(outward);
     if (height > 0 && height <= reach * 1.3) return point.addScaledVector(outward, -skinInset);
@@ -309,23 +412,21 @@ function skinPoint(body: THREE.Object3D, start: THREE.Vector3, outward: THREE.Ve
 }
 
 const traitLayouts: Record<Exclude<AquaticForm, "fish">, TraitLayout> = {
-  crab: { x: 0.92, y: 0.48, cx: 0, cy: 0.08, z: 0.34, scale: 0.46 },
-  jellyfish: { x: 0.78, y: 0.48, cx: 0, cy: 0.42, z: 0.5, scale: 0.44 },
-  octopus: { x: 0.66, y: 0.68, cx: 0, cy: 0.36, z: 0.46, scale: 0.44 },
-  turtle: { x: 1.08, y: 0.54, cx: 0.04, cy: 0, z: 0.36, scale: 0.48 },
-  ray: { x: 1.14, y: 0.82, cx: 0.18, cy: 0, z: 0.24, scale: 0.46 },
-  starfish: { x: 0.84, y: 0.84, cx: 0, cy: 0, z: 0.24, scale: 0.4 },
-  seahorse: { x: 0.48, y: 1.06, cx: 0, cy: 0.02, z: 0.3, scale: 0.38, vertical: true },
-  seal: { x: 1.16, y: 0.48, cx: 0, cy: 0.02, z: 0.35, scale: 0.48 },
-  shrimp: { x: 1.08, y: 0.4, cx: 0, cy: 0.08, z: 0.28, scale: 0.4 },
-  narwhal: { x: 1.34, y: 0.46, cx: 0, cy: 0.02, z: 0.46, scale: 0.48 },
-  dolphin: { x: 1.18, y: 0.43, cx: 0, cy: 0.02, z: 0.26, scale: 0.5 },
-  whale: { x: 1.56, y: 0.56, cx: 0, cy: 0.02, z: 0.3, scale: 0.56 },
-  clam: { x: 0.86, y: 0.48, cx: 0, cy: 0.04, z: 0.3, scale: 0.42 },
-  pufferfish: { x: 0.94, y: 0.68, cx: 0, cy: 0, z: 0.6, scale: 0.46 },
+  crab: { x: 0.92, y: 0.48, cx: 0, cy: 0.08, z: 0.34, scale: 0.46, mouth: { y: -0.08, facing: "viewer" } },
+  jellyfish: { x: 0.78, y: 0.48, cx: 0, cy: 0.42, z: 0.5, scale: 0.44, mouth: { y: 0.2, facing: "viewer" } },
+  octopus: { x: 0.66, y: 0.68, cx: 0, cy: 0.36, z: 0.46, scale: 0.44, mouth: { y: 0.28, facing: "viewer" } },
+  turtle: { x: 1.08, y: 0.54, cx: 0.04, cy: 0, z: 0.36, scale: 0.48, mouth: { x: 1.25, y: -0.04, facing: "viewer" } },
+  ray: { x: 1.14, y: 0.82, cx: 0.18, cy: 0, z: 0.24, scale: 0.46, mouth: { x: 0.9, y: 0, facing: "viewer" } },
+  starfish: { x: 0.84, y: 0.84, cx: 0, cy: 0, z: 0.24, scale: 0.4, mouth: { y: 0, facing: "viewer" } },
+  seahorse: { x: 0.48, y: 1.06, cx: 0, cy: 0.02, z: 0.3, scale: 0.38, vertical: true, mouth: { y: 1.1 } },
+  seal: { x: 1.16, y: 0.48, cx: 0, cy: 0.02, z: 0.35, scale: 0.48, mouth: { x: 1.12, y: 0.16, facing: "viewer" } },
+  shrimp: { x: 1.08, y: 0.4, cx: 0, cy: 0.08, z: 0.28, scale: 0.4, mouth: { y: 0.1 } },
+  narwhal: { x: 1.34, y: 0.46, cx: 0, cy: 0.02, z: 0.46, scale: 0.48, mouth: { y: -0.08 } },
+  dolphin: { x: 1.18, y: 0.43, cx: 0, cy: 0.02, z: 0.26, scale: 0.5, mouth: { y: -0.035 } },
+  whale: { x: 1.56, y: 0.56, cx: 0, cy: 0.02, z: 0.3, scale: 0.56, mouth: { y: -0.05 } },
+  clam: { x: 0.86, y: 0.48, cx: 0, cy: 0.04, z: 0.3, scale: 0.42, mouth: { y: 0.04 } },
+  pufferfish: { x: 0.94, y: 0.68, cx: 0, cy: 0, z: 0.6, scale: 0.46, mouth: { y: -0.08 } },
 };
-
-type TraitPlacement = { position: THREE.Vector3 };
 
 export function TraitMarks({
   pieces,
@@ -341,12 +442,16 @@ export function TraitMarks({
   layout?: TraitLayout;
 }) {
   const groupRef = useRef<THREE.Group>(null);
-  const [placements, setPlacements] = useState<Record<string, TraitPlacement>>({});
+  const [placements, setPlacements] = useState<Record<string, THREE.Vector3>>({});
+  const preview = useContext(TraitPreviewContext);
   const signature = baseSeed ?? pieces[0]?.artifactId ?? "new";
+  const traitSignature = preview.seed ? `${signature}:${preview.seed}` : signature;
   const palette = creatureColorPalette(signature);
   const layout = layoutOverride ?? (form === "fish" ? traitLayouts.seal : traitLayouts[form]);
-  const rotations = mountRotations[layout.vertical ? "vertical" : "horizontal"];
-  const placementKey = `${form}:${Object.values(layout).join("/")}:${pieces.map((piece) => `${piece.artifactId}/${piece.partId}`).join(",")}`;
+  const pieceKey = pieces.map((piece) => `${piece.artifactId}/${piece.partId}`).join(",");
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const mounts = useMemo(() => assignMounts(pieces, traitSignature, preview.side), [pieceKey, traitSignature, preview.side]);
+  const placementKey = `${form}:${traitSignature}:${preview.side ?? "mixed"}:${JSON.stringify(layout)}:${pieceKey}`;
 
   // Measure where the creature's skin actually is, so each trait grows out of it.
   useLayoutEffect(() => {
@@ -354,15 +459,16 @@ export function TraitMarks({
     if (!body) return;
     body.updateWorldMatrix(true, true);
     const raycaster = new THREE.Raycaster();
-    const next: Record<string, TraitPlacement> = {};
+    const next: Record<string, THREE.Vector3> = {};
     for (const piece of pieces) {
-      const { mount, along } = traitMounts[piece.partId];
-      // If the side misses the body there, slide toward the middle until it lands on skin.
+      const atMouth = mouthPartIds.has(piece.partId);
+      // If the ray misses the body there, slide toward the middle until it lands on skin.
       for (let step = 0; step <= 10; step += 1) {
-        const { start, outward, reach } = mountGeometry(layout, mount, along * (1 - step / 10));
-        const point = skinPoint(body, start, outward, reach, raycaster);
+        const point = atMouth
+          ? skinPoint(body, mouthGeometry(layout, step / 10), raycaster, isMouthSkin)
+          : skinPoint(body, mountGeometry(layout, mounts[piece.artifactId].mount, mounts[piece.artifactId].along * (1 - step / 10)), raycaster);
         if (point) {
-          next[piece.artifactId] = { position: point };
+          next[piece.artifactId] = point;
           break;
         }
       }
@@ -374,16 +480,19 @@ export function TraitMarks({
   return (
     <group ref={groupRef} userData={{ [traitMarksTag]: true }}>
       {pieces.map((piece, index) => {
-        const { mount, along } = traitMounts[piece.partId];
-        const fallback = mountGeometry(layout, mount, along);
-        const position = placements[piece.artifactId]?.position
-          ?? fallback.start.addScaledVector(fallback.outward, fallback.reach);
+        const atMouth = mouthPartIds.has(piece.partId);
+        const mount = atMouth ? null : mounts[piece.artifactId];
+        const fallback = atMouth ? mouthGeometry(layout) : mountGeometry(layout, mount!.mount, mount!.along);
+        const position = placements[piece.artifactId] ?? fallback.start.addScaledVector(fallback.outward, fallback.reach);
+        const rotation = mount
+          ? mountRotation(mount.mount, layout.vertical, volumetricPartIds.has(piece.partId))
+          : mouthRotations[layout.mouth.facing ?? "forward"];
         const highlighted = piece.partId === highlightedPart;
         const color = piece.color || [palette.marking, palette.fin, palette.head, palette.belly][index % 4];
 
         return (
-          <group key={piece.artifactId} name={piece.partId} position={position} scale={mountMirrors[mount]}>
-            <group rotation={rotations[mount]}>
+          <group key={piece.artifactId} name={piece.partId} position={position} scale={mount ? mountMirror(mount.mount) : [1, 1, 1]}>
+            <group rotation={rotation}>
               <GrowingTrait active={highlighted}>
                 <group scale={layout.scale * (highlighted ? 1.18 : 1)}>
                   <AquaticTraitForm partId={piece.partId} color={color} highlighted={highlighted} />

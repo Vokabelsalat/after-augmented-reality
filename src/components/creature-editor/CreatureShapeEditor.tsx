@@ -6,6 +6,7 @@ import { useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } fro
 import * as THREE from "three";
 import { AquariumPlant, editorPlantSpecs, plantKindLabels, plantKinds, type PlantKind } from "@/components/collective/AquariumDioramaPlants";
 import { AquaticCreatureModel } from "@/components/creature/AquaticCreatureModel";
+import { TraitPreviewContext, type TraitMount } from "@/components/creature/AquaticModelShared";
 import { caudalTailShapes, dorsalFinStyles, pectoralFinStyles, pelvicFinStyles } from "@/components/creature/CreatureModel";
 import { artifacts } from "@/data/artifacts";
 import { aquaticForms, aquaticFormLabels, type AquaticForm } from "@/lib/creature/aquaticForms";
@@ -267,6 +268,13 @@ const editorPieces: CreaturePiece[] = artifacts.map((artifact) => ({
   color: artifact.color,
 }));
 
+const traitSideOptions: Array<{ side: TraitMount; label: string }> = [
+  { side: "top", label: "Top" },
+  { side: "bottom", label: "Bottom" },
+  { side: "left", label: "Left" },
+  { side: "right", label: "Right" },
+];
+
 function readTransform(object: THREE.Object3D): NodeTransform {
   return {
     x: rounded(object.position.x),
@@ -290,6 +298,7 @@ function AquaticModelEditor({ onShowShapes, onShowPlants }: { onShowShapes: () =
   const [saveStatus, setSaveStatus] = useState("Saved changes are used by the app in this browser.");
   const [hiddenFeatures, setHiddenFeatures] = useState<HiddenFeature[]>([]);
   const [modelRevision, setModelRevision] = useState(0);
+  const [traitPreview, setTraitPreview] = useState<{ seed?: string; side?: TraitMount }>({});
   const modelRootRef = useRef<THREE.Group>(null);
   const initialTransforms = useRef(new Map<string, NodeTransform>());
 
@@ -323,6 +332,13 @@ function AquaticModelEditor({ onShowShapes, onShowPlants }: { onShowShapes: () =
     if (!selectedObject) return;
     const initial = initialTransforms.current.get(selectedObject.uuid);
     if (initial) updateTransform(initial);
+  };
+
+  const changeTraitPreview = (changes: { seed?: string; side?: TraitMount }) => {
+    setTraitPreview((current) => ({ ...current, ...changes }));
+    setSelectedObject(null);
+    setSelectedKey(null);
+    setTransform(null);
   };
 
   const setFeatureVisibility = (key: string, visible: boolean) => {
@@ -406,9 +422,33 @@ function AquaticModelEditor({ onShowShapes, onShowPlants }: { onShowShapes: () =
         </nav>
 
         <section className="shape-editor-stage min-w-0 px-6 py-5 lg:px-8" aria-label={`${form} model canvas`}>
-          <div className="mb-4">
-            <p className="text-sm text-white/42">AquaticCreatureModel.tsx</p>
-            <h2 className="font-display text-2xl capitalize">{aquaticFormLabels[form]}</h2>
+          <div className="mb-4 flex items-end justify-between gap-6">
+            <div>
+              <p className="text-sm text-white/42">AquaticCreatureModel.tsx</p>
+              <h2 className="font-display text-2xl capitalize">{aquaticFormLabels[form]}</h2>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="flex" role="group" aria-label="Add-on side">
+                {traitSideOptions.map(({ side, label }) => (
+                  <button
+                    key={side}
+                    type="button"
+                    aria-pressed={traitPreview.side === side}
+                    className={`border border-white/20 px-3 py-2 text-xs transition-colors [&+&]:border-l-0 ${traitPreview.side === side ? "bg-white/10 text-white" : "text-white/60 hover:text-white"}`}
+                    onClick={() => changeTraitPreview({ side: traitPreview.side === side ? undefined : side })}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+              <button
+                type="button"
+                className="border border-white/20 px-3 py-2 text-xs text-white/60 hover:border-white/40 hover:text-white"
+                onClick={() => changeTraitPreview({ seed: Math.random().toString(36).slice(2) })}
+              >
+                Randomize add-ons
+              </button>
+            </div>
           </div>
           <div className="shape-editor-canvas relative overflow-hidden border border-white/18 bg-black/20">
             <Canvas orthographic camera={{ position: [0, 0, 10], zoom: 105, near: 0.1, far: 40 }} dpr={[1, 1.5]} onPointerMissed={() => { setSelectedObject(null); setTransform(null); }}>
@@ -425,13 +465,15 @@ function AquaticModelEditor({ onShowShapes, onShowPlants }: { onShowShapes: () =
                   selectObject(event.object);
                 }}
               >
-                <AquaticCreatureModel form={form} pieces={editorPieces} animated={false} scale={1.2} />
+                <TraitPreviewContext.Provider value={traitPreview}>
+                  <AquaticCreatureModel form={form} pieces={editorPieces} animated={false} scale={1.2} />
+                </TraitPreviewContext.Provider>
               </group>
               {selectedObject instanceof THREE.Mesh && <SelectedMeshBlink object={selectedObject} />}
               <OrbitControls enablePan enableRotate enableZoom minZoom={55} maxZoom={180} />
             </Canvas>
           </div>
-          <p className="mt-4 border-t border-white/12 pt-4 text-sm leading-relaxed text-white/45">Drag the empty canvas to orbit, scroll to zoom, or click any visible part to edit or temporarily hide that mesh. Hidden features and unsaved changes stay local to this editor session.</p>
+          <p className="mt-4 border-t border-white/12 pt-4 text-sm leading-relaxed text-white/45">Drag the empty canvas to orbit, scroll to zoom, or click any visible part to edit or temporarily hide that mesh. Pick a side to put every add-on there, click it again to mix the sides, and randomize to reshuffle positions; the beak always stays at the mouth. Hidden features and unsaved changes stay local to this editor session.</p>
         </section>
 
         <aside className="shape-editor-controls min-h-0 overflow-y-auto border-l border-white/15 px-5 py-5">
