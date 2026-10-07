@@ -367,7 +367,7 @@ export function CollectiveWall() {
 
       {view === "collective" && latestContribution && (
         <aside
-          className="collective-recents absolute inset-x-0 bottom-0 z-30 bg-gradient-to-t from-[#030405] via-[#030405]/95 to-[#030405]/80 pb-6 lg:pb-7"
+          className="collective-recents absolute inset-x-0 bottom-0 z-30 pb-6 lg:pb-7"
           aria-label={`Most recently shared stories and ${activeVisualizationCopy.plural}`}
         >
           <div className="collective-recents-grid grid h-full grid-cols-[minmax(24rem,1.5fr)_minmax(20rem,1fr)] grid-rows-[minmax(0,1fr)] pt-4">

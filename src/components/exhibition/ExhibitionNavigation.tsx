@@ -40,7 +40,12 @@ export function ExhibitionNavigation() {
           {count} {count === 1 ? "encounter" : "encounters"} recorded
         </p>
       </div>
-      {/* Visitors start without a specimen; it appears once the first scan has revealed it. */}
+      {/* Visitors start without a specimen; until the first scan, the corner asks for one. */}
+      {count === 0 && (
+        <p className="flex min-h-14 items-center border border-white/45 bg-[var(--abyss)] px-4 text-sm text-white shadow-[0_0_1.5rem_rgba(0,0,0,0.35)]">
+          Scan your first marker
+        </p>
+      )}
       {previewDiscoveries.length > 0 && (
         <button
           type="button"
