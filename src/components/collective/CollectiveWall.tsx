@@ -371,7 +371,7 @@ export function CollectiveWall() {
           aria-label={`Most recently shared stories and ${activeVisualizationCopy.plural}`}
         >
           <div className="collective-recents-grid grid h-full grid-cols-[minmax(24rem,1.5fr)_minmax(20rem,1fr)] grid-rows-[minmax(0,1fr)] pt-4">
-            <article className="collective-recents-latest grid min-h-0 min-w-0 grid-cols-[clamp(7rem,9vw,9rem)_1fr] items-center gap-5 border-r border-white/12 pr-8">
+            <article className="collective-recents-latest grid h-full min-h-0 min-w-0 grid-cols-[clamp(7rem,9vw,9rem)_1fr] grid-rows-[minmax(0,1fr)] items-center gap-5 border-r border-white/12 pr-8">
               <div className="aspect-square w-full">
                 <PathVisualization
                   artifactIds={latestContribution.parts.map((part) => part.artifactId)}
@@ -385,9 +385,8 @@ export function CollectiveWall() {
               <div className="flex h-full min-h-0 min-w-0 flex-col justify-center">
                 <p className="mb-3 shrink-0 text-sm text-white/40">Latest released story</p>
                 <FitText className="font-display text-[clamp(1.15rem,1.45vw,1.75rem)] leading-[1.12] tracking-[-0.025em] text-white/82">
-                  {latestContribution.narrative.map((line, index) => (
-                    <p key={`${index}-${line}`} className="my-0.5">{line}</p>
-                  ))}
+                  {/* One flowing paragraph uses the panel's width, so long stories need fewer lines and keep a larger size. */}
+                  <p>{latestContribution.narrative.join(" ")}</p>
                 </FitText>
                 <p className="mt-4 shrink-0 text-[10px] tracking-[0.2em] text-white/30">
                   {latestContribution.parts.length} {latestContribution.parts.length === 1 ? "encounter" : "encounters"}
@@ -395,7 +394,7 @@ export function CollectiveWall() {
               </div>
             </article>
 
-            <div className="collective-recents-previous grid min-w-0 grid-cols-2 grid-rows-2 gap-x-5 gap-y-2 pl-8">
+            <div className="collective-recents-previous grid min-h-0 min-w-0 grid-cols-2 grid-rows-2 gap-x-5 gap-y-2 pl-8">
               {previousContributions.map((contribution, index) => (
                 <article key={contribution.id} className="grid min-w-0 grid-cols-[minmax(0,4.5rem)_1fr] items-center gap-3">
                   <div className="aspect-square w-full opacity-75">

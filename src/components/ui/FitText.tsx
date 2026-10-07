@@ -3,7 +3,7 @@
 import { useLayoutEffect, useRef, type ReactNode } from "react";
 
 /** The smallest share of the base font size the text may shrink to before it is cut off. */
-const minimumScale = 0.4;
+const minimumScale = 0.3;
 
 /**
  * Shows its children at the font size set by `className`, scaled down just enough to fit the
@@ -20,9 +20,11 @@ export function FitText({ className = "", children }: { className?: string; chil
     if (!box || !content) return;
 
     const fit = () => {
+      // The box shrinks to the text once it fits, so compare the text's layout height with it;
+      // the scroll height would also count letters reaching below a tight line height.
       const fits = (scale: number) => {
         content.style.fontSize = `${scale}em`;
-        return content.scrollHeight <= box.clientHeight + 0.5;
+        return content.offsetHeight <= box.clientHeight + 0.5;
       };
       if (fits(1)) return;
       // Search for the largest scale that still fits.
@@ -37,14 +39,26 @@ export function FitText({ className = "", children }: { className?: string; chil
     };
 
     fit();
+    // The box takes the height of its text once that fits, so watch the space around it too:
+    // otherwise the text never grows back when more room appears.
     const observer = new ResizeObserver(fit);
     observer.observe(box);
-    return () => observer.disconnect();
+    if (box.parentElement) observer.observe(box.parentElement);
+    // Web fonts change the text's size once they load.
+    let cancelled = false;
+    document.fonts?.ready.then(() => {
+      if (!cancelled) fit();
+    });
+    return () => {
+      cancelled = true;
+      observer.disconnect();
+    };
   }, [children]);
 
   return (
     <div ref={boxRef} className={`min-h-0 overflow-hidden ${className}`}>
-      <div ref={contentRef}>{children}</div>
+      {/* The padding keeps descenders of the last line inside the clipped box. */}
+      <div ref={contentRef} className="pb-[0.15em]">{children}</div>
     </div>
   );
 }
