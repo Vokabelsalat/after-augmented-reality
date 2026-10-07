@@ -116,6 +116,28 @@ type CreatureMotion = {
   vz: number;
 };
 
+/** A follower's place in its school, relative to the leader and its direction of travel. */
+type SchoolPlace = { leaderId: number; along: number; across: number; depth: number };
+
+/** Which creatures swim in formation right now, and who has to rest before schooling again. */
+type Schooling = {
+  places: Map<number, SchoolPlace>;
+  schools: Array<{ memberIds: number[]; endsAt: number }>;
+  cooldownUntil: Map<number, number>;
+};
+
+/** Same-species creatures this close together may form a school. */
+const schoolingRadius = 1.5;
+/** Once a school forms, same-species creatures this close swim over to join it. */
+const schoolRecruitRadius = 3.5;
+/** How often the tank looks for creatures that could school. */
+const schoolingCheckSeconds = 1.5;
+/** The chance that a cluster that could school actually does, so it happens only from time to time. */
+const schoolingChance = 0.35;
+const schoolMaxSize = 5;
+/** Few schools at a time keep formation swimming an occasional event rather than constant swarming. */
+const maxSchoolsAtOnce = 4;
+
 type PairingEvent = {
   parents: [ExhibitionContribution, ExhibitionContribution];
   startedAt: number;
@@ -154,6 +176,7 @@ type FloatingCreatureProps = {
   progress: number;
   actorRegistry?: MutableRefObject<Map<number, MutableRefObject<CreatureMotion>>>;
   pairingRef?: MutableRefObject<PairingEvent | null>;
+  schoolingRef?: MutableRefObject<Schooling>;
   juvenile?: boolean;
   spawnPosition?: [number, number, number];
   arrival?: CreatureArrival;
@@ -168,6 +191,7 @@ const FloatingCreature = memo(function FloatingCreature({
   progress,
   actorRegistry,
   pairingRef,
+  schoolingRef,
   juvenile = false,
   spawnPosition,
   arrival,
@@ -395,6 +419,37 @@ const FloatingCreature = memo(function FloatingCreature({
     if (!isWhale) state.x = THREE.MathUtils.clamp(state.x, -maxX, maxX);
     if (!isBottomDweller) state.y = THREE.MathUtils.clamp(state.y, -maxY, maxY);
 
+    // A school follower takes its place behind the leader and matches its course.
+    const schoolPlace = schoolingRef?.current.places.get(contribution.id);
+    const leader = schoolPlace && schoolPlace.leaderId !== contribution.id
+      ? actorRegistry?.current.get(schoolPlace.leaderId)?.current
+      : undefined;
+    if (schoolPlace && leader?.initialized) {
+      const leaderSpeed = Math.hypot(leader.vx, leader.vy);
+      const headingX = leaderSpeed > 0.0001 ? leader.vx / leaderSpeed : 1;
+      const headingY = leaderSpeed > 0.0001 ? leader.vy / leaderSpeed : 0;
+      const targetX = leader.x + headingX * schoolPlace.along - headingY * schoolPlace.across;
+      const targetY = leader.y + headingY * schoolPlace.along + headingX * schoolPlace.across;
+      const targetZ = THREE.MathUtils.clamp(leader.z + schoolPlace.depth, backDepth, frontDepth);
+      // Ease towards the place, but no faster than a quick swim, so joiners hurry over visibly.
+      const follow = 1 - Math.exp(-1.4 * delta);
+      let stepX = (targetX - state.x) * follow;
+      let stepY = isBottomDweller ? 0 : (targetY - state.y) * follow;
+      let stepZ = (targetZ - state.z) * follow;
+      const step = Math.hypot(stepX, stepY, stepZ);
+      const maxStep = Math.max(swimSpeed, 0.2) * 2.2 * delta;
+      if (step > maxStep) {
+        stepX *= maxStep / step;
+        stepY *= maxStep / step;
+        stepZ *= maxStep / step;
+      }
+      state.x += stepX;
+      state.y += stepY;
+      state.z += stepZ;
+      state.vx = THREE.MathUtils.damp(state.vx, leader.vx, 4, delta);
+      if (!isBottomDweller) state.vy = THREE.MathUtils.damp(state.vy, leader.vy, 4, delta);
+    }
+
     const pairing = pairingRef?.current;
     const participantIndex = pairing?.parents.findIndex((parent) => parent.id === contribution.id) ?? -1;
     if (pairing && participantIndex >= 0) {
@@ -518,11 +573,13 @@ function PairingDirector({
   contributions,
   actorRegistry,
   pairingRef,
+  schoolingRef,
   onBaby,
 }: {
   contributions: ExhibitionContribution[];
   actorRegistry: MutableRefObject<Map<number, MutableRefObject<CreatureMotion>>>;
   pairingRef: MutableRefObject<PairingEvent | null>;
+  schoolingRef: MutableRefObject<Schooling>;
   onBaby: (event: PairingEvent) => void;
 }) {
   const lastPairAt = useRef(0);
@@ -568,6 +625,8 @@ function PairingDirector({
         for (let secondIndex = firstIndex + 1; secondIndex < group.length; secondIndex += 1) {
           const first = group[firstIndex];
           const second = group[secondIndex];
+          // Creatures swimming in formation are busy.
+          if (schoolingRef.current.places.has(first.id) || schoolingRef.current.places.has(second.id)) continue;
           const firstMotion = actorRegistry.current.get(first.id)?.current;
           const secondMotion = actorRegistry.current.get(second.id)?.current;
           if (!firstMotion?.initialized || !secondMotion?.initialized) continue;
@@ -602,6 +661,93 @@ function PairingDirector({
       babyCreated: false,
     };
     sequence.current += 1;
+  });
+
+  return null;
+}
+
+/**
+ * From time to time lets nearby creatures of the same species swim in formation: one leads, the
+ * others line up behind it in a V (or single file along the floor). After a school breaks up,
+ * its members rest for a while before they can school again.
+ */
+function SchoolingDirector({
+  contributions,
+  actorRegistry,
+  pairingRef,
+  schoolingRef,
+}: {
+  contributions: ExhibitionContribution[];
+  actorRegistry: MutableRefObject<Map<number, MutableRefObject<CreatureMotion>>>;
+  pairingRef: MutableRefObject<PairingEvent | null>;
+  schoolingRef: MutableRefObject<Schooling>;
+}) {
+  const nextCheckAt = useRef(0);
+  const candidates = useMemo(
+    () => contributions.filter((contribution) => contribution.creatureForm !== "whale"),
+    [contributions],
+  );
+
+  useFrame(({ clock }) => {
+    const elapsed = clock.elapsedTime;
+    if (elapsed < nextCheckAt.current) return;
+    nextCheckAt.current = elapsed + schoolingCheckSeconds;
+    const schooling = schoolingRef.current;
+
+    // Break up schools whose time is over, and let their members rest.
+    schooling.schools = schooling.schools.filter((school) => {
+      const leaving = elapsed >= school.endsAt || !actorRegistry.current.has(school.memberIds[0]);
+      if (!leaving) return true;
+      school.memberIds.forEach((id) => {
+        schooling.places.delete(id);
+        schooling.cooldownUntil.set(id, elapsed + 35 + Math.random() * 25);
+      });
+      return false;
+    });
+
+    const pairingIds = new Set(pairingRef.current?.parents.map((parent) => parent.id));
+    const available = candidates.flatMap((contribution) => {
+      const motion = actorRegistry.current.get(contribution.id)?.current;
+      const resting = (schooling.cooldownUntil.get(contribution.id) ?? 0) > elapsed;
+      if (!motion?.initialized || resting || schooling.places.has(contribution.id) || pairingIds.has(contribution.id)) return [];
+      return [{ contribution, motion }];
+    });
+
+    // At most one new school per check, so schools form one after another.
+    if (schooling.schools.length >= maxSchoolsAtOnce) return;
+    if (Math.random() > schoolingChance) return;
+    // A school starts where two of a kind meet; the one with the most of its kind around leads,
+    // and calls the nearest of them over, so schools grow beyond the pair that met.
+    const gatherings = available.flatMap((leader) => {
+      const kin = available
+        .filter((other) =>
+          other.contribution.id !== leader.contribution.id &&
+          other.contribution.creatureForm === leader.contribution.creatureForm)
+        .map((other) => ({
+          ...other,
+          distance: Math.hypot(other.motion.x - leader.motion.x, other.motion.y - leader.motion.y, other.motion.z - leader.motion.z),
+        }))
+        .filter((other) => other.distance <= schoolRecruitRadius)
+        .sort((a, b) => a.distance - b.distance);
+      return kin.length > 0 && kin[0].distance <= schoolingRadius ? [{ leader, kin }] : [];
+    });
+    if (gatherings.length === 0) return;
+    const mostKin = Math.max(...gatherings.map((gathering) => gathering.kin.length));
+    const largest = gatherings.filter((gathering) => gathering.kin.length === mostKin);
+    const { leader, kin } = largest[Math.floor(Math.random() * largest.length)];
+    const neighbours = kin.slice(0, schoolMaxSize - 1);
+
+    const onFloor = leader.contribution.creatureForm === "crab" || leader.contribution.creatureForm === "clam";
+    const memberIds = [leader.contribution.id, ...neighbours.map((neighbour) => neighbour.contribution.id)];
+    schooling.places.set(leader.contribution.id, { leaderId: leader.contribution.id, along: 0, across: 0, depth: 0 });
+    neighbours.forEach((neighbour, index) => {
+      const row = Math.ceil((index + 1) / 2);
+      const side = index % 2 === 0 ? 1 : -1;
+      schooling.places.set(neighbour.contribution.id, onFloor
+        ? { leaderId: leader.contribution.id, along: -0.6 * (index + 1), across: 0, depth: 0 }
+        : { leaderId: leader.contribution.id, along: -0.65 * row, across: side * 0.42 * row, depth: side * 0.15 * row });
+    });
+    schooling.schools.push({ memberIds, endsAt: elapsed + 10 + Math.random() * 6 });
   });
 
   return null;
@@ -727,6 +873,7 @@ export function CollectiveCreatureField({
   const [babies, setBabies] = useState<BabyCreature[]>([]);
   const actorRegistry = useRef(new Map<number, MutableRefObject<CreatureMotion>>());
   const pairingRef = useRef<PairingEvent | null>(null);
+  const schoolingRef = useRef<Schooling>({ places: new Map(), schools: [], cooldownUntil: new Map() });
   const adults = useMemo(() => contributions.slice(-collectiveCapacity), [contributions]);
   const whales = useMemo(
     () => adults.filter((contribution) => contribution.creatureForm === "whale"),
@@ -769,7 +916,14 @@ export function CollectiveCreatureField({
         contributions={tankAdults}
         actorRegistry={actorRegistry}
         pairingRef={pairingRef}
+        schoolingRef={schoolingRef}
         onBaby={handleBaby}
+      />
+      <SchoolingDirector
+        contributions={tankAdults}
+        actorRegistry={actorRegistry}
+        pairingRef={pairingRef}
+        schoolingRef={schoolingRef}
       />
       <PairingHeart pairingRef={pairingRef} />
       {tankAdults.map((contribution) => (
@@ -781,6 +935,7 @@ export function CollectiveCreatureField({
           reduceGeometryDetail={reduceGeometryDetail}
           actorRegistry={actorRegistry}
           pairingRef={pairingRef}
+          schoolingRef={schoolingRef}
           arrival={arrival?.id === contribution.id ? arrival : undefined}
           onSelect={onSelectContribution}
         />
