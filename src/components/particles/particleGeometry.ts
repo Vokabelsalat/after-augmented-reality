@@ -281,6 +281,36 @@ function sampleButterfly(progress: number, random: () => number): Point3 {
   ];
 }
 
+// A fish in profile, swimming toward +x, with a few bubbles leaking from its mouth.
+function sampleFish(index: number, count: number, progress: number, random: () => number): Point3 {
+  const bodyCount = Math.floor(count * 0.5);
+  if (index < bodyCount) {
+    const point = sampleSphere(index, bodyCount, [0.78, 0.46, 0.26]);
+    return [point[0] + 0.1, point[1], point[2]];
+  }
+  if (progress < 0.68) {
+    const side = random() < 0.5 ? -1 : 1;
+    const point = sampleTriangle([-0.6, 0, 0], [-1.08, side * 0.56, 0], [-0.9, side * 0.04, 0], random);
+    return [point[0], point[1], (random() - 0.5) * 0.05];
+  }
+  if (progress < 0.78) {
+    const point = sampleTriangle([-0.28, 0.4, 0], [0.24, 0.44, 0], [-0.36, 0.8, 0], random);
+    return [point[0], point[1], (random() - 0.5) * 0.05];
+  }
+  if (progress < 0.84) {
+    const point = sampleTriangle([0.06, -0.38, 0], [0.34, -0.42, 0], [-0.1, -0.66, 0], random);
+    return [point[0], point[1], (random() - 0.5) * 0.05];
+  }
+  if (progress < 0.89) {
+    const angle = random() * Math.PI * 2;
+    return [0.6 + Math.cos(angle) * 0.075, 0.12 + Math.sin(angle) * 0.075, 0.24];
+  }
+  const bubbles: Array<[number, number, number]> = [[0.98, 0.3, 0.055], [1.06, 0.58, 0.075], [0.96, 0.9, 0.095]];
+  const [x, y, radius] = bubbles[Math.floor(random() * bubbles.length)];
+  const angle = random() * Math.PI * 2;
+  return [x + Math.cos(angle) * radius, y + Math.sin(angle) * radius, (random() - 0.5) * 0.04];
+}
+
 function formationPosition(
   particleForm: ParticleFormId,
   index: number,
@@ -539,6 +569,9 @@ function formationPosition(
         Math.sin(angle) * radius * 0.55,
       ];
     }
+
+    case "fish":
+      return sampleFish(index, count, progress, random);
 
     default: {
       const exhaustiveCheck: never = particleForm;

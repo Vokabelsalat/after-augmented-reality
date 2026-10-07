@@ -866,7 +866,7 @@ export function CreatureModel({
           cx: 0,
           cy: 0,
           z: proportions.depth * 0.86,
-          scale: 0.48,
+          scale: 0.72,
           mouth: { y: -proportions.height * 0.1 },
         }}
       />

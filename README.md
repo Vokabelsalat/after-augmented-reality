@@ -99,7 +99,7 @@ Save the downloaded file as:
 public/targets/exhibition.mind
 ```
 
-The exhibition prints the constellations on white. The checked-in `exhibition.mind` bundle contains 15 targets compiled from the 400 × 300 px `-white.png` particle constellation images in `public/targets/`, in exhibition ID order (`1-finding-frida-white.png` through `15-fiery-sparks-of-light-white.png`). `npm run targets:export` regenerates them from each artifact's `alternativeColor`. The constellation gallery still previews the dark version, but dark images are not exported or compiled. `npm run targets:compile` recompiles the bundle with MindAR's offline compiler, so the web compiler is optional. Recompile whenever the compiled images change.
+The exhibition prints the constellations on white. The checked-in `exhibition.mind` bundle contains 16 targets compiled from the 400 × 300 px `-white.png` particle constellation images in `public/targets/`, in exhibition ID order (`1-finding-frida-white.png` through `16-fishbowl-leaks-white.png`). `npm run targets:export` regenerates them from each artifact's `alternativeColor`. The constellation gallery still previews the dark version, but dark images are not exported or compiled. `npm run targets:compile` recompiles the bundle with MindAR's offline compiler, so the web compiler is optional. Recompile whenever the compiled images change.
 
 To lay out the constellations for the targets, open `/particles` in development (`npm run dev`). Each preview shows its target image exactly as it will be exported. Drag a constellation to turn it and Shift-drag to roll it within the image; on release it is re-framed to fill the target. **Save layout** writes every orientation to `src/data/constellationOrientations.ts`, which the target export, the print files and the scanner's assembly animation all read. Then run `npm run targets:build` to regenerate the target images, `exhibition.mind` with its compressed copies and version hash, the verification and the print files in one go, and reprint the targets whose layout changed. Saving only works while developing; the route returns 404 in production.
 
@@ -115,7 +115,7 @@ Run `npm run targets:verify` after compiling. Each compiled target keeps a downs
 
 ### 3. Check the configuration mapping
 
-`src/data/artifacts.ts` is the runtime source of truth and follows the CSV row order. `targetIndex` must match the image order used by the compiler. MindAR emits a number, the adapter forwards it, and `artifactByTargetIndex` resolves the exhibition content. The curatorial themes are **Memory**, **Interface**, **Worldmaking**, **Embodiment**, and **Agency**. Until final artwork images are available, the 15 configured works reuse three poster-image families while each keeps the artwork-specific `color`, white-background `alternative_color`, and simplified `particleForm` defined in `public/exhibition.csv`.
+`src/data/artifacts.ts` is the runtime source of truth and follows the CSV row order. `targetIndex` must match the image order used by the compiler. MindAR emits a number, the adapter forwards it, and `artifactByTargetIndex` resolves the exhibition content. The curatorial themes are **Memory**, **Interface**, **Worldmaking**, **Embodiment**, and **Agency**. Until final artwork images are available, the 16 configured works reuse three poster-image families while each keeps the artwork-specific `color`, white-background `alternative_color`, and simplified `particleForm` defined in `public/exhibition.csv`.
 
 ### 4. Serve over HTTPS on a phone
 

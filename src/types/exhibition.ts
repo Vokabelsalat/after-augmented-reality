@@ -22,6 +22,7 @@ export const particleFormIds = [
   "crystal",
   "hourglass",
   "spiral",
+  "fish",
 ] as const;
 
 export type ParticleFormId = (typeof particleFormIds)[number];

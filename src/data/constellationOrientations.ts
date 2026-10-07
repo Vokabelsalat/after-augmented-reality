@@ -20,4 +20,5 @@ export const constellationOrientations: Record<string, Orientation> = {
   "land-of-crystals": { yaw: 0.5, pitch: -0.16, roll: 0 },
   "grand-hotel-sand-fountain": { yaw: 0.5, pitch: -0.16, roll: 0 },
   "fiery-sparks-of-light": { yaw: 0.5, pitch: -0.16, roll: 0 },
+  "fishbowl-leaks": { yaw: 0.2, pitch: -0.1, roll: 0 },
 };

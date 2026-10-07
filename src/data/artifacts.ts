@@ -377,6 +377,29 @@ const aquariumLayers: Record<string, AquariumLayer> = {
       ],
     },
   },
+  "fishbowl-leaks": {
+    marineType: "leaking aquarium shoal",
+    classification: "Participatory narrative ecosystem",
+    visualTraits: ["cracked glass scales", "escaping bubbles"],
+    stateEffects: { openness: 2, agency: 1, coherence: -1 },
+    storylet:
+      "The tank was sorted into tidy partitions. One crack later, every species was swimming together.",
+    choice: {
+      prompt: "The glass of the aquarium is starting to crack.",
+      options: [
+        {
+          id: "seal",
+          label: "Keep the tank sealed",
+          effects: { coherence: 2, memory: 1 },
+        },
+        {
+          id: "leak",
+          label: "Let it leak",
+          effects: { openness: 2, agency: 1 },
+        },
+      ],
+    },
+  },
 };
 
 const exhibitionSources: ArtifactSource[] = [
@@ -684,6 +707,26 @@ const exhibitionSources: ArtifactSource[] = [
       label: "Spark plume",
       description:
         "A luminous plume that turns spoken language into a visible trail.",
+    },
+  },
+  {
+    id: "fishbowl-leaks",
+    exhibitionId: 16,
+    targetIndex: 15,
+    title: "The Fishbowl Leaks",
+    artist: "Jakob Kusnick",
+    visualFamily: "machine",
+    particleForm: "fish",
+    color: "#2F6FB5",
+    alternativeColor: "#1D4F8A",
+    theme: "worldmaking",
+    shortText:
+      "The Fishbowl Leaks turns the exhibition into a porous virtual aquarium. Through a browser-based AR layer, visitors meet fragments of the surrounding works as marine life and grow a personal creature from their path through the exhibition. On a shared screen the partitioned, classified tank slowly breaks down as creatures are added, until texts detach, species break free and the collective leaks into open water.",
+    narrativeWords: ["contain", "leak", "gather", "evolve"],
+    creaturePart: {
+      id: "helping-arms",
+      label: "Leak droplet",
+      description: "A drop of the tank that slipped through the glass and carries the collective with it.",
     },
   },
 ];

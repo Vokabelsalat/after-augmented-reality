@@ -70,7 +70,7 @@ function hashUnit(value: string) {
 // The beak always grows from the mouth; every other trait can grow from any side of the body.
 const mouthPartIds = new Set<CreaturePartId>(["cockatoo-beak"]);
 // Volumetric traits stand off the flanks; flat ones fold down so their face turns toward the viewer.
-const volumetricPartIds = new Set<CreaturePartId>(["inner-eye", "heart-plume"]);
+const volumetricPartIds = new Set<CreaturePartId>(["inner-eye", "heart-plume", "helping-arms"]);
 const traitSides: TraitMount[] = ["top", "bottom", "left", "right"];
 
 // Lets the creature editor reshuffle trait positions or pin every trait to one side.
@@ -168,16 +168,6 @@ const traitShapes = {
     [0.1, 0.16], [0.2, 0.46], [0.3, 0.12], [0.4, 0.34], [0.42, 0],
   ]),
   flame: leafShape(0.78, 0.2, -0.16),
-  ribbon: shapeFrom([
-    ...Array.from({ length: 12 }, (_, index) => {
-      const y = (index / 11) * 0.9;
-      return [Math.sin(y * 6) * 0.1 - 0.07, y] as [number, number];
-    }),
-    ...Array.from({ length: 12 }, (_, index) => {
-      const y = ((11 - index) / 11) * 0.9;
-      return [Math.sin(y * 6) * 0.1 + 0.07 * (1 - y * 0.6), y] as [number, number];
-    }),
-  ]),
   scale: leafShape(0.55, 0.34),
   glassFin: leafShape(0.72, 0.34, -0.22),
   page: (() => {
@@ -250,9 +240,39 @@ const traitGeometries = {
     const radius = 0.03 * Math.exp(angle * 0.28);
     return [Math.cos(angle) * radius, Math.sin(angle) * radius, 0] as [number, number, number];
   })), 0.02, 6.5)),
+  // A drop swelling at the end of a thin neck, as if it is just slipping out of the body.
+  droplet: new THREE.LatheGeometry(smoothProfile([[0.001, 0], [0.07, 0.02], [0.05, 0.14], [0.13, 0.32], [0.2, 0.48], [0.18, 0.62], [0.1, 0.7], [0.001, 0.72]]), 24),
   polyp: new THREE.LatheGeometry(smoothProfile([[0.001, 0], [0.16, 0.01], [0.08, 0.14], [0.07, 0.26], [0.17, 0.36], [0.18, 0.44], [0.08, 0.5], [0.001, 0.48]]), 22),
 };
 traitGeometries.thorn.computeVertexNormals();
+
+// Three parallel streamers that trail backward and sway one after another, like a wake through the water.
+function StreamingLines({ color, highlighted }: { color: string; highlighted: boolean }) {
+  const lineRefs = useRef<Array<THREE.Group | null>>([]);
+  const offsets = [-0.24, 0, 0.24];
+
+  useFrame(({ clock }) => {
+    lineRefs.current.forEach((line, index) => {
+      if (line) line.rotation.z = Math.sin(clock.elapsedTime * 2.6 - index * 0.7) * 0.1;
+    });
+  });
+
+  return (
+    <group rotation={[0, 0, 0.85]}>
+      {offsets.map((offset, index) => {
+        const length = 1.1 + index * 0.22;
+        return (
+          <group key={offset} position={[offset, 0, 0]} ref={(node) => { lineRefs.current[index] = node; }}>
+            <mesh position={[0, length / 2, 0]}>
+              <capsuleGeometry args={[0.075, length, 6, 12]} />
+              <TraitMaterial color={color} highlighted={highlighted} opacity={0.8} />
+            </mesh>
+          </group>
+        );
+      })}
+    </group>
+  );
+}
 
 // One form per part, built in a mount frame: origin on the skin, +y pointing away from the body
 // and +x pointing toward the head. Every form stands in the xy plane so it reads from any side.
@@ -273,13 +293,13 @@ function AquaticTraitForm({ partId, color, highlighted }: { partId: CreaturePart
     case "crystal-spines":
       return <mesh geometry={traitGeometries.thorn}><TraitMaterial color={color} highlighted={highlighted} opacity={0.86} /></mesh>;
     case "helping-arms":
-      return <mesh geometry={traitGeometries.curl} scale={[1.2, 1.2, 1.4]}>{material}</mesh>;
+      return <mesh position={[0, -0.03, 0]} geometry={traitGeometries.droplet}><TraitMaterial color={color} highlighted={highlighted} opacity={0.82} glow={0.4} /></mesh>;
     case "surfer-feet":
       return <mesh position={[0, -0.06, -0.02]}><extrudeGeometry args={[traitShapes.surfFin, flatExtrude]} />{material}</mesh>;
     case "sand-hourglass":
       return <mesh geometry={traitGeometries.shell}>{material}</mesh>;
     case "route-tail":
-      return <mesh position={[0, -0.04, -0.02]} rotation={[0, 0, 0.5]}><extrudeGeometry args={[traitShapes.ribbon, thinExtrude]} /><TraitMaterial color={color} highlighted={highlighted} opacity={0.85} /></mesh>;
+      return <StreamingLines color={color} highlighted={highlighted} />;
     case "cockatoo-beak":
       return <mesh geometry={traitGeometries.beak}>{material}</mesh>;
     case "inner-eye":
