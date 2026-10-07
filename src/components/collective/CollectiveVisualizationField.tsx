@@ -7,7 +7,7 @@ import * as THREE from "three";
 import { CollectiveCreatureField, type CreatureArrival } from "@/components/collective/CollectiveCreatureField";
 import { AbstractCreatureModel } from "@/components/visualization/AbstractCreatureCanvas";
 import { NetworkGlyph } from "@/components/visualization/NetworkGlyph";
-import { visualizationDesign } from "@/config/visualization";
+import { collectiveCapacity, visualizationDesign } from "@/config/visualization";
 import type { ExhibitionContribution } from "@/types/contribution";
 
 function seededUnit(seed: number) {
@@ -58,7 +58,7 @@ function CollectiveAbstractField({ contributions, progress }: { contributions: E
       <directionalLight position={[2, 5, 8]} intensity={2.4} color="#FFF4DF" />
       <pointLight position={[-5, 1, 5]} intensity={2.2} color="#58D6FF" />
       <pointLight position={[5, -2, 5]} intensity={1.8} color="#FF7557" />
-      {contributions.slice(-32).map((contribution) => (
+      {contributions.slice(-collectiveCapacity).map((contribution) => (
         <FloatingAbstractCreature key={contribution.id} contribution={contribution} progress={progress} />
       ))}
       <AdaptiveDpr pixelated />
@@ -69,7 +69,7 @@ function CollectiveAbstractField({ contributions, progress }: { contributions: E
 function CollectiveNetworkField({ contributions, progress }: { contributions: ExhibitionContribution[]; progress: number }) {
   return (
     <div className="relative size-full">
-      {contributions.slice(-32).map((contribution) => {
+      {contributions.slice(-collectiveCapacity).map((contribution) => {
         const size = 110 + seededUnit(contribution.id * 7) * 150;
         const compartment = compartmentCenters[contribution.id % compartmentCenters.length];
         const containment = Math.max(0, 1 - progress * 1.35);

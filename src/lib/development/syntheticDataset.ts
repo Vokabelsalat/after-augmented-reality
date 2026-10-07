@@ -5,7 +5,7 @@ import { generateJourneyNarrative } from "@/lib/narrative/generateJourneyNarrati
 import type { SharedCreaturePart } from "@/types/contribution";
 import { creatureColorPalette, type CreatureColorPalette } from "@/lib/creature/colorPalettes";
 
-export const SYNTHETIC_VISITOR_COUNT = 24;
+export const SYNTHETIC_VISITOR_COUNT = 150;
 
 export const SYNTHETIC_FEATURED_FORMS = [
   "seal",
@@ -31,6 +31,20 @@ export type SyntheticContribution = {
 };
 
 const pathSteps = [1, 2, 3, 5, 7] as const;
+const shortestPath = 3;
+const longestPath = 12;
+
+/** Walks the artifact list in fixed steps, skipping artifacts the visitor has already seen. */
+function syntheticPath(start: number, step: number, length: number) {
+  const visited = new Set<number>();
+  let index = start;
+  while (visited.size < Math.min(length, artifacts.length)) {
+    while (visited.has(index)) index = (index + 1) % artifacts.length;
+    visited.add(index);
+    index = (index + step) % artifacts.length;
+  }
+  return [...visited].map((artifactIndex) => artifacts[artifactIndex]);
+}
 
 /**
  * Produces a repeatable exhibition day with varied routes, pauses, choices,
@@ -56,13 +70,10 @@ export function createSyntheticDataset(
       firstCompletionMinute + progress * (lastCompletionMinute - firstCompletionMinute),
     );
     const completedAt = cycleStart + completionMinute * 60_000;
-    const pathLength = 3 + (visitorIndex % 5);
-    const pathStart = (visitorIndex * 4 + Math.floor(visitorIndex / 3)) % artifacts.length;
+    const pathLength = shortestPath + (visitorIndex % (longestPath - shortestPath + 1));
+    const pathStart = (visitorIndex * 7 + Math.floor(visitorIndex / 10)) % artifacts.length;
     const pathStep = pathSteps[visitorIndex % pathSteps.length];
-    const selectedArtifacts = Array.from(
-      { length: pathLength },
-      (_, pathIndex) => artifacts[(pathStart + pathIndex * pathStep) % artifacts.length],
-    );
+    const selectedArtifacts = syntheticPath(pathStart, pathStep, pathLength);
     const dwellTimes = selectedArtifacts.map((_, pathIndex) =>
       35_000 + ((visitorIndex * 83 + pathIndex * 47) % 330) * 1_000,
     );

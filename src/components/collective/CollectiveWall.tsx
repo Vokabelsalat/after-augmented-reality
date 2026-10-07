@@ -8,7 +8,7 @@ import { SpecimenDialog } from "@/components/collective/SpecimenDialog";
 import { PathVisualization } from "@/components/visualization/PathVisualization";
 import { BiomeBackdrop } from "@/components/visualization/BiomeBackdrop";
 import { creatureFitMargin } from "@/components/creature/CreatureCanvas";
-import { activeVisualizationCopy } from "@/config/visualization";
+import { activeVisualizationCopy, collectiveCapacity } from "@/config/visualization";
 import { artifacts } from "@/data/artifacts";
 import { aggregateContributionDwellTimes } from "@/lib/contributions/heatmap";
 import type { CollectiveHeatDatum, ExhibitionContribution } from "@/types/contribution";
@@ -18,6 +18,8 @@ const ARRIVAL_DURATION_MS = 17_000;
 const ARRIVAL_RELEASE_MS = ARRIVAL_DURATION_MS * 0.8;
 const ARRIVAL_FIT_SCALE = 1.25;
 const MINUTES_IN_DAY = 24 * 60 - 1;
+// The largest page the contributions API returns.
+const pageSize = 100;
 const osloClock = new Intl.DateTimeFormat("en-GB", {
   timeZone: "Europe/Oslo",
   hour: "2-digit",
@@ -36,13 +38,6 @@ function formatMinute(value: number) {
   const hours = Math.floor(value / 60);
   const minutes = value % 60;
   return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
-}
-
-function tankState(progress: number) {
-  if (progress < 0.25) return "cataloguing";
-  if (progress < 0.5) return "pressure rising";
-  if (progress < 0.75) return "labels loosening";
-  return "open water";
 }
 
 export function CollectiveWall() {
@@ -68,16 +63,26 @@ export function CollectiveWall() {
   useEffect(() => {
     let cancelled = false;
 
+    async function fetchPage(after: number) {
+      const response = await fetch(`/api/contributions?after=${after}&limit=${pageSize}`, { cache: "no-store" });
+      if (!response.ok) throw new Error("Collective aquarium unavailable");
+      return (await response.json()) as {
+        contributions: ExhibitionContribution[];
+        heatmap: CollectiveHeatDatum[];
+        cycleDate: string;
+        syntheticCount: number;
+      };
+    }
+
     async function refresh() {
       try {
-        const response = await fetch(`/api/contributions?after=${latestId.current}&limit=100`, { cache: "no-store" });
-        if (!response.ok) throw new Error("Collective aquarium unavailable");
-        const data = (await response.json()) as {
-          contributions: ExhibitionContribution[];
-          heatmap: CollectiveHeatDatum[];
-          cycleDate: string;
-          syntheticCount: number;
-        };
+        const data = await fetchPage(latestId.current);
+        // The first load reads the whole day, so only later contributions arrive as new creatures.
+        let page = data;
+        while (!initialized.current && page.contributions.length === pageSize && !cancelled) {
+          page = await fetchPage(page.contributions[page.contributions.length - 1].id);
+          data.contributions.push(...page.contributions);
+        }
         if (cancelled) return;
 
         if (cycleDateRef.current && cycleDateRef.current !== data.cycleDate) {
@@ -107,7 +112,7 @@ export function CollectiveWall() {
           latestId.current = Math.max(...data.contributions.map((item) => item.id));
           setContributions((current) => {
             const known = new Set(current.map((item) => item.id));
-            return [...current, ...data.contributions.filter((item) => !known.has(item.id))].slice(-60);
+            return [...current, ...data.contributions.filter((item) => !known.has(item.id))].slice(-collectiveCapacity);
           });
           if (initialized.current) {
             if (!activeRef.current) {
@@ -276,44 +281,22 @@ export function CollectiveWall() {
         </div>
       </header>
 
-      <section className="tank-time-control absolute left-1/2 top-24 z-40 w-[min(42rem,calc(100vw-3rem))] -translate-x-1/2 border border-white/20 bg-[var(--abyss)] px-5 py-4" aria-label="Test aquarium time progression">
-        <div className="mb-3 flex items-end justify-between gap-4">
-          <div>
-            <p className="text-sm text-white/50">Test time of day</p>
-            <p className="font-display text-3xl text-[var(--phosphor)]">{formatMinute(clockMinutes)}</p>
-          </div>
-          <div className="text-right">
-            <p className="text-base text-white/80">{tankState(dayProgress)}</p>
-            <button
-              type="button"
-              onClick={() => setLiveTime(true)}
-              className="mt-1 min-h-8 text-sm text-white/50 underline decoration-white/25 underline-offset-4 disabled:no-underline"
-              disabled={liveTime}
-            >
-              {liveTime ? "following live time" : "return to live time"}
-            </button>
-          </div>
-        </div>
-        <label className="sr-only" htmlFor="tank-time-slider">Time of day</label>
-        <input
-          id="tank-time-slider"
-          className="tank-time-slider w-full"
-          type="range"
-          min="0"
-          max={MINUTES_IN_DAY}
-          step="1"
-          value={clockMinutes}
-          onChange={(event) => {
-            setLiveTime(false);
-            setClockMinutes(Number(event.target.value));
-          }}
-        />
-        {/* <div className="mt-1 flex justify-between text-xs text-white/35" aria-hidden="true">
-          <span>00:00 · ordered</span>
-          <span>12:00 · unstable</span>
-          <span>23:59 · open</span>
-        </div> */}
-      </section>
+      <input
+        className="tank-time-slider absolute inset-x-0 bottom-[var(--collective-recents-height)] z-40 w-full translate-y-1/2"
+        type="range"
+        aria-label="Test time of day"
+        aria-valuetext={`${formatMinute(clockMinutes)}, ${liveTime ? "following live time" : "fixed test time"}`}
+        title="Double-click to return to live time"
+        min="0"
+        max={MINUTES_IN_DAY}
+        step="1"
+        value={clockMinutes}
+        onChange={(event) => {
+          setLiveTime(false);
+          setClockMinutes(Number(event.target.value));
+        }}
+        onDoubleClick={() => setLiveTime(true)}
+      />
 
       {view === "collective" && visibleContributions.length === 0 && ready && (
         <div className="absolute inset-0 flex items-center justify-center text-center">
@@ -361,7 +344,7 @@ export function CollectiveWall() {
           className="collective-recents absolute inset-x-0 bottom-0 z-30 bg-gradient-to-t from-[#030405] via-[#030405]/95 to-[#030405]/80 pb-6 lg:pb-7"
           aria-label={`Most recently shared stories and ${activeVisualizationCopy.plural}`}
         >
-          <div className="collective-recents-grid grid h-full grid-cols-[minmax(24rem,1.5fr)_minmax(20rem,1fr)] border-t border-white/12 pt-4">
+          <div className="collective-recents-grid grid h-full grid-cols-[minmax(24rem,1.5fr)_minmax(20rem,1fr)] pt-4">
             <article className="collective-recents-latest grid min-w-0 grid-cols-[clamp(7rem,9vw,9rem)_1fr] items-center gap-5 border-r border-white/12 pr-8">
               <div className="aspect-square w-full">
                 <PathVisualization

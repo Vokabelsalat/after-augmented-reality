@@ -39,6 +39,7 @@ describe("createSyntheticDataset", () => {
     expect(new Set(dataset.map((visitor) => visitor.parts.length)).size).toBeGreaterThan(3);
     expect(uniqueNarratives.size).toBe(uniquePaths.size);
     expect(dataset.every((visitor) => visitor.parts.every((part) => knownArtifacts.has(part.artifactId)))).toBe(true);
+    expect(dataset.every((visitor) => new Set(visitor.parts.map((part) => part.artifactId)).size === visitor.parts.length)).toBe(true);
     expect(dataset.every((visitor) => visitor.parts.every((part) => (part.dwellMs ?? 0) >= 35_000))).toBe(true);
     expect(dataset.every((visitor) => visitor.narrative.length === visitor.parts.length)).toBe(true);
   });

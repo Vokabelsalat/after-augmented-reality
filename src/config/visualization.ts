@@ -54,3 +54,6 @@ export const visualizationCopy = {
 }>;
 
 export const activeVisualizationCopy = visualizationCopy[visualizationDesign];
+
+/** How many of the latest contributions the collective view keeps and shows at once. */
+export const collectiveCapacity = 150;

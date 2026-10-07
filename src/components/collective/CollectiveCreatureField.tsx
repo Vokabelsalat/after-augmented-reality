@@ -9,6 +9,7 @@ import { AquariumDioramaPlants } from "@/components/collective/AquariumDioramaPl
 import { creatureSizeScale, type AquaticForm } from "@/lib/creature/aquaticForms";
 import { creatureColorPalette } from "@/lib/creature/colorPalettes";
 import type { ExhibitionContribution } from "@/types/contribution";
+import { collectiveCapacity } from "@/config/visualization";
 
 function seededUnit(seed: number) {
   const value = Math.sin(seed * 999.13) * 43758.5453;
@@ -697,7 +698,7 @@ export function CollectiveCreatureField({
   const [babies, setBabies] = useState<BabyCreature[]>([]);
   const actorRegistry = useRef(new Map<number, MutableRefObject<CreatureMotion>>());
   const pairingRef = useRef<PairingEvent | null>(null);
-  const adults = useMemo(() => contributions.slice(-32), [contributions]);
+  const adults = useMemo(() => contributions.slice(-collectiveCapacity), [contributions]);
   const whales = useMemo(
     () => adults.filter((contribution) => contribution.creatureForm === "whale"),
     [adults],
