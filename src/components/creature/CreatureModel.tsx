@@ -4,7 +4,7 @@ import { useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
 import { artifactById } from "@/data/artifacts";
-import { GrowingTrait } from "@/components/creature/AquaticModelShared";
+import { TraitMarks } from "@/components/creature/AquaticModelShared";
 import { creatureColorPalette, type CreatureColorPalette } from "@/lib/creature/colorPalettes";
 import type { CreaturePartId, ThemeId } from "@/types/exhibition";
 
@@ -13,18 +13,6 @@ export type CreaturePiece = {
   partId: CreaturePartId;
   color: string;
 };
-
-const mirroredPartIds = new Set<CreaturePartId>([
-  "memory-crown",
-  "archive-ears",
-  "glass-wings",
-  "surfer-feet",
-  "inner-eye",
-  "orbit-ring",
-  "heart-plume",
-  "helping-arms",
-  "sand-hourglass",
-]);
 
 type FishProfile = {
   length: number;
@@ -559,226 +547,6 @@ function PectoralFin({
   );
 }
 
-function FishPartMesh({ piece }: { piece: CreaturePiece }) {
-  const material = <SoftMaterial color={piece.color} />;
-
-  switch (piece.partId) {
-    case "memory-crown":
-      return (
-        <group name={piece.partId} position={[-0.18, 0.02, 0.27]}>
-          {[-0.65, -0.28, 0.1, 0.48].map((x, index) => (
-            <mesh key={x} position={[x, (index % 2) * 0.18 - 0.09, 0]} scale={[1.35, 0.85, 0.08]}>
-              <sphereGeometry args={[0.16, 14, 14]} />
-              <meshToonMaterial color={piece.color} emissive={piece.color} emissiveIntensity={0.18} />
-            </mesh>
-          ))}
-        </group>
-      );
-    case "archive-ears":
-      return (
-        <group name={piece.partId} position={[0.52, 0, 0.2]}>
-          {[-1, 1].map((side) => (
-            <group key={side} position={[0, side * 0.3, 0]} rotation={[0, 0, side * 0.16]}>
-              {[0, 1, 2].map((index) => (
-                <mesh key={index} position={[-index * 0.08, side * index * 0.12, 0]} rotation={[0, 0, side * -0.28]} scale={[0.5, 1, 0.08]}>
-                  <coneGeometry args={[0.2, 0.58, 5]} />
-                  {material}
-                </mesh>
-              ))}
-            </group>
-          ))}
-        </group>
-      );
-    case "route-tail":
-      return (
-        <group name={piece.partId} position={[-1.42, 0, -0.04]}>
-          {[-0.3, 0, 0.3].map((y, index) => (
-            <mesh key={y} position={[-0.42 - index * 0.08, y, 0]} rotation={[0, 0, Math.PI / 2]} scale={[0.35, 1 + index * 0.2, 0.08]}>
-              <capsuleGeometry args={[0.07, 0.72, 5, 10]} />
-              <SoftMaterial color={piece.color} opacity={0.74} />
-            </mesh>
-          ))}
-        </group>
-      );
-    case "signal-antenna":
-      return (
-        <group name={piece.partId} position={[0.68, 0.5, 0]} rotation={[0, 0, -0.24]}>
-          <mesh position={[0, 0.32, 0]}>
-            <cylinderGeometry args={[0.025, 0.045, 0.68, 8]} />
-            {material}
-          </mesh>
-          <mesh position={[0.05, 0.7, 0]}>
-            <sphereGeometry args={[0.13, 14, 14]} />
-            <meshToonMaterial color={piece.color} emissive={piece.color} emissiveIntensity={1.5} />
-          </mesh>
-        </group>
-      );
-    case "cockatoo-beak":
-      return (
-        <group name={piece.partId} position={[1.34, -0.03, 0.04]} rotation={[0, 0, -Math.PI / 2]}>
-          <mesh scale={[1, 1.25, 0.12]}>
-            <coneGeometry args={[0.3, 0.6, 5]} />
-            {material}
-          </mesh>
-        </group>
-      );
-    case "glass-wings":
-      return (
-        <group name={piece.partId} position={[-0.05, -0.12, 0.28]}>
-          <mesh rotation={[0.05, 0.18, -0.72]} scale={[0.62, 1.34, 0.12]}>
-            <sphereGeometry args={[0.5, 18, 18]} />
-            <meshToonMaterial color={piece.color} transparent opacity={0.42} side={THREE.DoubleSide} />
-          </mesh>
-        </group>
-      );
-    case "page-fins":
-      return (
-        <group name={piece.partId} position={[-0.2, 0.68, -0.04]}>
-          {[-0.28, 0.18, 0.58].map((x, index) => (
-            <mesh key={x} position={[x, index * 0.06, 0]} rotation={[0, 0, -0.08 + index * 0.08]} scale={[0.7, 1.1 - index * 0.12, 0.08]}>
-              <coneGeometry args={[0.28, 0.76, 4]} />
-              {material}
-            </mesh>
-          ))}
-        </group>
-      );
-    case "surfer-feet":
-      return (
-        <group name={piece.partId} position={[-0.2, -0.58, 0.24]} scale={[0.92, 0.86, 1]}>
-          <mesh position={[0, 0, -0.012]} scale={[1.05, 1.05, 1]}>
-            <shapeGeometry args={[pelvicFinStyles[2].shape, 20]} />
-            <meshBasicMaterial color="#080B12" side={THREE.DoubleSide} />
-          </mesh>
-          <mesh>
-            <shapeGeometry args={[pelvicFinStyles[2].shape, 20]} />
-            <SoftMaterial color={piece.color} opacity={0.9} />
-          </mesh>
-        </group>
-      );
-    case "inner-eye":
-      return (
-        <group name={piece.partId} position={[0.76, 0.42, 0.28]}>
-          <mesh scale={[1.2, 0.72, 0.1]}>
-            <sphereGeometry args={[0.17, 18, 18]} />
-            {material}
-          </mesh>
-          <mesh position={[0, 0, 0.07]}>
-            <sphereGeometry args={[0.065, 14, 14]} />
-            <meshBasicMaterial color="#09090D" />
-          </mesh>
-        </group>
-      );
-    case "orbit-ring":
-      return (
-        <group name={piece.partId} position={[-0.12, 0, 0.3]}>
-          {[-0.44, 0, 0.44].map((x, index) => (
-            <mesh key={x} position={[x, 0, 0]} scale={[0.38, 0.72 - Math.abs(index - 1) * 0.08, 0.12]}>
-              <torusGeometry args={[0.55, 0.055, 8, 28]} />
-              <meshToonMaterial color={piece.color} emissive={piece.color} emissiveIntensity={0.32} />
-            </mesh>
-          ))}
-        </group>
-      );
-    case "heart-plume":
-      return (
-        <group name={piece.partId} position={[0.18, -0.02, 0.31]} scale={0.58}>
-          <mesh position={[-0.13, 0.12, 0]}><sphereGeometry args={[0.23, 16, 16]} />{material}</mesh>
-          <mesh position={[0.13, 0.12, 0]}><sphereGeometry args={[0.23, 16, 16]} />{material}</mesh>
-          <mesh position={[0, -0.16, 0]} rotation={[0, 0, Math.PI]} scale={[1, 1.4, 0.1]}>
-            <coneGeometry args={[0.31, 0.62, 4]} />
-            {material}
-          </mesh>
-        </group>
-      );
-    case "helping-arms":
-      return (
-        <group name={piece.partId} position={[0.72, -0.34, 0.18]}>
-          {[-1, 1].map((side) => (
-            <mesh key={side} position={[0.18, side * 0.18, 0]} rotation={[0, 0, Math.PI / 2 + side * 0.18]} scale={[0.26, 1.35, 0.08]}>
-              <capsuleGeometry args={[0.08, 0.86, 5, 10]} />
-              {material}
-            </mesh>
-          ))}
-        </group>
-      );
-    case "goliath-horns":
-      return (
-        <group name={piece.partId} position={[0.58, 0.58, 0]}>
-          {[0, 1, 2].map((index) => (
-            <mesh key={index} position={[-index * 0.26, index * 0.04, 0]} rotation={[0, 0, index * -0.12]}>
-              <coneGeometry args={[0.13, 0.58 - index * 0.06, 6]} />
-              {material}
-            </mesh>
-          ))}
-        </group>
-      );
-    case "crystal-spines":
-      return (
-        <group name={piece.partId} position={[-0.1, 0.72, 0]}>
-          {[-0.48, -0.16, 0.16, 0.48].map((x, index) => (
-            <mesh
-              key={x}
-              position={[x, index % 2 === 0 ? -0.04 : 0.08, 0]}
-              scale={[0.15, 0.36 + index * 0.035, 0.12]}
-            >
-              <octahedronGeometry args={[1, 0]} />
-              <meshToonMaterial
-                color={piece.color}
-                emissive={piece.color}
-                emissiveIntensity={0.24}
-                transparent
-                opacity={0.86}
-              />
-            </mesh>
-          ))}
-        </group>
-      );
-    case "sand-hourglass":
-      return (
-        <group name={piece.partId} position={[0.12, 0, 0.31]} scale={0.72}>
-          <mesh position={[0, 0.2, 0]} rotation={[0, 0, Math.PI]}>
-            <coneGeometry args={[0.28, 0.4, 12]} />
-            <SoftMaterial color={piece.color} opacity={0.72} />
-          </mesh>
-          <mesh position={[0, -0.2, 0]}>
-            <coneGeometry args={[0.28, 0.4, 12]} />
-            <SoftMaterial color={piece.color} opacity={0.72} />
-          </mesh>
-          <mesh>
-            <sphereGeometry args={[0.075, 12, 12]} />
-            {material}
-          </mesh>
-        </group>
-      );
-    case "spark-plume":
-      return (
-        <group name={piece.partId} position={[0.48, 0.56, 0.04]}>
-          {[0, 1, 2, 3, 4].map((index) => {
-            const angle = index * 1.35;
-            return (
-              <mesh
-                key={index}
-                position={[
-                  Math.cos(angle) * (0.09 + index * 0.045),
-                  index * 0.17,
-                  Math.sin(angle) * 0.05,
-                ]}
-                scale={0.13 - index * 0.012}
-              >
-                <octahedronGeometry args={[1, 0]} />
-                <meshToonMaterial
-                  color={piece.color}
-                  emissive={piece.color}
-                  emissiveIntensity={0.8}
-                />
-              </mesh>
-            );
-          })}
-        </group>
-      );
-  }
-}
-
 function FishMarkings({
   pattern,
   color,
@@ -873,7 +641,6 @@ export function CreatureModel({
   const pelvicRef = useRef<THREE.Group>(null);
   const eyeRefs = useRef<Array<THREE.Group | null>>([]);
   const pupilRefs = useRef<Array<THREE.Mesh | null>>([]);
-  const partRefs = useRef(new Map<string, THREE.Group>());
   const signature = baseSeed ?? pieces[0]?.artifactId ?? "new";
   const lookIds = Object.keys(fishLooks);
   const baseLookId = lookIds[Math.min(lookIds.length - 1, Math.floor(hashUnit(`${signature}:base-look`) * lookIds.length))];
@@ -947,77 +714,7 @@ export function CreatureModel({
       pupil.position.x = 0.025 + Math.sin(elapsed * 0.67 + index * 0.35 + proportions.winkOffset) * 0.028;
       pupil.position.y = Math.cos(elapsed * 0.49 + index * 0.28 + proportions.winkOffset) * 0.022;
     });
-
-    pieces.forEach((piece) => {
-      const part = partRefs.current.get(piece.artifactId);
-      if (!part) return;
-      const time = elapsed + hashUnit(piece.artifactId) * Math.PI * 2;
-      const emphasis = piece.partId === highlightedPart ? 1.75 : 1;
-      const pulse = Math.sin(time * 2.1);
-      part.position.set(0, 0, 0);
-      part.rotation.set(0, 0, 0);
-      part.scale.setScalar(1);
-
-      switch (piece.partId) {
-        case "memory-crown":
-          part.scale.setScalar(1 + pulse * 0.035 * emphasis);
-          break;
-        case "archive-ears":
-          part.scale.set(1, 1 + pulse * 0.06 * emphasis, 1);
-          break;
-        case "route-tail":
-          part.rotation.z = Math.sin(time * 2.6) * 0.14 * emphasis;
-          break;
-        case "signal-antenna":
-          part.rotation.z = Math.sin(time * 1.9) * 0.08 * emphasis;
-          break;
-        case "cockatoo-beak":
-          part.scale.set(1, 1 + Math.max(0, pulse) * 0.055 * emphasis, 1);
-          break;
-        case "glass-wings":
-          part.rotation.z = Math.sin(time * 2.4) * 0.1 * emphasis;
-          break;
-        case "page-fins":
-          part.rotation.z = Math.sin(time * 1.5) * 0.045 * emphasis;
-          break;
-        case "surfer-feet":
-          part.rotation.z = Math.sin(time * 2.1) * 0.06 * emphasis;
-          break;
-        case "inner-eye":
-          part.scale.set(1, 0.88 + Math.sin(time * 1.6) * 0.12, 1);
-          break;
-        case "orbit-ring":
-          part.position.x = Math.sin(time * 0.9) * 0.025 * emphasis;
-          break;
-        case "heart-plume": {
-          const heartbeat = Math.pow(Math.max(0, Math.sin(time * 2.8)), 8);
-          part.scale.setScalar(1 + heartbeat * 0.1 * emphasis);
-          break;
-        }
-        case "helping-arms":
-          part.rotation.z = Math.sin(time * 1.7) * 0.1 * emphasis;
-          break;
-        case "goliath-horns":
-          part.rotation.z = Math.sin(time * 1.15) * 0.04 * emphasis;
-          break;
-        case "crystal-spines":
-          part.scale.setScalar(1 + Math.max(0, pulse) * 0.045 * emphasis);
-          break;
-        case "sand-hourglass":
-          part.rotation.z = Math.sin(time * 0.8) * 0.08 * emphasis;
-          break;
-        case "spark-plume":
-          part.rotation.z = Math.sin(time * 1.4) * 0.09 * emphasis;
-          part.scale.setScalar(1 + Math.max(0, pulse) * 0.06 * emphasis);
-          break;
-      }
-    });
   });
-
-  function setPartRef(artifactId: string, node: THREE.Group | null) {
-    if (node) partRefs.current.set(artifactId, node);
-    else partRefs.current.delete(artifactId);
-  }
 
   const headX = proportions.length * 0.62;
   const tailX = -proportions.length * 1.02;
@@ -1158,18 +855,20 @@ export function CreatureModel({
         </mesh>
       ))}
 
-      {pieces.map((piece) => (
-        <group ref={(node) => { setPartRef(piece.artifactId, node); }} key={piece.artifactId}>
-          <GrowingTrait active={piece.partId === highlightedPart}>
-            <FishPartMesh piece={piece} />
-            {mirroredPartIds.has(piece.partId) && (
-              <group scale={[1, 1, -1]}>
-                <FishPartMesh piece={piece} />
-              </group>
-            )}
-          </GrowingTrait>
-        </group>
-      ))}
+      <TraitMarks
+        pieces={pieces}
+        baseSeed={baseSeed}
+        form="fish"
+        highlightedPart={highlightedPart}
+        layout={{
+          x: proportions.length * 0.7,
+          y: proportions.height * 0.86,
+          cx: 0,
+          cy: 0,
+          z: proportions.depth * 0.86,
+          scale: 0.48,
+        }}
+      />
     </group>
   );
 }
