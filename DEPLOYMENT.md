@@ -69,6 +69,22 @@ NEXT_PUBLIC_VISUALIZATION_DESIGN=fish
 
 `NEXT_PUBLIC_VISUALIZATION_DESIGN` is baked into the client bundle at build time. Set it to `fish`, `creature` or `constellation` before building; changing it later requires a rebuild.
 
+### Test dataset on the server
+
+To try the collective screen with the synthetic exhibition day before opening, add this line to the environment file:
+
+```ini
+ENABLE_SYNTHETIC_DATASET=true
+```
+
+It is read at runtime, so restarting the service is enough:
+
+```bash
+sudo systemctl restart after-augmented-reality
+```
+
+The visitor app's exhibition simulator then shows the "Synthetic exhibition day" switch, which adds the test visitors to the database or removes them again. Anyone who can open the site can use it, so switch the dataset off, remove the line and restart the service before the exhibition opens. Real visitor contributions are not affected by the switch.
+
 ## 4. Install dependencies and build
 
 ```bash
