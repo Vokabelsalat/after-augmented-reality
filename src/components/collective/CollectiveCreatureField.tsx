@@ -8,7 +8,7 @@ import { AquaticCreatureModel } from "@/components/creature/AquaticCreatureModel
 import { GeometryDetailReducer } from "@/components/creature/GeometryDetailReducer";
 import { StaticMeshMerger } from "@/components/creature/StaticMeshMerger";
 import { AquariumDioramaPlants } from "@/components/collective/AquariumDioramaPlants";
-import { creatureSizeScale, type AquaticForm } from "@/lib/creature/aquaticForms";
+import { creatureSizeScale, creatureSpeedFactor, creatureSpeedHoldSeconds, type AquaticForm } from "@/lib/creature/aquaticForms";
 import { creatureColorPalette } from "@/lib/creature/colorPalettes";
 import { creaturePattern, patternForTraitCount } from "@/lib/creature/patterns";
 import { creatureProportions } from "@/lib/creature/proportions";
@@ -196,12 +196,22 @@ const FloatingCreature = memo(function FloatingCreature({
     depthSpeed: isWhale ? 0 : (0.07 + seededUnit(contribution.id * 11) * 0.17) * formSpeed,
     depthDirection: seededUnit(contribution.id * 23) > 0.5 ? 1 : -1,
     scale: 0.4,
-    speed: isWhale ? 0.34 + seededUnit(contribution.id * 13) * 0.12 : (0.24 + seededUnit(contribution.id * 13) * 0.5) * formSpeed,
+    // Base speeds; the creature's current pace multiplies them while it swims.
+    speed: isWhale
+      ? 0.34 + seededUnit(contribution.id * 13) * 0.12
+      : (0.4 + seededUnit(contribution.id * 13) * 0.14) * formSpeed,
     phase: seededUnit(contribution.id * 17) * Math.PI * 2,
     heading: isWhale
       ? (seededUnit(contribution.id * 19) > 0.5 ? 0 : Math.PI)
       : seededUnit(contribution.id * 19) * Math.PI * 2,
   }), [contribution.id, formSpeed, isWhale]);
+  // Every creature changes its pace from time to time, easing between drifting, steady and darting.
+  const pace = useRef({
+    factor: creatureSpeedFactor(contribution.publicId),
+    target: creatureSpeedFactor(contribution.publicId),
+    change: 0,
+    nextChangeAt: null as number | null,
+  });
   const motion = useRef<CreatureMotion>({
     initialized: false,
     x: 0,
@@ -337,13 +347,28 @@ const FloatingCreature = memo(function FloatingCreature({
       if (state.y < -maxY + turnZone && state.vy < 0) state.vy = Math.max(0.12, Math.abs(state.vy));
     }
 
+    const currentPace = pace.current;
+    currentPace.nextChangeAt ??= elapsed + creatureSpeedHoldSeconds(contribution.publicId, 0);
+    if (elapsed >= currentPace.nextChangeAt) {
+      currentPace.change += 1;
+      currentPace.target = creatureSpeedFactor(contribution.publicId, currentPace.change);
+      currentPace.nextChangeAt = elapsed + creatureSpeedHoldSeconds(contribution.publicId, currentPace.change);
+    }
+    // Speeding up and slowing down take a couple of seconds rather than a jump.
+    currentPace.factor = THREE.MathUtils.damp(currentPace.factor, currentPace.target, 0.9, delta);
+    // Whales stay slow travellers, so their pace only nudges them.
+    const paceFactor = isWhale ? Math.sqrt(currentPace.factor) : currentPace.factor;
+    const swimSpeed = placement.speed * paceFactor;
+    const isPairing = Boolean(pairingRef?.current?.parents.some((parent) => parent.id === contribution.id));
+    if (!isPairing && state.vz !== 0) state.vz = Math.sign(state.vz) * placement.depthSpeed * paceFactor;
+
     const turn = isBottomDweller || isWhale ? 0 : Math.sin(elapsed * 0.34 + placement.phase) * 0.12 * delta;
     const previousVx = state.vx;
     state.vx = previousVx * Math.cos(turn) - state.vy * Math.sin(turn);
     state.vy = isBottomDweller || isWhale ? 0 : previousVx * Math.sin(turn) + state.vy * Math.cos(turn);
-    const currentSpeed = Math.hypot(state.vx, state.vy) || placement.speed;
-    state.vx = (state.vx / currentSpeed) * placement.speed;
-    state.vy = (state.vy / currentSpeed) * placement.speed;
+    const currentSpeed = Math.hypot(state.vx, state.vy) || swimSpeed;
+    state.vx = (state.vx / currentSpeed) * swimSpeed;
+    state.vy = (state.vy / currentSpeed) * swimSpeed;
 
     movementDirection.current.set(state.vx, state.vy, state.vz).normalize();
     aimTowardVelocity(state.vx, state.vy, state.vz);
@@ -415,9 +440,9 @@ const FloatingCreature = memo(function FloatingCreature({
       state.x = THREE.MathUtils.lerp(state.x, targetX, follow);
       state.y = isBottomDweller ? floorY : THREE.MathUtils.lerp(state.y, targetY, follow);
       state.z = THREE.MathUtils.lerp(state.z, targetZ, follow);
-      const targetVx = movementDirection.current.x * placement.speed;
-      const targetVy = movementDirection.current.y * placement.speed;
-      const targetVz = movementDirection.current.z * placement.speed;
+      const targetVx = movementDirection.current.x * swimSpeed;
+      const targetVy = movementDirection.current.y * swimSpeed;
+      const targetVz = movementDirection.current.z * swimSpeed;
       state.vx = THREE.MathUtils.damp(state.vx, targetVx, 7, delta);
       state.vy = isBottomDweller ? 0 : THREE.MathUtils.damp(state.vy, targetVy, 7, delta);
       state.vz = THREE.MathUtils.damp(state.vz, targetVz, 7, delta);

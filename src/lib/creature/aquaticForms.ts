@@ -60,3 +60,40 @@ export function creatureSizeScale(seed: string | number) {
   }
   return creatureSizeTiers[(hash >>> 0) % creatureSizeTiers.length];
 }
+
+/** How fast a visitor's creature swims compared with others of its kind. */
+export const creatureSpeedLevels = [
+  { name: "drifting", factor: 0.55 },
+  { name: "steady", factor: 1 },
+  { name: "darting", factor: 1.6 },
+] as const;
+
+function mixedUnit(value: string) {
+  let hash = 2166136261;
+  for (let index = 0; index < value.length; index += 1) {
+    hash ^= value.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  // A final mix keeps this independent of the size tier, which hashes the same id.
+  hash ^= hash >>> 16;
+  hash = Math.imul(hash, 0x85ebca6b);
+  hash ^= hash >>> 13;
+  hash = Math.imul(hash, 0xc2b2ae35);
+  hash ^= hash >>> 16;
+  return (hash >>> 0) / 4294967296;
+}
+
+/**
+ * The speed level a creature swims at after its `change`-th change of pace (0 is where it starts),
+ * plus a little jitter so creatures on the same level do not move in lockstep. The result
+ * multiplies the creature's swimming speed.
+ */
+export function creatureSpeedFactor(seed: string | number, change = 0) {
+  const level = creatureSpeedLevels[Math.floor(mixedUnit(`${seed}:speed-level:${change}`) * creatureSpeedLevels.length)];
+  return level.factor * (0.9 + mixedUnit(`${seed}:speed-jitter:${change}`) * 0.2);
+}
+
+/** Seconds a creature keeps its pace after its `change`-th change, between 6 and 18. */
+export function creatureSpeedHoldSeconds(seed: string | number, change: number) {
+  return 6 + mixedUnit(`${seed}:speed-hold:${change}`) * 12;
+}
