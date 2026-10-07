@@ -116,11 +116,14 @@ export function CollectiveVisualizationField({
   arrival,
   onSelectContribution,
   onRenderStats,
+  mergeStaticMeshes = false,
 }: {
   contributions: ExhibitionContribution[];
   progress?: number;
   arrival?: CreatureArrival | null;
   onSelectContribution?: (contribution: ExhibitionContribution) => void;
+  /** Merges each creature's still parts into a few meshes in the 3D aquarium. */
+  mergeStaticMeshes?: boolean;
   /** When set, the 3D aquarium reports its frame rate and mesh counts twice a second. */
   onRenderStats?: (report: RenderStatsReport) => void;
 }) {
@@ -137,6 +140,7 @@ export function CollectiveVisualizationField({
       arrival={arrival}
       onSelectContribution={onSelectContribution}
       onRenderStats={onRenderStats}
+      mergeStaticMeshes={mergeStaticMeshes}
     />
   );
 }

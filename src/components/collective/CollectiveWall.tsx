@@ -9,6 +9,7 @@ import { PathVisualization } from "@/components/visualization/PathVisualization"
 import { BiomeBackdrop } from "@/components/visualization/BiomeBackdrop";
 import { creatureFitMargin } from "@/components/creature/CreatureCanvas";
 import { formatRenderStats, type RenderStatsReport } from "@/components/development/RenderStats";
+import { useMergeStaticMeshes } from "@/lib/development/renderSettings";
 import { activeVisualizationCopy, collectiveCapacity } from "@/config/visualization";
 import { artifacts } from "@/data/artifacts";
 import { aggregateContributionDwellTimes } from "@/lib/contributions/heatmap";
@@ -64,6 +65,7 @@ export function CollectiveWall() {
   const [releasedArrival, setReleasedArrival] = useState<CreatureArrival | null>(null);
   const [takenOverId, setTakenOverId] = useState<number | null>(null);
   const renderStatsRef = useRef<HTMLSpanElement>(null);
+  const [mergeStaticMeshes, setMergeStaticMeshes] = useMergeStaticMeshes();
   // Written straight into the element, so the readout never re-renders the wall.
   const showRenderStatsReport = useCallback((report: RenderStatsReport) => {
     if (renderStatsRef.current) renderStatsRef.current.textContent = formatRenderStats(report);
@@ -258,6 +260,7 @@ export function CollectiveWall() {
             arrival={releasedArrival}
             onSelectContribution={setSelectedContribution}
             onRenderStats={showRenderStats ? showRenderStatsReport : undefined}
+            mergeStaticMeshes={mergeStaticMeshes}
           />
         </div>
       ) : (
@@ -288,7 +291,28 @@ export function CollectiveWall() {
           </button>
         </div>
         <div className="flex items-center gap-6 text-xs tracking-[0.18em] text-white/42 p-8">
-          {showRenderStats && view === "collective" && <span ref={renderStatsRef} aria-hidden="true" />}
+          {showRenderStats && view === "collective" && (
+            <>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={mergeStaticMeshes}
+                className="flex items-center gap-3 transition-colors hover:text-white/70"
+                onClick={() => setMergeStaticMeshes(!mergeStaticMeshes)}
+              >
+                <span
+                  className={`relative h-4 w-7 rounded-full border transition-colors ${mergeStaticMeshes ? "border-[var(--phosphor)] bg-[var(--phosphor)]/25" : "border-white/30 bg-black/20"}`}
+                  aria-hidden="true"
+                >
+                  <span
+                    className={`absolute top-1/2 left-0.5 size-2.5 -translate-y-1/2 rounded-full transition-transform ${mergeStaticMeshes ? "translate-x-3 bg-[var(--phosphor)]" : "translate-x-0 bg-white/45"}`}
+                  />
+                </span>
+                Merged meshes
+              </button>
+              <span ref={renderStatsRef} aria-hidden="true" />
+            </>
+          )}
           <span>{visibleContributions.length} {visibleContributions.length === 1 ? activeVisualizationCopy.singular : activeVisualizationCopy.plural}</span>
           {/* <span className="flex items-center gap-2">
             <span className={`size-1.5 rounded-full ${connected ? "bg-emerald-300" : "bg-amber-300"}`} aria-hidden="true" />

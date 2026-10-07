@@ -19,11 +19,16 @@ export type SavedNodeTransform = {
 
 export type CreatureModelOverrides = Partial<Record<AquaticForm, Record<string, SavedNodeTransform>>>;
 
+// Meshes added by StaticMeshMerger are not part of the model, so they never shift its mesh indices.
+function isModelMesh(object: THREE.Object3D): object is THREE.Mesh {
+  return object instanceof THREE.Mesh && object.userData.mergedStaticMesh !== true;
+}
+
 export function meshKey(root: THREE.Object3D, target: THREE.Object3D) {
   let index = 0;
   let result: string | null = null;
   root.traverse((object) => {
-    if (!(object instanceof THREE.Mesh) || result) return;
+    if (!isModelMesh(object) || result) return;
     if (object === target) result = `mesh-${index}`;
     index += 1;
   });
@@ -85,7 +90,7 @@ export function applyCreatureModelOverrides(root: THREE.Object3D, form: AquaticF
   if (!overrides) return;
   let index = 0;
   root.traverse((object) => {
-    if (!(object instanceof THREE.Mesh)) return;
+    if (!isModelMesh(object)) return;
     const transform = overrides[`mesh-${index}`];
     index += 1;
     if (!transform) return;

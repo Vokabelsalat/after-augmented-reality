@@ -20,7 +20,7 @@ export function RenderStats({ onReport }: { onReport: (report: RenderStatsReport
   const frames = useRef(0);
   const windowStart = useRef<number | null>(null);
 
-  useFrame(({ clock, gl, scene }) => {
+  useFrame(({ camera, clock, gl, scene }) => {
     const now = clock.elapsedTime;
     windowStart.current ??= now;
     frames.current += 1;
@@ -28,8 +28,9 @@ export function RenderStats({ onReport }: { onReport: (report: RenderStatsReport
     if (elapsed < updateEverySeconds) return;
 
     let meshes = 0;
+    // Counts what the camera draws, so meshes moved off its layers (like merged originals) are left out.
     scene.traverseVisible((object) => {
-      if ((object as { isMesh?: boolean }).isMesh) meshes += 1;
+      if ((object as { isMesh?: boolean }).isMesh && object.layers.test(camera.layers)) meshes += 1;
     });
     onReport({
       fps: Math.round(frames.current / elapsed),

@@ -5,6 +5,7 @@ import { Canvas, useFrame, useThree, type ThreeEvent } from "@react-three/fiber"
 import { useCallback, useEffect, useMemo, useRef, useState, type MutableRefObject } from "react";
 import * as THREE from "three";
 import { AquaticCreatureModel } from "@/components/creature/AquaticCreatureModel";
+import { StaticMeshMerger } from "@/components/creature/StaticMeshMerger";
 import { AquariumDioramaPlants } from "@/components/collective/AquariumDioramaPlants";
 import { creatureSizeScale, type AquaticForm } from "@/lib/creature/aquaticForms";
 import { creatureColorPalette } from "@/lib/creature/colorPalettes";
@@ -165,6 +166,7 @@ type FloatingCreatureProps = {
   spawnPosition?: [number, number, number];
   arrival?: CreatureArrival;
   onSelect?: (contribution: ExhibitionContribution) => void;
+  mergeStaticMeshes?: boolean;
 };
 
 function FloatingCreature({
@@ -176,6 +178,7 @@ function FloatingCreature({
   spawnPosition,
   arrival,
   onSelect,
+  mergeStaticMeshes = false,
 }: FloatingCreatureProps) {
   const canvas = useThree((state) => state.gl.domElement);
   const swimRef = useRef<THREE.Group>(null);
@@ -493,15 +496,17 @@ function FloatingCreature({
       }}
     >
       <group ref={directionRef} rotation={[0, startsFacingLeft ? Math.PI : 0, 0]}>
-        <AquaticCreatureModel
-          form={contribution.creatureForm}
-          pieces={contribution.parts}
-          baseSeed={contribution.publicId}
-          colorPalette={contribution.creaturePalette}
-          scale={placement.scale * formScale * individualScale}
-          animated
-          grounded={isBottomDweller}
-        />
+        <StaticMeshMerger enabled={mergeStaticMeshes}>
+          <AquaticCreatureModel
+            form={contribution.creatureForm}
+            pieces={contribution.parts}
+            baseSeed={contribution.publicId}
+            colorPalette={contribution.creaturePalette}
+            scale={placement.scale * formScale * individualScale}
+            animated
+            grounded={isBottomDweller}
+          />
+        </StaticMeshMerger>
       </group>
     </group>
   );
@@ -691,6 +696,7 @@ export function CollectiveCreatureField({
   arrival,
   onSelectContribution,
   onRenderStats,
+  mergeStaticMeshes = false,
 }: {
   contributions: ExhibitionContribution[];
   progress?: number;
@@ -698,6 +704,8 @@ export function CollectiveCreatureField({
   onSelectContribution?: (contribution: ExhibitionContribution) => void;
   /** When set, receives the frame rate and mesh counts twice a second. */
   onRenderStats?: (report: RenderStatsReport) => void;
+  /** Merges each creature's still parts into a few meshes to save draw calls. */
+  mergeStaticMeshes?: boolean;
 }) {
   const [babies, setBabies] = useState<BabyCreature[]>([]);
   const actorRegistry = useRef(new Map<number, MutableRefObject<CreatureMotion>>());
@@ -732,6 +740,7 @@ export function CollectiveCreatureField({
           key={contribution.id}
           contribution={contribution}
           progress={progress}
+          mergeStaticMeshes={mergeStaticMeshes}
           arrival={arrival?.id === contribution.id ? arrival : undefined}
           onSelect={onSelectContribution}
         />
@@ -750,6 +759,7 @@ export function CollectiveCreatureField({
           key={contribution.id}
           contribution={contribution}
           progress={progress}
+          mergeStaticMeshes={mergeStaticMeshes}
           actorRegistry={actorRegistry}
           pairingRef={pairingRef}
           arrival={arrival?.id === contribution.id ? arrival : undefined}
@@ -761,6 +771,7 @@ export function CollectiveCreatureField({
           key={baby.contribution.id}
           contribution={baby.contribution}
           progress={progress}
+          mergeStaticMeshes={mergeStaticMeshes}
           juvenile
           spawnPosition={baby.spawnPosition}
         />
