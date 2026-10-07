@@ -459,6 +459,7 @@ function SoftMaterial({ color, opacity = 1 }: { color: string; opacity?: number 
       transparent={opacity < 1}
       opacity={opacity}
       side={opacity < 1 ? THREE.DoubleSide : THREE.FrontSide}
+      forceSinglePass
     />
   );
 }

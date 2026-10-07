@@ -66,6 +66,8 @@ function TraitMaterial({ color, highlighted, opacity = 1, glow = 0.24 }: { color
       transparent={opacity < 1}
       opacity={opacity}
       side={THREE.DoubleSide}
+      // Two-pass rendering of see-through double-sided traits recompiles their shader every frame.
+      forceSinglePass
     />
   );
 }
