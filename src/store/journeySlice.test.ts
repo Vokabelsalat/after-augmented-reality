@@ -4,6 +4,7 @@ import {
   artifactDetected,
   artifactRevisited,
   finishJourney,
+  hydrateJourney,
   journeyReducer,
   resetJourney,
   setActiveArtifact,
@@ -24,8 +25,20 @@ describe("journeySlice", () => {
       experiencePhase: "scanning",
       discoveries: [],
     });
-    expect(state.creatureForm).not.toBeNull();
-    expect(state.creaturePalette).toEqual(creatureColorPalette("session-test"));
+  });
+
+  it("starts without a specimen", () => {
+    const state = journeyReducer(
+      undefined,
+      startJourney({ sessionId: "session-test", startedAt: 100 }),
+    );
+
+    expect(state).toMatchObject({
+      creatureForm: null,
+      creaturePalette: null,
+      creaturePattern: null,
+      creatureProportions: null,
+    });
   });
 
   it("discovers artifacts in order", () => {
@@ -45,17 +58,57 @@ describe("journeySlice", () => {
     expect(state.creatureForm).not.toBeNull();
   });
 
-  it("chooses the aquatic form when the journey starts and keeps it through scans", () => {
+  it("gives the specimen on the first scan and keeps it through later scans", () => {
     let state = journeyReducer(
       undefined,
       startJourney({ sessionId: "session-creature", startedAt: 100 }),
     );
-    const firstForm = state.creatureForm;
     state = journeyReducer(state, artifactDetected("first-work", 200));
+    const specimen = {
+      creatureForm: state.creatureForm,
+      creaturePalette: state.creaturePalette,
+      creaturePattern: state.creaturePattern,
+      creatureProportions: state.creatureProportions,
+    };
     state = journeyReducer(state, artifactDetected("second-work", 300));
 
-    expect(firstForm).not.toBeNull();
-    expect(state.creatureForm).toBe(firstForm);
+    expect(specimen.creatureForm).not.toBeNull();
+    expect(specimen.creaturePalette).toEqual(creatureColorPalette("session-creature"));
+    expect(specimen.creaturePattern).not.toBeNull();
+    expect(specimen.creatureProportions).not.toBeNull();
+    expect(state).toMatchObject(specimen);
+  });
+
+  it("restores a saved journey without scans without a specimen", () => {
+    const state = journeyReducer(
+      undefined,
+      hydrateJourney({
+        sessionId: "session-saved",
+        startedAt: 100,
+        completedAt: null,
+        discoveries: [],
+        creatureForm: "whale",
+      }),
+    );
+
+    expect(state.creatureForm).toBeNull();
+    expect(state.creaturePattern).toBeNull();
+  });
+
+  it("restores the saved specimen of a journey with scans", () => {
+    const state = journeyReducer(
+      undefined,
+      hydrateJourney({
+        sessionId: "session-saved",
+        startedAt: 100,
+        completedAt: null,
+        discoveries: [{ artifactId: "memory-fragment", sequence: 1, discoveredAt: 200 }],
+        creatureForm: "whale",
+      }),
+    );
+
+    expect(state.creatureForm).toBe("whale");
+    expect(state.creaturePalette).toEqual(creatureColorPalette("session-saved"));
   });
 
   it("lets a scan shape the narrative without requiring a choice", () => {

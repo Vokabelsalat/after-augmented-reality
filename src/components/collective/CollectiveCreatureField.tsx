@@ -10,7 +10,7 @@ import { StaticMeshMerger } from "@/components/creature/StaticMeshMerger";
 import { AquariumDioramaPlants } from "@/components/collective/AquariumDioramaPlants";
 import { creatureSizeScale, type AquaticForm } from "@/lib/creature/aquaticForms";
 import { creatureColorPalette } from "@/lib/creature/colorPalettes";
-import { creaturePattern } from "@/lib/creature/patterns";
+import { creaturePattern, patternForTraitCount } from "@/lib/creature/patterns";
 import { creatureProportions } from "@/lib/creature/proportions";
 import type { ExhibitionContribution } from "@/types/contribution";
 import { collectiveCapacity } from "@/config/visualization";
@@ -476,7 +476,7 @@ const FloatingCreature = memo(function FloatingCreature({
               pieces={contribution.parts}
               baseSeed={contribution.publicId}
               colorPalette={contribution.creaturePalette}
-            pattern={contribution.creaturePattern}
+            pattern={patternForTraitCount(contribution.creaturePattern, contribution.parts.length)}
             proportions={contribution.creatureProportions}
               scale={placement.scale * formScale * individualScale}
               animated

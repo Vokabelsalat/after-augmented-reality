@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { creaturePattern, creaturePatternKinds, isCreaturePattern } from "@/lib/creature/patterns";
+import {
+  creaturePattern,
+  creaturePatternKinds,
+  isCreaturePattern,
+  patternForTraitCount,
+} from "@/lib/creature/patterns";
 
 describe("creaturePattern", () => {
   it("draws the same valid pattern for the same seed", () => {
@@ -32,5 +37,21 @@ describe("isCreaturePattern", () => {
     ["a missing field", { kind: "spots", density: 2, orientation: "along", contrast: 0.6 }],
   ])("rejects %s", (_, value) => {
     expect(isCreaturePattern(value)).toBe(false);
+  });
+});
+
+describe("patternForTraitCount", () => {
+  const spots = { kind: "spots", density: 2, orientation: "along", contrast: 0.6, seed: 42 } as const;
+
+  it("keeps the first specimen plain and reveals the pattern with the second trait", () => {
+    expect(patternForTraitCount(spots, 0)?.kind).toBe("plain");
+    expect(patternForTraitCount(spots, 1)?.kind).toBe("plain");
+    expect(patternForTraitCount(spots, 2)).toEqual(spots);
+    expect(patternForTraitCount(spots, 7)).toEqual(spots);
+  });
+
+  it("stays plain before the second trait even without a stored pattern", () => {
+    expect(patternForTraitCount(undefined, 1)?.kind).toBe("plain");
+    expect(patternForTraitCount(undefined, 2)).toBeUndefined();
   });
 });

@@ -27,6 +27,33 @@ const patches = [
       '      throw new Error("File URL inputs are unavailable in the browser-only MindAR adapter");',
     description: "browser-only TensorFlow IO branch",
   },
+  // MindAR adds a window resize listener in its constructor and never removes it, so every
+  // stopped or failed camera attempt kept resizing a dead instance and threw once the camera
+  // had never started. The listener now lives from start() to stop(), and resize() waits for
+  // the tracker.
+  {
+    old: 'window.addEventListener("resize", this.resize.bind(this));',
+    replacement: "this._onResize = this.resize.bind(this);",
+    description: "resize listener kept for removal",
+  },
+  {
+    // The indentation keeps this from matching again inside its own replacement.
+    old: "    this.ui.showLoading(), await this._startVideo(), await this._startAR();",
+    replacement:
+      '    window.removeEventListener("resize", this._onResize), window.addEventListener("resize", this._onResize), this.ui.showLoading(), await this._startVideo(), await this._startAR();',
+    description: "resize listener added when the camera starts",
+  },
+  {
+    old: "    this.controller.stopProcessVideo(), this.video.srcObject.getTracks().forEach(function(t) {",
+    replacement:
+      '    window.removeEventListener("resize", this._onResize), this.controller.stopProcessVideo(), this.video.srcObject.getTracks().forEach(function(t) {',
+    description: "resize listener removed when the camera stops",
+  },
+  {
+    old: "    if (!n)\n      return;",
+    replacement: "    if (!n || !this.controller)\n      return;",
+    description: "resize skipped until the tracker exists",
+  },
 ];
 
 let changed = false;

@@ -20,6 +20,10 @@ import { selectCreatureForm, selectCreaturePalette, selectCreaturePattern, selec
 
 type RevealPresentation = "tracked-ar" | "simulated";
 
+function capitalize(text: string) {
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
 function ArtifactRevealSequence({
   artifact,
   isRevisit,
@@ -49,6 +53,8 @@ function ArtifactRevealSequence({
   const contentVisible = phase === "content-reveal" || phase === "complete";
   const creatureVisible = !isRevisit && visualizationDesign !== "constellation";
   const isGrowing = phase === "formation";
+  // The first scan gives the visitor their specimen rather than changing an existing one.
+  const isFirstSpecimen = discoveries.length === 1 && discoveries[0].artifactId === artifact.id;
   // The creature shows its previous state until the formation phase, when the new trait grows in.
   const traitEmerged = isGrowing || contentVisible;
   const creatureArtifactIds = discoveries.map((item) => item.artifactId);
@@ -96,8 +102,12 @@ function ArtifactRevealSequence({
       {!contentVisible && (
         <p key={phase} className="creature-reveal-status absolute inset-x-6 bottom-[10vh] text-center text-sm text-white/80">
           {phase === "assembling" && "Signal located"}
-          {phase === "attached" && (visualizationDesign === "constellation" ? "Signal located" : "Your creature recognizes something new")}
-          {phase === "release" && (visualizationDesign === "constellation" ? "Releasing language" : `${artifact.marineType} is joining it`)}
+          {phase === "attached" && (visualizationDesign === "constellation"
+            ? "Signal located"
+            : isFirstSpecimen ? "A specimen gathers around the signal" : "Your creature recognizes something new")}
+          {phase === "release" && (visualizationDesign === "constellation"
+            ? "Releasing language"
+            : isFirstSpecimen ? `${capitalize(artifact.marineType)} is forming your specimen` : `${artifact.marineType} is joining it`)}
           {phase === "formation" && (visualizationDesign === "constellation" ? "Classification unstable" : `${artifact.creaturePart.label} is taking shape`)}
         </p>
       )}

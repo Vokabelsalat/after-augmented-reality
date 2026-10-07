@@ -40,17 +40,20 @@ export function ExhibitionNavigation() {
           {count} {count === 1 ? "encounter" : "encounters"} recorded
         </p>
       </div>
-      <button
-        type="button"
-        onClick={() => dispatch(setExperiencePhase("journey"))}
-        className="pointer-events-auto flex items-center gap-2 border border-white/45 bg-[var(--abyss)] pr-3 text-sm text-white shadow-[0_0_1.5rem_rgba(0,0,0,0.35)] transition-colors hover:border-white"
-        aria-label={`Open ${activeVisualizationCopy.personalTitle}, ${count} parts collected`}
-      >
-        <div key={previewKey} className="specimen-preview-update size-14 overflow-hidden bg-white/[0.035]" aria-hidden="true">
-          <PathVisualization artifactIds={previewDiscoveries.map((item) => item.artifactId)} creatureForm={creatureForm} creatureSeed={creatureSeed} creaturePalette={creaturePalette ?? undefined} creaturePattern={creaturePattern ?? undefined} creatureProportions={creatureProportions ?? undefined} compact />
-        </div>
-        <span>My Creature</span>
-      </button>
+      {/* Visitors start without a specimen; it appears once the first scan has revealed it. */}
+      {previewDiscoveries.length > 0 && (
+        <button
+          type="button"
+          onClick={() => dispatch(setExperiencePhase("journey"))}
+          className="pointer-events-auto flex items-center gap-2 border border-white/45 bg-[var(--abyss)] pr-3 text-sm text-white shadow-[0_0_1.5rem_rgba(0,0,0,0.35)] transition-colors hover:border-white"
+          aria-label={`Open ${activeVisualizationCopy.personalTitle}, ${count} parts collected`}
+        >
+          <div key={previewKey} className="specimen-preview-update size-14 overflow-hidden bg-white/[0.035]" aria-hidden="true">
+            <PathVisualization artifactIds={previewDiscoveries.map((item) => item.artifactId)} creatureForm={creatureForm} creatureSeed={creatureSeed} creaturePalette={creaturePalette ?? undefined} creaturePattern={creaturePattern ?? undefined} creatureProportions={creatureProportions ?? undefined} compact />
+          </div>
+          <span>My Creature</span>
+        </button>
+      )}
     </header>
   );
 }

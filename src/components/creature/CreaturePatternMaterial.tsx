@@ -168,6 +168,7 @@ export function PatternedToonMaterial({
       : null),
     [color, markingColor, pattern, patterned, repeatX, repeatY, wraps],
   );
-  if (!texture) return <meshToonMaterial color={color} {...material} />;
-  return <meshToonMaterial color="#FFFFFF" map={texture} {...material} />;
+  // Separate keys give a fresh material when a pattern appears, so its shader includes the texture.
+  if (!texture) return <meshToonMaterial key="plain" color={color} {...material} />;
+  return <meshToonMaterial key="patterned" color="#FFFFFF" map={texture} {...material} />;
 }

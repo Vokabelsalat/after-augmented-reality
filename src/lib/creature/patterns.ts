@@ -60,6 +60,19 @@ export function isCreaturePattern(value: unknown): value is CreaturePattern {
   );
 }
 
+/** The scan that reveals a creature's skin pattern; until then it is shown plain. */
+export const patternRevealTraitCount = 2;
+
+const plainPattern: CreaturePattern = { kind: "plain", density: 1, orientation: "along", contrast: 0.35, seed: 0 };
+
+/**
+ * The pattern to show for a creature with `traitCount` traits: its own once it has enough,
+ * plain before. Without a stored pattern, the model draws one from its seed later on.
+ */
+export function patternForTraitCount(pattern: CreaturePattern | undefined, traitCount: number) {
+  return traitCount >= patternRevealTraitCount ? pattern : plainPattern;
+}
+
 /** A pattern drawn from `seed`; the same seed always gives the same pattern. */
 export function creaturePattern(seed: string): CreaturePattern {
   const totalWeight = creaturePatternKinds.reduce((sum, kind) => sum + kindWeights[kind], 0);

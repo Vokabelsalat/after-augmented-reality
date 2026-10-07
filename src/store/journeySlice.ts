@@ -68,6 +68,14 @@ export const initialJourneyState: JourneyState = {
   creatureProportions: null,
 };
 
+/** Draws the visitor's specimen: its form, colours, skin pattern and body proportions. */
+function giveSpecimen(state: JourneyState, seed: string) {
+  state.creatureForm = pickAquaticForm(seed);
+  state.creaturePalette = creatureColorPalette(seed);
+  state.creaturePattern = creaturePattern(seed);
+  state.creatureProportions = creatureProportions(seed);
+}
+
 function makeSessionId() {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
     return crypto.randomUUID();
@@ -88,18 +96,7 @@ const journeySlice = createSlice({
           state.sessionId = action.payload.sessionId;
           state.startedAt = action.payload.startedAt;
         }
-        if (!state.creatureForm) {
-          state.creatureForm = pickAquaticForm(state.sessionId ?? action.payload.sessionId);
-        }
-        if (!state.creaturePalette) {
-          state.creaturePalette = creatureColorPalette(state.sessionId ?? action.payload.sessionId);
-        }
-        if (!state.creaturePattern) {
-          state.creaturePattern = creaturePattern(state.sessionId ?? action.payload.sessionId);
-        }
-        if (!state.creatureProportions) {
-          state.creatureProportions = creatureProportions(state.sessionId ?? action.payload.sessionId);
-        }
+        // Visitors start without a specimen; the first scan gives them one.
         state.activeArtifactId = null;
         state.completedAt = null;
         state.experiencePhase = "scanning";
@@ -125,18 +122,7 @@ const journeySlice = createSlice({
 
         if (alreadyDiscovered) return;
 
-        if (!state.creatureForm) {
-          state.creatureForm = pickAquaticForm(state.sessionId ?? "anonymous");
-        }
-        if (!state.creaturePalette) {
-          state.creaturePalette = creatureColorPalette(state.sessionId ?? "anonymous");
-        }
-        if (!state.creaturePattern) {
-          state.creaturePattern = creaturePattern(state.sessionId ?? "anonymous");
-        }
-        if (!state.creatureProportions) {
-          state.creatureProportions = creatureProportions(state.sessionId ?? "anonymous");
-        }
+        if (!state.creatureForm) giveSpecimen(state, state.sessionId ?? "anonymous");
 
         state.discoveries.push({
           artifactId,
@@ -222,19 +208,19 @@ const journeySlice = createSlice({
       state.completedAt = action.payload.completedAt;
       state.discoveries = action.payload.discoveries;
       state.narrativeState = { ...(action.payload.narrativeState ?? neutralNarrativeState) };
-      const firstDiscovery = action.payload.discoveries[0];
-      state.creatureForm = action.payload.creatureForm
-        ?? (action.payload.sessionId
-          ? pickAquaticForm(action.payload.sessionId)
-          : firstDiscovery
-            ? pickAquaticForm("anonymous")
-            : null);
-      state.creaturePalette = action.payload.creaturePalette
-        ?? (action.payload.sessionId ? creatureColorPalette(action.payload.sessionId) : null);
-      state.creaturePattern = action.payload.creaturePattern
-        ?? (action.payload.sessionId ? creaturePattern(action.payload.sessionId) : null);
-      state.creatureProportions = action.payload.creatureProportions
-        ?? (action.payload.sessionId ? creatureProportions(action.payload.sessionId) : null);
+      // A specimen exists only once something was scanned; keep the saved one, or draw it again.
+      if (action.payload.discoveries.length === 0) {
+        state.creatureForm = null;
+        state.creaturePalette = null;
+        state.creaturePattern = null;
+        state.creatureProportions = null;
+      } else {
+        const seed = action.payload.sessionId ?? "anonymous";
+        state.creatureForm = action.payload.creatureForm ?? pickAquaticForm(seed);
+        state.creaturePalette = action.payload.creaturePalette ?? creatureColorPalette(seed);
+        state.creaturePattern = action.payload.creaturePattern ?? creaturePattern(seed);
+        state.creatureProportions = action.payload.creatureProportions ?? creatureProportions(seed);
+      }
       state.activeArtifactId = null;
       state.experiencePhase = action.payload.sessionId ? "scanning" : "intro";
     },

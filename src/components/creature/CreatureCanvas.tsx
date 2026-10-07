@@ -10,7 +10,7 @@ import { growingTraitTag, TraitGrowthContext } from "@/components/creature/Aquat
 import { aquaticFormLabels, type AquaticForm } from "@/lib/creature/aquaticForms";
 import type { CreaturePartId } from "@/types/exhibition";
 import type { CreatureColorPalette } from "@/lib/creature/colorPalettes";
-import type { CreaturePattern } from "@/lib/creature/patterns";
+import { patternForTraitCount, type CreaturePattern } from "@/lib/creature/patterns";
 import type { CreatureProportions } from "@/lib/creature/proportions";
 
 /** Share of the canvas a fitted creature fills before `fitScale` is applied. */
@@ -107,6 +107,9 @@ export function CreatureCanvas({
   const pieces = creaturePiecesFromArtifactIds(artifactIds);
   const creatureRootRef = useRef<THREE.Group>(null);
   const fitKey = `${creatureForm}:${artifactIds.join("|")}`;
+  // A trait still held back for the reveal does not count yet, so the pattern arrives with it.
+  const shownTraits = artifactIds.length - (emergingArtifactId && !emerging && artifactIds.includes(emergingArtifactId) ? 1 : 0);
+  const shownPattern = patternForTraitCount(creaturePattern, shownTraits);
   const growth = useMemo(
     () => ({ artifactId: emergingArtifactId, growing: emerging }),
     [emergingArtifactId, emerging],
@@ -131,7 +134,7 @@ export function CreatureCanvas({
         <pointLight position={[3, -2, 3]} intensity={1.4} color="#FF7557" />
         <group ref={creatureRootRef}>
           <TraitGrowthContext.Provider value={growth}>
-            <AquaticCreatureModel form={creatureForm} pieces={pieces} baseSeed={creatureSeed} colorPalette={creaturePalette} pattern={creaturePattern} proportions={creatureProportions} highlightedPart={highlightedPart} scale={(compact ? 0.86 : 1) * creatureScale} />
+            <AquaticCreatureModel form={creatureForm} pieces={pieces} baseSeed={creatureSeed} colorPalette={creaturePalette} pattern={shownPattern} proportions={creatureProportions} highlightedPart={highlightedPart} scale={(compact ? 0.86 : 1) * creatureScale} />
           </TraitGrowthContext.Provider>
         </group>
         {interactive && (
