@@ -669,9 +669,19 @@ function PairingHeart({ pairingRef }: { pairingRef: MutableRefObject<PairingEven
 
 function createBaby(event: PairingEvent): BabyCreature {
   const [first, second] = event.parents;
+  // Traits are keyed and placed by artifact, so each artifact may be inherited only once.
+  // When the preferred trait is taken, the next unused one from either parent stands in;
+  // the first parent's own traits are all distinct, so one is always left.
+  const inheritedIds = new Set<string>();
   const inheritedParts = first.parts.map((part, index) => {
-    if (index % 2 === 0) return part;
-    return second.parts.find((candidate) => candidate.partId === part.partId) ?? second.parts[index % second.parts.length] ?? part;
+    const preferred = index % 2 === 0
+      ? [part]
+      : [second.parts.find((candidate) => candidate.partId === part.partId), second.parts[index % second.parts.length], part];
+    const inherited = [...preferred, ...second.parts, ...first.parts].find(
+      (candidate) => candidate && !inheritedIds.has(candidate.artifactId),
+    )!;
+    inheritedIds.add(inherited.artifactId);
+    return inherited;
   });
   const id = 1_000_000 + event.sequence;
   const publicId = `offspring-${first.publicId}-${second.publicId}-${event.sequence}`;
