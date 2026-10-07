@@ -8,3 +8,12 @@ The crabs and the clamps need to be really at the bottom of the aquarium so far 
 The release animation of the creature needs to be smoother. Drop the creature into the collective screen with a smooth animation.
 
 integrate three quick scales
+
+
+
+tentacles as addons
+scaling the base shape
+fins
+wings
+pattern
+claws

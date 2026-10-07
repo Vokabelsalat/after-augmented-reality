@@ -24,12 +24,26 @@ export function aquaticPalette(
   };
 }
 
-export function GrowingTrait({ active, children }: { active: boolean; children: ReactNode }) {
+/** Marks the group a trait grows inside, so camera fitting can measure the trait at full size. */
+export const growingTraitTag = "growingTrait";
+
+/**
+ * A trait that is about to emerge during a reveal: it stays collapsed while `growing` is
+ * false, so the creature reads as it was before, then grows out of the body.
+ */
+export const TraitGrowthContext = createContext<{ artifactId?: string; growing: boolean }>({ growing: false });
+
+export function GrowingTrait({ active, held = false, children }: { active: boolean; held?: boolean; children: ReactNode }) {
   const ref = useRef<THREE.Group>(null);
   const startedAt = useRef<number | null>(null);
 
   useFrame(({ clock }) => {
     if (!ref.current || !active) return;
+    if (held) {
+      startedAt.current = null;
+      ref.current.scale.setScalar(0.001);
+      return;
+    }
     if (startedAt.current === null) startedAt.current = clock.elapsedTime;
     const elapsed = clock.elapsedTime - startedAt.current;
     const progress = Math.min(1, elapsed / 2.2);
@@ -39,7 +53,7 @@ export function GrowingTrait({ active, children }: { active: boolean; children: 
     ref.current.rotation.z = (1 - eased) * -0.35;
   });
 
-  return <group ref={ref} scale={active ? 0.001 : 1}>{children}</group>;
+  return <group ref={ref} scale={active ? 0.001 : 1} userData={active ? { [growingTraitTag]: true } : undefined}>{children}</group>;
 }
 
 function TraitMaterial({ color, highlighted, opacity = 1, glow = 0.24 }: { color: string; highlighted: boolean; opacity?: number; glow?: number }) {
@@ -464,6 +478,7 @@ export function TraitMarks({
   const groupRef = useRef<THREE.Group>(null);
   const [placements, setPlacements] = useState<Record<string, THREE.Vector3>>({});
   const preview = useContext(TraitPreviewContext);
+  const growth = useContext(TraitGrowthContext);
   const signature = baseSeed ?? pieces[0]?.artifactId ?? "new";
   const traitSignature = preview.seed ? `${signature}:${preview.seed}` : signature;
   const palette = creatureColorPalette(signature);
@@ -508,12 +523,15 @@ export function TraitMarks({
           ? mountRotation(mount.mount, layout.vertical, volumetricPartIds.has(piece.partId))
           : mouthRotations[layout.mouth.facing ?? "forward"];
         const highlighted = piece.partId === highlightedPart;
+        // During a reveal only the newly found trait grows, even if older traits share its part.
+        const emerging = piece.artifactId === growth.artifactId;
+        const grows = growth.artifactId ? emerging : highlighted;
         const color = piece.color || [palette.marking, palette.fin, palette.head, palette.belly][index % 4];
 
         return (
           <group key={piece.artifactId} name={piece.partId} position={position} scale={mount ? mountMirror(mount.mount) : [1, 1, 1]}>
             <group rotation={rotation}>
-              <GrowingTrait active={highlighted}>
+              <GrowingTrait active={grows} held={emerging && !growth.growing}>
                 <group scale={layout.scale * (highlighted ? 1.18 : 1)}>
                   <AquaticTraitForm partId={piece.partId} color={color} highlighted={highlighted} />
                 </group>

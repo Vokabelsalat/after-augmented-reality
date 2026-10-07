@@ -47,6 +47,8 @@ function ArtifactRevealSequence({
   const contentVisible = phase === "content-reveal" || phase === "complete";
   const creatureVisible = !isRevisit && visualizationDesign !== "constellation";
   const isGrowing = phase === "formation";
+  // The creature shows its previous state until the formation phase, when the new trait grows in.
+  const traitEmerged = isGrowing || contentVisible;
   const creatureArtifactIds = discoveries.map((item) => item.artifactId);
 
   return (
@@ -79,6 +81,8 @@ function ArtifactRevealSequence({
               fitScale={1.14}
               interactive
               highlightedPart={isGrowing ? artifact.creaturePart.id : undefined}
+              emergingArtifactId={artifact.id}
+              emerging={traitEmerged}
               label={`${artifact.marineType} altering your ${activeVisualizationCopy.singular}`}
             />
           </div>

@@ -22,6 +22,8 @@ export function PathVisualization({
   creatureForm,
   creatureSeed,
   creaturePalette,
+  emergingArtifactId,
+  emerging = false,
   label,
   interactive = false,
 }: {
@@ -35,6 +37,9 @@ export function PathVisualization({
   creatureForm?: AquaticForm | null;
   creatureSeed?: string;
   creaturePalette?: CreatureColorPalette;
+  /** A newly found trait that is held back until `emerging` turns true, then grows in. */
+  emergingArtifactId?: string;
+  emerging?: boolean;
   label?: string;
   interactive?: boolean;
 }) {
@@ -53,7 +58,7 @@ export function PathVisualization({
   if (visualizationDesign === "creature") {
     return (
       <AbstractCreatureCanvas
-        artifactIds={artifactIds}
+        artifactIds={emerging ? artifactIds : artifactIds.filter((id) => id !== emergingArtifactId)}
         highlightedPart={highlightedPart}
         compact={compact}
         label={label}
@@ -73,6 +78,8 @@ export function PathVisualization({
       creatureForm={contribution?.creatureForm ?? creatureForm ?? "fish"}
       creatureSeed={creatureSeed ?? contribution?.publicId}
       creaturePalette={contribution?.creaturePalette ?? creaturePalette}
+      emergingArtifactId={emergingArtifactId}
+      emerging={emerging}
       label={label}
       interactive={interactive}
     />

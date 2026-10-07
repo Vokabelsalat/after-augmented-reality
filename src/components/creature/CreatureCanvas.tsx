@@ -2,10 +2,11 @@
 
 import { AdaptiveDpr, OrbitControls } from "@react-three/drei";
 import { Canvas, useThree } from "@react-three/fiber";
-import { useLayoutEffect, useRef, type RefObject } from "react";
+import { useLayoutEffect, useMemo, useRef, type RefObject } from "react";
 import * as THREE from "three";
 import { creaturePiecesFromArtifactIds } from "@/components/creature/CreatureModel";
 import { AquaticCreatureModel } from "@/components/creature/AquaticCreatureModel";
+import { growingTraitTag, TraitGrowthContext } from "@/components/creature/AquaticModelShared";
 import { aquaticFormLabels, type AquaticForm } from "@/lib/creature/aquaticForms";
 import type { CreaturePartId } from "@/types/exhibition";
 import type { CreatureColorPalette } from "@/lib/creature/colorPalettes";
@@ -32,8 +33,16 @@ function FitCreatureCamera({
     if (!(currentCamera instanceof THREE.OrthographicCamera) || !object) return;
 
     object.position.set(0, 0, 0);
+    // Frame a trait that is still collapsed at its full size, so it can grow without a refit.
+    const collapsed: Array<{ group: THREE.Object3D; scale: THREE.Vector3 }> = [];
+    object.traverse((child) => {
+      if (!child.userData[growingTraitTag]) return;
+      collapsed.push({ group: child, scale: child.scale.clone() });
+      child.scale.setScalar(1);
+    });
     object.updateWorldMatrix(true, true);
     const bounds = new THREE.Box3().setFromObject(object);
+    collapsed.forEach(({ group, scale }) => group.scale.copy(scale));
     if (bounds.isEmpty()) return;
 
     const center = bounds.getCenter(new THREE.Vector3());
@@ -68,6 +77,8 @@ export function CreatureCanvas({
   creatureForm = "fish",
   creatureSeed,
   creaturePalette,
+  emergingArtifactId,
+  emerging = false,
   label,
   interactive = false,
 }: {
@@ -81,12 +92,19 @@ export function CreatureCanvas({
   creatureForm?: AquaticForm;
   creatureSeed?: string;
   creaturePalette?: CreatureColorPalette;
+  /** A trait that stays collapsed until `emerging` turns true, then grows in. */
+  emergingArtifactId?: string;
+  emerging?: boolean;
   label?: string;
   interactive?: boolean;
 }) {
   const pieces = creaturePiecesFromArtifactIds(artifactIds);
   const creatureRootRef = useRef<THREE.Group>(null);
   const fitKey = `${creatureForm}:${artifactIds.join("|")}`;
+  const growth = useMemo(
+    () => ({ artifactId: emergingArtifactId, growing: emerging }),
+    [emergingArtifactId, emerging],
+  );
 
   return (
     <div
@@ -106,7 +124,9 @@ export function CreatureCanvas({
         <pointLight position={[-3, 0, 4]} intensity={2} color="#58D6FF" />
         <pointLight position={[3, -2, 3]} intensity={1.4} color="#FF7557" />
         <group ref={creatureRootRef}>
-          <AquaticCreatureModel form={creatureForm} pieces={pieces} baseSeed={creatureSeed} colorPalette={creaturePalette} highlightedPart={highlightedPart} scale={(compact ? 0.86 : 1) * creatureScale} />
+          <TraitGrowthContext.Provider value={growth}>
+            <AquaticCreatureModel form={creatureForm} pieces={pieces} baseSeed={creatureSeed} colorPalette={creaturePalette} highlightedPart={highlightedPart} scale={(compact ? 0.86 : 1) * creatureScale} />
+          </TraitGrowthContext.Provider>
         </group>
         {interactive && (
           <OrbitControls
