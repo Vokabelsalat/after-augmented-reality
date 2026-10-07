@@ -2,7 +2,7 @@
 
 import { AdaptiveDpr } from "@react-three/drei";
 import { Canvas, useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
-import { useCallback, useEffect, useMemo, useRef, useState, type MutableRefObject } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState, type MutableRefObject } from "react";
 import * as THREE from "three";
 import { AquaticCreatureModel } from "@/components/creature/AquaticCreatureModel";
 import { GeometryDetailReducer } from "@/components/creature/GeometryDetailReducer";
@@ -171,7 +171,8 @@ type FloatingCreatureProps = {
   reduceGeometryDetail?: boolean;
 };
 
-function FloatingCreature({
+// Re-renders only when its own props change, not whenever a baby joins or the field updates.
+const FloatingCreature = memo(function FloatingCreature({
   contribution,
   progress,
   actorRegistry,
@@ -522,7 +523,7 @@ function FloatingCreature({
       </group>
     </group>
   );
-}
+});
 
 function PairingDirector({
   contributions,

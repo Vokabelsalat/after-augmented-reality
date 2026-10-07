@@ -2,7 +2,7 @@
 
 import { AdaptiveDpr } from "@react-three/drei";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { useMemo, useRef, type CSSProperties } from "react";
+import { memo, useMemo, useRef, type CSSProperties } from "react";
 import * as THREE from "three";
 import { CollectiveCreatureField, type CreatureArrival } from "@/components/collective/CollectiveCreatureField";
 import { AbstractCreatureModel } from "@/components/visualization/AbstractCreatureCanvas";
@@ -110,7 +110,7 @@ function CollectiveNetworkField({ contributions, progress }: { contributions: Ex
   );
 }
 
-export function CollectiveVisualizationField({
+function VisualizationField({
   contributions,
   progress = 1,
   arrival,
@@ -148,3 +148,6 @@ export function CollectiveVisualizationField({
     />
   );
 }
+
+// The wall re-renders for its clock, heatmap and recent stories; the aquarium only needs to when its own props change.
+export const CollectiveVisualizationField = memo(VisualizationField);

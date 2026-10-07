@@ -70,6 +70,8 @@ function RenderSwitch({ label, checked, onChange }: { label: string; checked: bo
 export function CollectiveWall() {
   const [contributions, setContributions] = useState<ExhibitionContribution[]>([]);
   const [heatmap, setHeatmap] = useState<CollectiveHeatDatum[]>([]);
+  // The poll returns a fresh heatmap every time; only a changed one should re-render the wall.
+  const heatmapSignature = useRef("");
   const [view, setView] = useState<"collective" | "heatmap">("collective");
   const [active, setActive] = useState<ExhibitionContribution | null>(null);
   const [selectedContribution, setSelectedContribution] = useState<ExhibitionContribution | null>(null);
@@ -143,6 +145,7 @@ export function CollectiveWall() {
           activeRef.current = null;
           setActive(null);
           setContributions([]);
+          heatmapSignature.current = JSON.stringify(data.heatmap);
           setHeatmap(data.heatmap);
           return;
         }
@@ -164,7 +167,11 @@ export function CollectiveWall() {
             }
           }
         }
-        setHeatmap(data.heatmap);
+        const signature = JSON.stringify(data.heatmap);
+        if (signature !== heatmapSignature.current) {
+          heatmapSignature.current = signature;
+          setHeatmap(data.heatmap);
+        }
         initialized.current = true;
         setConnected(true);
         setReady(true);
