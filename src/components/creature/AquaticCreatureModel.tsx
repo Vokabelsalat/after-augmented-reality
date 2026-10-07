@@ -94,8 +94,6 @@ function CrabModel({
         scale={0.9}
         pose={{ yaw: -0.35 }}
         color={colors.body}
-        shellColor={colors.accent}
-        jointColor={colors.dark}
         animated={animated !== false}
       />
       <TraitMarks pieces={pieces} baseSeed={baseSeed} form="crab" highlightedPart={highlightedPart} />

@@ -8,11 +8,11 @@ import { withDetailRecipe } from "@/lib/creature/geometryDetail";
 type Vector3Tuple = [number, number, number];
 
 export type ClawPose = {
-  /** Raise of the upper arm from the shoulder, in radians. */
+  /** Raise of the arm from the shoulder, in radians. */
   shoulder?: number;
-  /** Bend at the elbow, in radians. */
+  /** How far the arm arches between shoulder and wrist, in radians. */
   elbow?: number;
-  /** Tilt of the pincer at the wrist, in radians. */
+  /** Tilt of the pincer against the end of the arm, in radians. */
   wrist?: number;
   /** Swing of the whole arm toward the viewer (negative) or away from it. */
   yaw?: number;
@@ -24,14 +24,8 @@ export type ClawProps = {
   position?: Vector3Tuple;
   rotation?: Vector3Tuple;
   scale?: number;
-  /** Arm segments. */
+  /** The whole claw: arm, knuckles, palm and fingers. */
   color: string;
-  /** Palm and fingers. Defaults to `color`. */
-  shellColor?: string;
-  /** Knuckles and the bumps on the palm. Defaults to `color`. */
-  jointColor?: string;
-  /** The fingertips fade into this colour. Defaults to `jointColor`. */
-  tipColor?: string;
   /** Length of the arm relative to the pincer. */
   reach?: number;
   /** Size of the palm and fingers relative to the arm. */
@@ -79,12 +73,11 @@ export function pinchCycle(cycle: number) {
   };
 }
 
-function ClawSurface({ color, glow, vertexColors = false }: { color: string; glow?: number; vertexColors?: boolean }) {
-  if (glow === undefined) return <meshToonMaterial color={vertexColors ? "#FFFFFF" : color} vertexColors={vertexColors} />;
+function ClawSurface({ color, glow }: { color: string; glow?: number }) {
+  if (glow === undefined) return <meshToonMaterial color={color} />;
   return (
     <meshStandardMaterial
-      color={vertexColors ? "#FFFFFF" : color}
-      vertexColors={vertexColors}
+      color={color}
       emissive={color}
       emissiveIntensity={glow}
       roughness={0.38}
@@ -102,20 +95,8 @@ function fingerShape(length: number, width: number) {
   return shape;
 }
 
-/** A point on the finger's gripping edge; 0 is the tip, 1 the base. */
-function innerEdgePoint(length: number, width: number, along: number) {
-  const tip = new THREE.Vector2(length, width * 0.38);
-  const control = new THREE.Vector2(length * 0.52, width * 0.12);
-  const base = new THREE.Vector2(0, width / 2);
-  const rest = 1 - along;
-  return tip
-    .multiplyScalar(rest * rest)
-    .add(control.multiplyScalar(2 * rest * along))
-    .add(base.multiplyScalar(along * along));
-}
-
 /** `detail` scales the curve and bevel segments, for claws shown small. */
-function fingerGeometry(length: number, width: number, shellColor: string, tipColor: string, detail = 1) {
+function fingerGeometry(length: number, width: number, detail = 1) {
   const depth = width * 0.7;
   const extruded = new THREE.ExtrudeGeometry(fingerShape(length, width), {
     depth,
@@ -127,61 +108,27 @@ function fingerGeometry(length: number, width: number, shellColor: string, tipCo
     bevelSegments: Math.max(1, Math.round(3 * detail)),
   });
   extruded.translate(0, 0, -depth / 2);
-  // Fade the last part of the finger into the tip colour.
-  const shell = new THREE.Color(shellColor);
-  const tip = new THREE.Color(tipColor);
-  const mixed = new THREE.Color();
-  const positions = extruded.getAttribute("position");
-  const colors = new Float32Array(positions.count * 3);
-  for (let index = 0; index < positions.count; index += 1) {
-    const fade = THREE.MathUtils.smoothstep(positions.getX(index), length * 0.6, length * 0.88);
-    mixed.copy(shell).lerp(tip, fade).toArray(colors, index * 3);
-  }
-  extruded.setAttribute("color", new THREE.BufferAttribute(colors, 3));
   return extruded;
 }
 
-function ClawFinger({
-  length,
-  width,
-  shellColor,
-  tipColor,
-  glow,
-}: {
-  length: number;
-  width: number;
-  shellColor: string;
-  tipColor: string;
-  glow?: number;
-}) {
+function ClawFinger({ length, width, color, glow }: { length: number; width: number; color: string; glow?: number }) {
   const geometry = useMemo(
-    () => withDetailRecipe(14, (detail) => fingerGeometry(length, width, shellColor, tipColor, detail)),
-    [length, width, shellColor, tipColor],
+    () => withDetailRecipe(14, (detail) => fingerGeometry(length, width, detail)),
+    [length, width],
   );
 
   useEffect(() => () => geometry.dispose(), [geometry]);
 
   return (
-    <group>
-      <mesh geometry={geometry}>
-        <ClawSurface color={shellColor} glow={glow} vertexColors />
-      </mesh>
-      {[0.3, 0.5, 0.7].map((along) => {
-        const point = innerEdgePoint(length, width, along);
-        return (
-          <mesh key={along} position={[point.x, point.y + width * 0.2, 0]} scale={[width * 0.15, width * 0.34, width * 0.15]}>
-            <coneGeometry args={[1, 1, 6]} />
-            <ClawSurface color={shellColor} glow={glow} />
-          </mesh>
-        );
-      })}
-    </group>
+    <mesh geometry={geometry}>
+      <ClawSurface color={color} glow={glow} />
+    </mesh>
   );
 }
 
 /**
- * An articulated crustacean claw: upper arm, forearm and a pincer whose movable finger
- * opens and snaps shut. Its origin is the shoulder joint, so it can be mounted on any body.
+ * A crustacean claw: an arched arm and a pincer whose movable finger opens and snaps shut.
+ * Its origin is the shoulder, where the arm's open end can sink into any body.
  */
 export function Claw({
   side = 1,
@@ -189,9 +136,6 @@ export function Claw({
   rotation,
   scale = 1,
   color,
-  shellColor = color,
-  jointColor = color,
-  tipColor = jointColor,
   reach = 1,
   pincerSize = 1,
   pose,
@@ -203,16 +147,29 @@ export function Claw({
   glow,
 }: ClawProps) {
   const shoulderRef = useRef<THREE.Group>(null);
-  const elbowRef = useRef<THREE.Group>(null);
   const wristRef = useRef<THREE.Group>(null);
   const movableFingerRef = useRef<THREE.Group>(null);
   const fixedFingerRef = useRef<THREE.Group>(null);
   const resting = { ...defaultPose, ...pose };
   const closedAngle = -0.1;
+  const armRadius = 0.065;
 
+  // The arm leaves the shoulder along +x and curves by the elbow angle toward the wrist.
   const upperArm = 0.38 * reach;
   const forearm = 0.28 * reach;
-  const armRadius = 0.075;
+  const wrist = useMemo(
+    () => new THREE.Vector3(upperArm + forearm * Math.cos(resting.elbow), forearm * Math.sin(resting.elbow), 0),
+    [forearm, resting.elbow, upperArm],
+  );
+  const armGeometry = useMemo(() => {
+    const arc = new THREE.QuadraticBezierCurve3(new THREE.Vector3(0, 0, 0), new THREE.Vector3(upperArm, 0, 0), wrist);
+    return new THREE.TubeGeometry(arc, 20, armRadius, 10, false);
+  }, [upperArm, wrist]);
+
+  useEffect(() => () => armGeometry.dispose(), [armGeometry]);
+
+  // The pincer continues in the direction the arm arrives at the wrist.
+  const wristAngle = resting.elbow + resting.wrist;
 
   useFrame(({ clock }) => {
     if (!animated) return;
@@ -220,8 +177,7 @@ export function Claw({
     const swing = phase * Math.PI * 2;
     const { open, recoil } = pinchCycle(time * pinchSpeed + phase);
     if (shoulderRef.current) shoulderRef.current.rotation.z = resting.shoulder + Math.sin(time * 1.7 + swing) * 0.14 * sway;
-    if (elbowRef.current) elbowRef.current.rotation.z = resting.elbow + Math.sin(time * 1.25 + swing + 1.1) * 0.1 * sway - open * 0.08;
-    if (wristRef.current) wristRef.current.rotation.z = resting.wrist + Math.sin(time * 2.1 + swing) * 0.06 * sway + open * 0.1 + recoil * 0.12;
+    if (wristRef.current) wristRef.current.rotation.z = wristAngle + Math.sin(time * 2.1 + swing) * 0.06 * sway + open * 0.1 + recoil * 0.12;
     if (movableFingerRef.current) movableFingerRef.current.rotation.z = closedAngle + open * maxOpen;
     if (fixedFingerRef.current) fixedFingerRef.current.rotation.z = -open * maxOpen * 0.12;
   });
@@ -230,48 +186,21 @@ export function Claw({
     <group position={position} rotation={rotation} scale={scale}>
       <group scale={[side, 1, 1]}>
         <group ref={shoulderRef} rotation={[0, resting.yaw, resting.shoulder]}>
-          <mesh scale={armRadius * 1.25}>
-            <sphereGeometry args={[1, 12, 10]} />
-            <ClawSurface color={jointColor} glow={glow} />
-          </mesh>
-          <mesh position={[upperArm / 2, 0, 0]} rotation={[0, 0, -Math.PI / 2]} scale={[1, 1, 0.82]}>
-            <cylinderGeometry args={[armRadius * 0.82, armRadius, upperArm, 10]} />
+          <mesh geometry={armGeometry}>
             <ClawSurface color={color} glow={glow} />
           </mesh>
-
-          <group ref={elbowRef} position={[upperArm, 0, 0]} rotation={[0, 0, resting.elbow]}>
-            <mesh scale={armRadius * 1.1}>
-              <sphereGeometry args={[1, 12, 10]} />
-              <ClawSurface color={jointColor} glow={glow} />
-            </mesh>
-            <mesh position={[forearm / 2, 0, 0]} rotation={[0, 0, -Math.PI / 2]}>
-              <cylinderGeometry args={[armRadius * 0.9, armRadius * 0.78, forearm, 10]} />
-              <ClawSurface color={color} glow={glow} />
-            </mesh>
-
-            <group ref={wristRef} position={[forearm, 0, 0]} rotation={[0, 0, resting.wrist]}>
-              <group scale={pincerSize}>
-                <mesh scale={armRadius * 1.05}>
-                  <sphereGeometry args={[1, 12, 10]} />
-                  <ClawSurface color={jointColor} glow={glow} />
-                </mesh>
-                <mesh position={[0.22, 0.01, 0]} scale={[0.27, 0.19, 0.15]}>
-                  <sphereGeometry args={[1, 20, 14]} />
-                  <ClawSurface color={shellColor} glow={glow} />
-                </mesh>
-                {[0.12, 0.22, 0.32].map((x, index) => (
-                  <mesh key={x} position={[x, 0.17 - Math.abs(index - 1) * 0.03, 0.05]} scale={0.022}>
-                    <sphereGeometry args={[1, 8, 6]} />
-                    <ClawSurface color={jointColor} glow={glow} />
-                  </mesh>
-                ))}
-                <group ref={fixedFingerRef} position={[0.4, -0.06, 0]}>
-                  <ClawFinger length={0.3} width={0.11} shellColor={shellColor} tipColor={tipColor} glow={glow} />
-                </group>
-                <group ref={movableFingerRef} position={[0.36, 0.08, 0]} rotation={[0, 0, closedAngle + (animated ? 0 : maxOpen * 0.25)]}>
-                  <group scale={[1, -1, 1]}>
-                    <ClawFinger length={0.33} width={0.1} shellColor={shellColor} tipColor={tipColor} glow={glow} />
-                  </group>
+          <group ref={wristRef} position={wrist} rotation={[0, 0, wristAngle]}>
+            <group scale={pincerSize}>
+              <mesh position={[0.2, 0.01, 0]} scale={[0.27, 0.19, 0.15]}>
+                <sphereGeometry args={[1, 20, 14]} />
+                <ClawSurface color={color} glow={glow} />
+              </mesh>
+              <group ref={fixedFingerRef} position={[0.38, -0.06, 0]}>
+                <ClawFinger length={0.3} width={0.11} color={color} glow={glow} />
+              </group>
+              <group ref={movableFingerRef} position={[0.34, 0.08, 0]} rotation={[0, 0, closedAngle + (animated ? 0 : maxOpen * 0.25)]}>
+                <group scale={[1, -1, 1]}>
+                  <ClawFinger length={0.33} width={0.1} color={color} glow={glow} />
                 </group>
               </group>
             </group>
