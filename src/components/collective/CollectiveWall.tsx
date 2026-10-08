@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore
 import { CollectiveVisualizationField } from "@/components/collective/CollectiveVisualizationField";
 import type { CreatureArrival } from "@/components/collective/CollectiveCreatureField";
 import { CollectiveHeatmap } from "@/components/collective/CollectiveHeatmap";
+import { AquariumAudio } from "@/components/collective/AquariumAudio";
 import { SpecimenDialog } from "@/components/collective/SpecimenDialog";
 import { PathVisualization } from "@/components/visualization/PathVisualization";
 import { FitText } from "@/components/ui/FitText";
@@ -306,6 +307,8 @@ export function CollectiveWall() {
           </span> */}
         </div>
       </header>
+
+      <AquariumAudio />
 
       <input
         className="tank-time-slider absolute inset-x-0 bottom-[var(--collective-recents-height)] z-40 w-full translate-y-1/2"

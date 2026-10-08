@@ -17,3 +17,5 @@ fins
 wings
 pattern
 claws
+bow
+hat
