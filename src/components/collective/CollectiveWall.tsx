@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties } from "react";
 import { CollectiveVisualizationField } from "@/components/collective/CollectiveVisualizationField";
 import type { CreatureArrival } from "@/components/collective/CollectiveCreatureField";
@@ -32,7 +33,7 @@ const osloClock = new Intl.DateTimeFormat("en-GB", {
 });
 
 // Debug readout: always on during development, and with `?stats` in the URL on a production server.
-const noSubscription = () => () => {};
+const noSubscription = () => () => { };
 
 function minuteOfDay(value: Date | string) {
   const parts = Object.fromEntries(
@@ -373,7 +374,7 @@ export function CollectiveWall() {
           className="collective-recents absolute inset-x-0 bottom-0 z-30 pb-6 lg:pb-7"
           aria-label={`Most recently shared stories and ${activeVisualizationCopy.plural}`}
         >
-          <div className="collective-recents-grid grid h-full grid-cols-[minmax(24rem,1.5fr)_minmax(20rem,1fr)] grid-rows-[minmax(0,1fr)] pt-4">
+          <div className="collective-recents-grid grid h-full grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] grid-rows-[minmax(0,1fr)] pt-4">
             <article className="collective-recents-latest grid h-full min-h-0 min-w-0 grid-cols-[clamp(7rem,9vw,9rem)_1fr] grid-rows-[minmax(0,1fr)] items-center gap-5 border-r border-white/12 pr-8">
               <div className="aspect-square w-full">
                 <PathVisualization
@@ -416,6 +417,20 @@ export function CollectiveWall() {
             </div>
           </div>
         </aside>
+      )}
+
+      {view === "collective" && (
+        <a
+          className="collective-qr absolute z-30 flex flex-col items-center gap-2 text-base text-[var(--foam)]"
+          href="https://aar.kusnick.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Scan to open the exhibition on your phone at aar.kusnick.com"
+        >
+          <span className="text-center text-sm leading-5">Contribute your own story creature</span>
+          <Image src="/images/exhibition-qr.svg" alt="QR code linking to https://aar.kusnick.com" width={164} height={164} className="block h-auto w-full" unoptimized />
+          <span className="whitespace-nowrap text-sm leading-5">aar.kusnick.com</span>
+        </a>
       )}
 
       {selectedContribution && (
