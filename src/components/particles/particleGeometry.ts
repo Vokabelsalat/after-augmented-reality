@@ -281,34 +281,148 @@ function sampleButterfly(progress: number, random: () => number): Point3 {
   ];
 }
 
-// A fish in profile, swimming toward +x, with a few bubbles leaking from its mouth.
+// A fish in profile, swimming toward +x.
 function sampleFish(index: number, count: number, progress: number, random: () => number): Point3 {
-  const bodyCount = Math.floor(count * 0.5);
+  const bodyCount = Math.floor(count * 0.58);
   if (index < bodyCount) {
     const point = sampleSphere(index, bodyCount, [0.78, 0.46, 0.26]);
     return [point[0] + 0.1, point[1], point[2]];
   }
-  if (progress < 0.68) {
+  if (progress < 0.76) {
     const side = random() < 0.5 ? -1 : 1;
     const point = sampleTriangle([-0.6, 0, 0], [-1.08, side * 0.56, 0], [-0.9, side * 0.04, 0], random);
     return [point[0], point[1], (random() - 0.5) * 0.05];
   }
-  if (progress < 0.78) {
+  if (progress < 0.87) {
     const point = sampleTriangle([-0.28, 0.4, 0], [0.24, 0.44, 0], [-0.36, 0.8, 0], random);
     return [point[0], point[1], (random() - 0.5) * 0.05];
   }
-  if (progress < 0.84) {
+  if (progress < 0.94) {
     const point = sampleTriangle([0.06, -0.38, 0], [0.34, -0.42, 0], [-0.1, -0.66, 0], random);
     return [point[0], point[1], (random() - 0.5) * 0.05];
   }
-  if (progress < 0.89) {
-    const angle = random() * Math.PI * 2;
-    return [0.6 + Math.cos(angle) * 0.075, 0.12 + Math.sin(angle) * 0.075, 0.24];
-  }
-  const bubbles: Array<[number, number, number]> = [[0.98, 0.3, 0.055], [1.06, 0.58, 0.075], [0.96, 0.9, 0.095]];
-  const [x, y, radius] = bubbles[Math.floor(random() * bubbles.length)];
   const angle = random() * Math.PI * 2;
-  return [x + Math.cos(angle) * radius, y + Math.sin(angle) * radius, (random() - 0.5) * 0.04];
+  return [0.6 + Math.cos(angle) * 0.075, 0.12 + Math.sin(angle) * 0.075, 0.24];
+}
+
+// The same pseudo-random value for every particle of one feather.
+function unitHash(value: number) {
+  const hashed = Math.sin(value * 127.1 + 311.7) * 43758.5453;
+  return hashed - Math.floor(hashed);
+}
+
+// Each crest feather: where it roots on the crown (angle around the head),
+// its lean from upright (negative leans back) and its length.
+const crestFeathers: Array<[number, number, number]> = [
+  [0.86, -1.08, 0.92], [0.8, -0.84, 1.2], [0.74, -0.6, 1.44], [0.67, -0.38, 1.6],
+  [0.6, -0.16, 1.56], [0.53, 0.06, 1.36], [0.46, 0.26, 1.06],
+];
+const crestHead = { x: 0.04, y: -0.78, width: 0.42, height: 0.36, depth: 0.32 };
+
+// A point on the head's surface in the direction (dx, dy, dz). The skull
+// narrows towards the face and flattens a little under the chin.
+function crestHeadSurface(dx: number, dy: number, dz: number): Point3 {
+  const length = Math.hypot(dx, dy, dz) || 1;
+  const [nx, ny, nz] = [dx / length, dy / length, dz / length];
+  const narrowing = 1 - 0.32 * Math.max(0, nx);
+  const chin = ny < 0 ? 1 - 0.18 * ny * ny : 1;
+  return [
+    crestHead.x + nx * crestHead.width,
+    crestHead.y + ny * crestHead.height * chin,
+    nz * crestHead.depth * narrowing,
+  ];
+}
+
+// A point on a tube of the given radius around a centre line, with a flattened side.
+function aroundTube(center: [number, number], direction: number, radius: number, angle: number, width = 0.8): Point3 {
+  return [
+    center[0] - Math.sin(direction) * Math.cos(angle) * radius,
+    center[1] + Math.cos(direction) * Math.cos(angle) * radius,
+    Math.sin(angle) * radius * width,
+  ];
+}
+
+// The fortune-telling cockatoo's raised crest: a fan of feathers rooted along
+// its crown, sweeping back and up and hooking forward at the tips, each a
+// shaft with a tapering vane. Below sit the rounded head, its two eyes, the
+// hooked beak and a short neck.
+function sampleCrest(progress: number, random: () => number): Point3 {
+  if (progress < 0.2) {
+    // The head as contour lines, so it reads as a rounded volume from any
+    // side: rings around the skull from neck to face, its profile and its
+    // outline seen from above.
+    const line = random();
+    const angle = random() * Math.PI * 2;
+    if (line < 0.62) {
+      const along = -0.84 + Math.floor(random() * 6) * 0.336;
+      const ring = Math.sqrt(1 - along * along);
+      return crestHeadSurface(along, Math.cos(angle) * ring, Math.sin(angle) * ring);
+    }
+    if (line < 0.92) {
+      return line < 0.8
+        ? crestHeadSurface(Math.cos(angle), Math.sin(angle), 0)
+        : crestHeadSurface(Math.cos(angle), 0, Math.sin(angle));
+    }
+    const y = random() * 2 - 1;
+    const ring = Math.sqrt(1 - y * y);
+    return crestHeadSurface(Math.cos(angle) * ring, y, Math.sin(angle) * ring);
+  }
+
+  if (progress < 0.24) {
+    // One eye on each side of the head: a ring around a pupil, set into the skin.
+    const side = random() < 0.5 ? -1 : 1;
+    const [ex, ey, ez] = crestHeadSurface(0.42, 0.2, side * 0.88);
+    const angle = random() * Math.PI * 2;
+    const radius = random() < 0.65 ? 0.075 : 0.028;
+    return [ex + Math.cos(angle) * radius, ey + Math.sin(angle) * radius, ez + side * 0.02];
+  }
+
+  if (progress < 0.295) {
+    // The hooked upper beak: a tube that leaves the face, arcs over and
+    // tapers to a point curling down and back. Particles follow the tube's
+    // girth, so the thin tip stays sparse instead of bunching up.
+    const t = 1 - Math.sqrt(random());
+    const arc = 1.25 - t * 2.45;
+    const center: [number, number] = [0.42 + Math.cos(arc) * 0.2, -0.92 + Math.sin(arc) * 0.2];
+    return aroundTube(center, arc + Math.PI / 2, 0.13 * (1 - t) + 0.012, random() * Math.PI * 2);
+  }
+
+  if (progress < 0.315) {
+    // The smaller lower beak, tucked under the hook well short of its tip.
+    const t = 1 - Math.sqrt(random());
+    const center: [number, number] = [0.38 + t * 0.1, -1.0 - t * 0.03];
+    return aroundTube(center, -0.25, 0.065 * (1 - t) + 0.012, random() * Math.PI * 2);
+  }
+
+  if (progress < 0.35) {
+    // A short neck, fading out below the back of the head.
+    const t = random();
+    const angle = random() * Math.PI * 2;
+    const radius = 0.27 + t * 0.05;
+    return [-0.06 + Math.cos(angle) * radius, -1.02 - t * 0.3, Math.sin(angle) * radius * 0.9];
+  }
+
+  const feather = Math.floor(random() * crestFeathers.length);
+  const [root, tilt, length] = crestFeathers[feather];
+  const t = random();
+  const along = t * length;
+  const baseX = crestHead.x + Math.cos(root * Math.PI) * crestHead.width;
+  const baseY = crestHead.y + Math.sin(root * Math.PI) * crestHead.height;
+  // Tips hook forward (+x) and down, and each feather bows out of the plane.
+  const hook = t * t * t;
+  const x = baseX + Math.sin(tilt) * along + hook * 0.48;
+  const y = baseY + Math.cos(tilt) * along - hook * 0.22;
+  const z = Math.sin(t * Math.PI) * (0.1 + unitHash(feather) * 0.12);
+  // Most particles trace the shaft and the two edges of the vane.
+  const vaneWidth = 0.12 * Math.sin(Math.PI * Math.pow(t, 0.7)) * (0.85 + unitHash(feather + 10) * 0.3);
+  const strand = random();
+  const offset =
+    strand < 0.3 ? 0 : strand < 0.8 ? (strand < 0.55 ? -1 : 1) * vaneWidth : (random() * 2 - 1) * vaneWidth;
+  return [
+    x + Math.cos(tilt) * offset,
+    y - Math.sin(tilt) * offset,
+    z + (random() - 0.5) * 0.03,
+  ];
 }
 
 // Bar and gap widths of the barcode, in modules, alternating from a bar.
@@ -465,16 +579,8 @@ function formationPosition(
       return point;
     }
 
-    case "nest": {
-      const ring = index % 9;
-      const radius = 0.3 + ring * 0.085;
-      const angle = Math.floor(index / 9) * GOLDEN_ANGLE + ring * 0.18;
-      return [
-        Math.cos(angle) * radius * 1.2,
-        -0.58 + radius * radius * 0.82 + jitter(0.05),
-        Math.sin(angle) * radius * 0.56,
-      ];
-    }
+    case "crest":
+      return sampleCrest(progress, random);
 
     case "prism": {
       const vertices: Point3[] = [

@@ -38,7 +38,7 @@ describe("artifact target image configuration", () => {
       ["triad", "#6C3F61", "#5A2F4F"],
       ["tree", "#597D8C", "#365E6D"],
       ["cuboid", "#79A83B", "#4D751C"],
-      ["nest", "#D5A62E", "#8A6500"],
+      ["crest", "#D5A62E", "#8A6500"],
       ["prism", "#C4473D", "#A52E27"],
       ["book", "#ffffff", "#000000"],
       ["skateboard", "#8B5E3C", "#6B4027"],

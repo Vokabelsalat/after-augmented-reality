@@ -514,7 +514,7 @@ const exhibitionSources: ArtifactSource[] = [
     title: "The Grand Hotel Bald Cockatoo",
     artist: "Scott Rettberg, Caitlin Fisher, Roderick Coover",
     visualFamily: "machine",
-    particleForm: "nest",
+    particleForm: "crest",
     color: "#D5A62E",
     alternativeColor: "#8A6500",
     theme: "worldmaking",
