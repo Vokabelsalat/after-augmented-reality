@@ -1,8 +1,16 @@
 # The Fishbowl Leaks
 
-**The Fishbowl Leaks** is a mobile-first AR exhibition prototype about extending digital narratives. A visitor scans physical works; particles detach from each work, resolve into accessible exhibition content, and join a persistent personal constellation. The final screen turns the ordered path into a deterministic short poem.
+**The Fishbowl Leaks** transform(s) the exhibition into a porous virtual aquarium…  
+ 
+Visitors encounter fragments of the surrounding works as marine life and unstable species through a browser-based augmented reality layer. Each encounter alters a personal creature, shaped by the visitor’s movement through the exhibition, transforming it into a generative story.  
+The aquarium acts as both environment and metaphor. It displays containment but also resembles a collective, developing system. On a shared screen, the aquarium begins in a state of order: partitioned and classified. As visitors contribute their creatures, this order gradually breaks down. Texts detach, species break free, the tank falls apart, and memory is leaking, releasing the creatures into open waters… 
+ 
+**The Fishbowl Leaks** imagine(s) a living narrative ecosystem. The single artworks start in fixed categories and grow together into a symbiotic, participatory collective, by the help of exhibition visitors. The result sits between exhibition guide, generative story system, and shared hallucination in a container. What might evolve when that container starts to leak? 
 
-The complete prototype loop works without a camera through the built-in simulator. Real image tracking uses MindAR through a narrow adapter and can be enabled by adding one compiled target bundle.
+## Used Software
+
+Augmented Reality Web-Application created by Codex (OpenAI) and Claude Code (Antropic), assisted by Jakob Kusnick using
+Next.js, three.js, MindAR, Tailwind CSS, SQLite, Node.js,Inkscape, Visual Studio Code
 
 ## Setup
 
@@ -72,7 +80,7 @@ Dwell time runs from an artifact's first scan until the next new artifact is sca
 
 Open `/collective` full-screen on the exhibition display. It polls the live contribution feed every 2.5 seconds. Each new story expands into focus, displays its narrative, then contracts into an abstract constellation and joins up to 60 other drifting contributions. Initial history appears directly as the ambient field, so restarting the display does not replay every old story.
 
-Use the **Time map** switch on the collective display to see cumulative dwell time for all 16 artwork stations. This view aggregates every stored contribution (not only the recent stories in the ambient field), ranks the stations by total attention, and shows visit count plus average dwell time. Missing timing data from older stories is excluded from the totals.
+Use the **Time map** switch on the collective display to see cumulative dwell time for all 17 artwork stations. This view aggregates every stored contribution (not only the recent stories in the ambient field), ranks the stations by total attention, and shows visit count plus average dwell time. Missing timing data from older stories is excluded from the totals.
 
 The default database file is `data/exhibition.sqlite` and is ignored by Git. Set `EXHIBITION_DATABASE_PATH` to an absolute persistent volume path in production. Run one server instance against that volume; for horizontal scaling, replace the small database helper with a managed shared SQL store while preserving the API contract.
 
@@ -99,11 +107,11 @@ Save the downloaded file as:
 public/targets/exhibition.mind
 ```
 
-The exhibition prints the constellations on white. The checked-in `exhibition.mind` bundle contains 16 targets compiled from the 400 × 300 px `-white.png` particle constellation images in `public/targets/`, in exhibition ID order (`1-finding-frida-white.png` through `16-fishbowl-leaks-white.png`). `npm run targets:export` regenerates them from each artifact's `alternativeColor`. The constellation gallery still previews the dark version, but dark images are not exported or compiled. `npm run targets:compile` recompiles the bundle with MindAR's offline compiler, so the web compiler is optional. Recompile whenever the compiled images change.
+The exhibition prints the constellations on white. The checked-in `exhibition.mind` bundle contains 17 targets compiled from the 400 × 533 px `-white.png` particle constellation images in `public/targets/`, in exhibition ID order (`1-finding-frida-white.png` through `17-realidad-mitigada-white.png`). `npm run targets:export` regenerates them from each artifact's `alternativeColor`. The constellation gallery still previews the dark version, but dark images are not exported or compiled. `npm run targets:compile` recompiles the bundle with MindAR's offline compiler, so the web compiler is optional. Recompile whenever the compiled images change.
 
 To lay out the constellations for the targets, open `/particles` in development (`npm run dev`). Each preview shows its target image exactly as it will be exported. Drag a constellation to turn it and Shift-drag to roll it within the image; on release it is re-framed to fill the target. **Save layout** writes every orientation to `src/data/constellationOrientations.ts`, which the target export, the print files and the scanner's assembly animation all read. Then run `npm run targets:build` to regenerate the target images, `exhibition.mind` with its compressed copies and version hash, the verification and the print files in one go, and reprint the targets whose layout changed. Saving only works while developing; the route returns 404 in production.
 
-The compile images are deliberately small. MindAR stores every target at several scales from the full image size down to 100 px, so the bundle grows with the image resolution, while the camera only ever sees a print at a few hundred pixels. At 400 × 300 px (`COMPILE_WIDTH` in `scripts/export-particle-targets.mjs`) the bundle is about 4.5 MB instead of 6.5 MB at 800 × 600 px, with the same detection results in `npm run targets:assess`. Do not go below 400 px: MindAR's tracking image needs a short side of at least 256 px.
+The compile images are deliberately small. MindAR stores every target at several scales from the full image size down to 100 px, so the bundle grows with the image resolution, while the camera only ever sees a print at a few hundred pixels. At 400 × 533 px (`COMPILE_WIDTH` in `scripts/export-particle-targets.mjs`) the bundle is about 4.5 MB instead of 6.5 MB at 800 × 600 px (measured with the earlier 4:3 targets), with the same detection results in `npm run targets:assess`. Do not go below 400 px: MindAR's tracking image needs a short side of at least 256 px.
 
 The compile script also writes Brotli and gzip copies (`exhibition.mind.br`, `exhibition.mind.gz`) and the bundle's content hash to `src/data/targetBundle.ts`. The scanner loads the bundle from `/api/targets?v=<hash>`, which sends the smallest encoding the browser accepts (about 1.4 MB with Brotli) and lets browsers cache it for good under that hash. MindAR's msgpack format is otherwise sent uncompressed: neither Next nor Caddy compresses `application/octet-stream`.
 
@@ -111,11 +119,11 @@ Run `npm run targets:verify` after compiling. Each compiled target keeps a downs
 
 `npm run targets:assess [typical|hard] [framesPerTarget]` estimates how reliably each target is detected. It renders synthetic 640 × 480 camera frames of every print at near, mid and far distance with random viewing angle, lighting, ink contrast, blur and noise, runs MindAR's own crop detector and matcher on them like the browser does (first matching target index wins), and reports the detection rate, wrong-target detections and a false-positive check with unrelated dot prints. With the current targets, `typical` detects 100% with no confusions; `hard` (dim light, washed-out ink, motion blur, steep angles) detects about 74%, with the misses almost all at the far distance, where the print covers only a quarter to a third of the frame's shorter side. Keep the printed target at least a third of the camera's shorter side in view: roughly, an A4-wide print up to about 0.8 m away, or larger prints for longer distances. Matte paper avoids glare that washes out the ink.
 
-`npm run targets:print [--width-mm=400] [--dpi=300]` exports the print files, drawn with the same painter as the compile images, so prints and bundle show the same picture at any size. It writes one vector PDF per target at the given print width and a matching raster PNG at the given dpi (skip with `--dpi=0`) to `print/`, which is not committed, plus an A4 test sheet with all targets in `public/targets/print-white.pdf`, six per page with each target's title and MindAR index.
+`npm run targets:print [--width-mm=400] [--dpi=300]` exports the print files, drawn with the same painter as the compile images, so prints and bundle show the same picture at any size. It writes one vector PDF per target at the given print width and a matching raster PNG at the given dpi (skip with `--dpi=0`) to `print/`, which is not committed, plus an A4 test sheet with all targets in `public/targets/print-white.pdf`, nine per page with each target's title and MindAR index.
 
 ### 3. Check the configuration mapping
 
-`src/data/artifacts.ts` is the runtime source of truth and follows the CSV row order. `targetIndex` must match the image order used by the compiler. MindAR emits a number, the adapter forwards it, and `artifactByTargetIndex` resolves the exhibition content. The curatorial themes are **Memory**, **Interface**, **Worldmaking**, **Embodiment**, and **Agency**. Until final artwork images are available, the 16 configured works reuse three poster-image families while each keeps the artwork-specific `color`, white-background `alternative_color`, and simplified `particleForm` defined in `public/exhibition.csv`.
+`src/data/artifacts.ts` is the runtime source of truth and follows the CSV row order. `targetIndex` must match the image order used by the compiler. MindAR emits a number, the adapter forwards it, and `artifactByTargetIndex` resolves the exhibition content. The curatorial themes are **Memory**, **Interface**, **Worldmaking**, **Embodiment**, and **Agency**. Until final artwork images are available, the 17 configured works reuse three poster-image families while each keeps the artwork-specific `color`, white-background `alternative_color`, and simplified `particleForm` defined in `public/exhibition.csv`.
 
 ### 4. Serve over HTTPS on a phone
 

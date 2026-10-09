@@ -308,6 +308,15 @@ function AquaticTraitForm({ partId, color, highlighted }: { partId: CreaturePart
       return <mesh position={[0, -0.06, -0.05]}><extrudeGeometry args={[traitShapes.comb, { ...flatExtrude, depth: 0.06, curveSegments: 4 }]} />{material}</mesh>;
     case "spark-plume":
       return <mesh position={[0, -0.06, -0.03]}><extrudeGeometry args={[traitShapes.flame, flatExtrude]} /><TraitMaterial color={color} highlighted={highlighted} glow={0.7} /></mesh>;
+    case "barcode-fin":
+      // Bars of a barcode, standing side by side like the rays of a fin.
+      return (
+        <group position={[0, -0.04, -0.02]}>
+          {[[-0.21, 0.07, 0.42], [-0.11, 0.035, 0.52], [-0.03, 0.08, 0.58], [0.07, 0.035, 0.52], [0.14, 0.06, 0.44], [0.22, 0.035, 0.34]].map(([x, width, height]) => (
+            <mesh key={x} position={[x, height / 2, 0]}><boxGeometry args={[width, height, 0.05]} />{material}</mesh>
+          ))}
+        </group>
+      );
     case "crystal-spines":
       return <mesh geometry={traitGeometries.thorn}><TraitMaterial color={color} highlighted={highlighted} opacity={0.86} /></mesh>;
     case "helping-arms":

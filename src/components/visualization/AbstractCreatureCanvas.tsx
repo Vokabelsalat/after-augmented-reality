@@ -161,6 +161,14 @@ function AbstractPart({ piece }: { piece: CreaturePiece }) {
           </mesh>
         </group>
       );
+    case "barcode-fin":
+      return (
+        <group position={[0, 0.2, -0.58]}>
+          {[[-0.3, 0.06], [-0.18, 0.03], [-0.08, 0.09], [0.06, 0.03], [0.15, 0.06], [0.28, 0.03]].map(([x, width]) => (
+            <mesh key={x} position={[x, 0, 0]}><boxGeometry args={[width, 0.9, 0.05]} />{material}</mesh>
+          ))}
+        </group>
+      );
     case "spark-plume":
       return (
         <group position={[0.36, 1.5, 0.08]}>

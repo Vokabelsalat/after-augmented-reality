@@ -55,7 +55,7 @@ for (const artifact of ordered) {
 const sheetWidth = 595.28;
 const sheetHeight = 841.89;
 const margin = 36;
-const columns = 2;
+const columns = 3;
 const rows = 3;
 const gutter = 24;
 const labelHeight = 18;

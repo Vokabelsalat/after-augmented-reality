@@ -23,6 +23,7 @@ export const particleFormIds = [
   "hourglass",
   "spiral",
   "fish",
+  "crescent",
 ] as const;
 
 export type ParticleFormId = (typeof particleFormIds)[number];
@@ -43,7 +44,8 @@ export type CreaturePartId =
   | "goliath-horns"
   | "crystal-spines"
   | "sand-hourglass"
-  | "spark-plume";
+  | "spark-plume"
+  | "barcode-fin";
 
 export type CreaturePart = {
   id: CreaturePartId;

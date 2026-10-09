@@ -8,17 +8,18 @@ import { targetBundleVersion } from "@/data/targetBundle";
 
 describe("artifact target image configuration", () => {
   it("maps the full exhibition in CSV order to unique target indices", () => {
-    expect(artifacts).toHaveLength(16);
+    expect(artifacts).toHaveLength(17);
     expect(artifacts.map(({ exhibitionId }) => exhibitionId)).toEqual(
-      Array.from({ length: 16 }, (_, index) => index + 1),
+      Array.from({ length: 17 }, (_, index) => index + 1),
     );
     expect(artifacts.map(({ targetIndex }) => targetIndex)).toEqual(
-      Array.from({ length: 16 }, (_, index) => index),
+      Array.from({ length: 17 }, (_, index) => index),
     );
     expect(artifacts[0].title).toBe("Finding Frida");
     expect(artifacts[11].title).toBe("Goliath");
     expect(artifacts[14].title).toBe("Fiery Sparks of Light");
     expect(artifacts[15].title).toBe("The Fishbowl Leaks");
+    expect(artifacts[16].title).toBe("Realidad Mitigada");
   });
 
   it("keeps the three poster families while assigning artwork-specific particles", () => {
@@ -49,11 +50,12 @@ describe("artifact target image configuration", () => {
       ["hourglass", "#C19D65", "#77572F"],
       ["spiral", "#E45D3E", "#B43822"],
       ["fish", "#2F6FB5", "#1D4F8A"],
+      ["crescent", "#9A6BDB", "#5E2E9A"],
     ]);
   });
 
   it("gives every artifact a distinct creature part", () => {
-    expect(new Set(artifacts.map(({ creaturePart }) => creaturePart.id)).size).toBe(16);
+    expect(new Set(artifacts.map(({ creaturePart }) => creaturePart.id)).size).toBe(17);
     expect(
       artifacts.find(({ id }) => id === "grand-hotel-bald-cockatoo")?.creaturePart,
     ).toMatchObject({ id: "cockatoo-beak", label: "Cockatoo beak" });

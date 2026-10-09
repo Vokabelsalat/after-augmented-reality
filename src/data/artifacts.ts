@@ -400,6 +400,29 @@ const aquariumLayers: Record<string, AquariumLayer> = {
       ],
     },
   },
+  "realidad-mitigada": {
+    marineType: "barcoded moon jelly",
+    classification: "Mitigated reality drifter",
+    visualTraits: ["barcode stripes", "sticker spots"],
+    stateEffects: { voice: 2, agency: 1, openness: 1 },
+    storylet:
+      "A violet moon rose behind the bars of a barcode. By morning, pieces of the sea were stuck to walls far outside the tank.",
+    choice: {
+      prompt: "Someone is sticking pieces of the sea outside the glass.",
+      options: [
+        {
+          id: "peel",
+          label: "Peel them off",
+          effects: { coherence: 2, voice: -1 },
+        },
+        {
+          id: "spread",
+          label: "Pass them on",
+          effects: { agency: 2, openness: 1 },
+        },
+      ],
+    },
+  },
 };
 
 const exhibitionSources: ArtifactSource[] = [
@@ -727,6 +750,27 @@ const exhibitionSources: ArtifactSource[] = [
       id: "helping-arms",
       label: "Leak droplet",
       description: "A drop of the tank that slipped through the glass and carries the collective with it.",
+    },
+  },
+  {
+    id: "realidad-mitigada",
+    exhibitionId: 17,
+    targetIndex: 16,
+    title: "Realidad Mitigada",
+    artist: "Tina Escaja",
+    visualFamily: "body",
+    particleForm: "crescent",
+    color: "#9A6BDB",
+    alternativeColor: "#5E2E9A",
+    theme: "agency",
+    shortText:
+      "Realidad Mitigada (Mitigated Reality) is the AR app for Tina Escaja’s hybrid book of poems and digital artefacts. Works like Luna Morada (Black Moon) and Bar Codes address domestic violence and informatics control, turning the printing press and other technologies that once legitimised oppression into tools for subversion. Stickers at the end of the book carry its “Virus and the Sea” poems into the community, as readers place them in random locations around the world.",
+    narrativeWords: ["scan", "mitigate", "testify", "spread"],
+    creaturePart: {
+      id: "barcode-fin",
+      label: "Barcode fin",
+      description:
+        "A striped fin printed like a barcode, made to be peeled off and stuck somewhere new.",
     },
   },
 ];

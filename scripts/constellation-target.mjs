@@ -12,7 +12,7 @@ import { createArtifactFormationPositions } from "../src/components/particles/pa
 import { constellationOrientations } from "../src/data/constellationOrientations.ts";
 
 /** Width to height of every target. */
-export const TARGET_ASPECT = 4 / 3;
+export const TARGET_ASPECT = 3 / 4;
 
 export function targetFileName(artifact, extension) {
   return `${artifact.exhibitionId}-${artifact.id}-white.${extension}`;

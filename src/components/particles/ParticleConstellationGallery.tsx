@@ -42,8 +42,8 @@ const sameOrientation = (a: Orientation, b: Orientation) =>
   Math.abs(a.yaw - b.yaw) < 1e-4 &&
   Math.abs(a.pitch - b.pitch) < 1e-4 &&
   Math.abs((a.roll ?? 0) - (b.roll ?? 0)) < 1e-4;
-const exportWidth = 400;
-const exportHeight = 300;
+const exportWidth = 300;
+const exportHeight = 400;
 const exportPixelRatio = 4;
 type PreviewSurface = "dark" | "light";
 
@@ -340,7 +340,7 @@ export function ParticleConstellationGallery({
           className="border-b border-white/25 sm:border-r lg:[&:nth-child(4n)]:border-r-0"
         >
           <div
-            className="relative aspect-[4/3] overflow-hidden border-b border-white/15 transition-colors"
+            className="relative aspect-[3/4] overflow-hidden border-b border-white/15 transition-colors"
             style={{ backgroundColor: previewBackgrounds[surface] }}
           >
             <canvas

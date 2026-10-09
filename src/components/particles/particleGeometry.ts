@@ -311,6 +311,56 @@ function sampleFish(index: number, count: number, progress: number, random: () =
   return [x + Math.cos(angle) * radius, y + Math.sin(angle) * radius, (random() - 0.5) * 0.04];
 }
 
+// Bar and gap widths of the barcode, in modules, alternating from a bar.
+const barcodeModules = [3, 2, 1, 2, 4, 3, 2, 2, 1, 2, 3, 3, 1, 2, 2];
+// The x range of every bar, spread over [-1, 1].
+const barcodeBars = (() => {
+  const total = barcodeModules.reduce((sum, width) => sum + width, 0);
+  const bars: Array<[number, number]> = [];
+  let x = -1;
+  barcodeModules.forEach((width, index) => {
+    const next = x + (width / total) * 2;
+    if (index % 2 === 0) bars.push([x, next]);
+    x = next;
+  });
+  return bars;
+})();
+
+// A violet crescent moon cut into the bars of a barcode, with a few square
+// stickers that have drifted away from it.
+function sampleCrescent(index: number, random: () => number): Point3 {
+  if (index % 9 === 0) {
+    const stickers: Array<[number, number]> = [[0.84, 0.86], [1.04, 0.3], [0.72, -0.9], [-0.84, -1.08]];
+    const [x, y] = stickers[Math.floor(random() * stickers.length)];
+    const half = 0.13;
+    const along = random() * 8;
+    const side = Math.floor(along / 2);
+    const offset = (along % 2) - 1;
+    const point: [number, number] =
+      side === 0 ? [offset, -1] : side === 1 ? [1, offset] : side === 2 ? [-offset, 1] : [-1, -offset];
+    return [x + point[0] * half, y + point[1] * half, (random() - 0.5) * 0.03];
+  }
+
+  // A solid crescent: the outline of a moon with a disc cut away, swelling
+  // into a lens that is thickest midway between its two edges. Particles lie
+  // on its front and back faces, which meet along the rim.
+  const shadowCenter = [0.42, 0.14];
+  const shadowRadius = 0.86;
+  let point: Point3 = [-0.8, 0, 0];
+  for (let attempt = 0; attempt < 64; attempt += 1) {
+    const radius = Math.sqrt(random());
+    const angle = random() * Math.PI * 2;
+    const x = Math.cos(angle) * radius;
+    const y = Math.sin(angle) * radius;
+    const toInnerEdge = Math.hypot(x - shadowCenter[0], y - shadowCenter[1]) - shadowRadius;
+    const onBar = barcodeBars.some(([from, to]) => x >= from && x <= to);
+    const thickness = 0.8 * Math.sqrt(Math.max(0, Math.min(1 - radius, toInnerEdge)));
+    point = [x, y, (random() < 0.5 ? -1 : 1) * thickness];
+    if (toInnerEdge > 0 && onBar) break;
+  }
+  return point;
+}
+
 function formationPosition(
   particleForm: ParticleFormId,
   index: number,
@@ -573,6 +623,9 @@ function formationPosition(
     case "fish":
       return sampleFish(index, count, progress, random);
 
+    case "crescent":
+      return sampleCrescent(index, random);
+
     default: {
       const exhaustiveCheck: never = particleForm;
       throw new Error(`Unsupported particle form: ${exhaustiveCheck}`);
@@ -676,7 +729,9 @@ export function createConstellationGeometry(
     const row = Math.floor(index / columns);
     const itemsInRow = Math.min(columns, count - row * columns);
     const x = (column - (itemsInRow - 1) / 2) * 1.42;
-    const y = ((rows - 1) / 2 - row) * 1.3;
+    // Rows tighten past four so the whole collection keeps the same height.
+    const rowSpacing = Math.min(1.3, 3.9 / Math.max(rows - 1, 1));
+    const y = ((rows - 1) / 2 - row) * rowSpacing;
     return new THREE.Vector3(x, y, ((column + row) % 2) * 0.12);
   });
 
